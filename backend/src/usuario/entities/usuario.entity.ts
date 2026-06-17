@@ -10,41 +10,41 @@ export class Usuario {
   @PrimaryGeneratedColumn({
     name: 'id_usuario',
   })
-  id_usuario: number;
+  id_usuario!: number;
 
   @Column({
     type: 'varchar',
     length: 100,
   })
-  nombres: string;
+  nombres!: string;
 
   @Column({
     type: 'varchar',
     length: 100,
   })
-  apellidos: string;
+  apellidos!: string;
 
   @Column({
     type: 'varchar',
     length: 150,
     unique: true,
   })
-  correo: string;
+  correo!: string;
 
   @Column({
     type: 'varchar',
     length: 255,
   })
-  password: string;
+  password!: string;
 
   @Column({
     type: 'boolean',
     default: true,
   })
-  estado: boolean;
+  estado!: boolean;
 
   @CreateDateColumn({
     name: 'fecha_registro',
   })
-  fecha_registro: Date;
+  fecha_registro!: Date;
 }
