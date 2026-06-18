@@ -12,6 +12,7 @@ import { SeccionModule } from './seccion/seccion.module';
 import { CursoModule } from './curso/curso.module';
 import { MatriculaModule } from './matricula/matricula.module';
 import { AsignacionCursoModule } from './asignacion-curso/asignacion-curso.module';
+import { MaterialModule } from './material/material.module';
 
 @Module({
   imports: [
@@ -38,6 +39,8 @@ import { AsignacionCursoModule } from './asignacion-curso/asignacion-curso.modul
     MatriculaModule,
 
     AsignacionCursoModule,
+
+    MaterialModule,
   ],
 })
 export class AppModule {}
