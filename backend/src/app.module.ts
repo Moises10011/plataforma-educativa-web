@@ -10,6 +10,7 @@ import { PeriodoAcademicoModule } from './periodo-academico/periodo-academico.mo
 import { GradoModule } from './grado/grado.module';
 import { SeccionModule } from './seccion/seccion.module';
 import { CursoModule } from './curso/curso.module';
+import { MatriculaModule } from './matricula/matricula.module';
 
 @Module({
   imports: [
@@ -32,6 +33,8 @@ import { CursoModule } from './curso/curso.module';
     SeccionModule,
 
     CursoModule,
+
+    MatriculaModule,
   ],
 })
 export class AppModule {}
