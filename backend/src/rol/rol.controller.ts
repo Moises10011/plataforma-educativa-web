@@ -7,11 +7,14 @@ import {
   Body,
   Param,
   ParseIntPipe,
+  UseGuards,
 } from '@nestjs/common';
 import { RolService } from './rol.service';
 import { CreateRolDto } from './dto/create-rol.dto';
 import { UpdateRolDto } from './dto/update-rol.dto';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
+@UseGuards(JwtAuthGuard)
 @Controller('rol')
 export class RolController {
   constructor(private readonly rolService: RolService) {}

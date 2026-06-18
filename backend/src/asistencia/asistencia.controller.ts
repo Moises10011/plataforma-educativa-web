@@ -7,11 +7,14 @@ import {
   Body,
   Param,
   ParseIntPipe,
+  UseGuards,
 } from '@nestjs/common';
 import { AsistenciaService } from './asistencia.service';
 import { CreateAsistenciaDto } from './dto/create-asistencia.dto';
 import { UpdateAsistenciaDto } from './dto/update-asistencia.dto';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
+@UseGuards(JwtAuthGuard)
 @Controller('asistencia')
 export class AsistenciaController {
   constructor(private readonly asistenciaService: AsistenciaService) {}

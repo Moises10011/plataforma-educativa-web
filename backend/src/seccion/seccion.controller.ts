@@ -7,11 +7,14 @@ import {
   Body,
   Param,
   ParseIntPipe,
+  UseGuards,
 } from '@nestjs/common';
 import { SeccionService } from './seccion.service';
 import { CreateSeccionDto } from './dto/create-seccion.dto';
 import { UpdateSeccionDto } from './dto/update-seccion.dto';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
+@UseGuards(JwtAuthGuard)
 @Controller('seccion')
 export class SeccionController {
   constructor(private readonly seccionService: SeccionService) {}

@@ -7,11 +7,14 @@ import {
   Body,
   Param,
   ParseIntPipe,
+  UseGuards,
 } from '@nestjs/common';
 import { NotaService } from './nota.service';
 import { CreateNotaDto } from './dto/create-nota.dto';
 import { UpdateNotaDto } from './dto/update-nota.dto';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
+@UseGuards(JwtAuthGuard)
 @Controller('nota')
 export class NotaController {
   constructor(private readonly notaService: NotaService) {}

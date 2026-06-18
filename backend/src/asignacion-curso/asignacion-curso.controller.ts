@@ -7,11 +7,14 @@ import {
   Body,
   Param,
   ParseIntPipe,
+  UseGuards,
 } from '@nestjs/common';
 import { AsignacionCursoService } from './asignacion-curso.service';
 import { CreateAsignacionCursoDto } from './dto/create-asignacion-curso.dto';
 import { UpdateAsignacionCursoDto } from './dto/update-asignacion-curso.dto';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
+@UseGuards(JwtAuthGuard)
 @Controller('asignacion-curso')
 export class AsignacionCursoController {
   constructor(

@@ -7,11 +7,14 @@ import {
   Body,
   Param,
   ParseIntPipe,
+  UseGuards,
 } from '@nestjs/common';
 import { GradoService } from './grado.service';
 import { CreateGradoDto } from './dto/create-grado.dto';
 import { UpdateGradoDto } from './dto/update-grado.dto';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
+@UseGuards(JwtAuthGuard)
 @Controller('grado')
 export class GradoController {
   constructor(private readonly gradoService: GradoService) {}

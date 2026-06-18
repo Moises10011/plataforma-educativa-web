@@ -7,10 +7,12 @@ import {
   Body,
   Param,
   ParseIntPipe,
+  UseGuards,
 } from '@nestjs/common';
 import { UsuarioService } from './usuario.service';
 import { CreateUsuarioDto } from './dto/create-usuario.dto';
 import { UpdateUsuarioDto } from './dto/update-usuario.dto';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
 @Controller('usuario')
 export class UsuarioController {
@@ -21,16 +23,19 @@ export class UsuarioController {
     return this.usuarioService.create(createUsuarioDto);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Get()
   findAll() {
     return this.usuarioService.findAll();
   }
 
+  @UseGuards(JwtAuthGuard)
   @Get(':id')
   findOne(@Param('id', ParseIntPipe) id: number) {
     return this.usuarioService.findOne(id);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Put(':id')
   update(
     @Param('id', ParseIntPipe) id: number,
@@ -39,6 +44,7 @@ export class UsuarioController {
     return this.usuarioService.update(id, updateUsuarioDto);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Delete(':id')
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.usuarioService.remove(id);

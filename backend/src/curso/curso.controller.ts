@@ -7,11 +7,14 @@ import {
   Body,
   Param,
   ParseIntPipe,
+  UseGuards,
 } from '@nestjs/common';
 import { CursoService } from './curso.service';
 import { CreateCursoDto } from './dto/create-curso.dto';
 import { UpdateCursoDto } from './dto/update-curso.dto';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
+@UseGuards(JwtAuthGuard)
 @Controller('curso')
 export class CursoController {
   constructor(private readonly cursoService: CursoService) {}

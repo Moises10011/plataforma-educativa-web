@@ -7,11 +7,14 @@ import {
   Body,
   Param,
   ParseIntPipe,
+  UseGuards,
 } from '@nestjs/common';
 import { MatriculaService } from './matricula.service';
 import { CreateMatriculaDto } from './dto/create-matricula.dto';
 import { UpdateMatriculaDto } from './dto/update-matricula.dto';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
+@UseGuards(JwtAuthGuard)
 @Controller('matricula')
 export class MatriculaController {
   constructor(private readonly matriculaService: MatriculaService) {}

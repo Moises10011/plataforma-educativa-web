@@ -7,11 +7,14 @@ import {
   Body,
   Param,
   ParseIntPipe,
+  UseGuards,
 } from '@nestjs/common';
 import { EntregaTareaService } from './entrega-tarea.service';
 import { CreateEntregaTareaDto } from './dto/create-entrega-tarea.dto';
 import { UpdateEntregaTareaDto } from './dto/update-entrega-tarea.dto';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
+@UseGuards(JwtAuthGuard)
 @Controller('entrega-tarea')
 export class EntregaTareaController {
   constructor(private readonly entregaTareaService: EntregaTareaService) {}

@@ -7,11 +7,14 @@ import {
   Body,
   Param,
   ParseIntPipe,
+  UseGuards,
 } from '@nestjs/common';
 import { PeriodoAcademicoService } from './periodo-academico.service';
 import { CreatePeriodoAcademicoDto } from './dto/create-periodo-academico.dto';
 import { UpdatePeriodoAcademicoDto } from './dto/update-periodo-academico.dto';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
+@UseGuards(JwtAuthGuard)
 @Controller('periodo-academico')
 export class PeriodoAcademicoController {
   constructor(
