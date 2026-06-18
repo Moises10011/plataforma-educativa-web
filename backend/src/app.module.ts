@@ -13,6 +13,7 @@ import { CursoModule } from './curso/curso.module';
 import { MatriculaModule } from './matricula/matricula.module';
 import { AsignacionCursoModule } from './asignacion-curso/asignacion-curso.module';
 import { MaterialModule } from './material/material.module';
+import { TareaModule } from './tarea/tarea.module';
 
 @Module({
   imports: [
@@ -41,6 +42,8 @@ import { MaterialModule } from './material/material.module';
     AsignacionCursoModule,
 
     MaterialModule,
+
+    TareaModule,
   ],
 })
 export class AppModule {}
