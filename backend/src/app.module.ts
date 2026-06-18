@@ -9,6 +9,7 @@ import { UsuarioRolModule } from './usuario-rol/usuario-rol.module';
 import { PeriodoAcademicoModule } from './periodo-academico/periodo-academico.module';
 import { GradoModule } from './grado/grado.module';
 import { SeccionModule } from './seccion/seccion.module';
+import { CursoModule } from './curso/curso.module';
 
 @Module({
   imports: [
@@ -29,6 +30,8 @@ import { SeccionModule } from './seccion/seccion.module';
     GradoModule,
 
     SeccionModule,
+
+    CursoModule,
   ],
 })
 export class AppModule {}
