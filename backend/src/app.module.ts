@@ -5,6 +5,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { databaseConfig } from './config/database.config';
 import { UsuarioModule } from './usuario/usuario.module';
 import { RolModule } from './rol/rol.module';
+import { UsuarioRolModule } from './usuario-rol/usuario-rol.module';
 
 @Module({
   imports: [
@@ -17,6 +18,8 @@ import { RolModule } from './rol/rol.module';
     UsuarioModule,
 
     RolModule,
+
+    UsuarioRolModule,
   ],
 })
 export class AppModule {}
