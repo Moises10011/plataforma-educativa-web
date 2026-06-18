@@ -7,6 +7,7 @@ import { UsuarioModule } from './usuario/usuario.module';
 import { RolModule } from './rol/rol.module';
 import { UsuarioRolModule } from './usuario-rol/usuario-rol.module';
 import { PeriodoAcademicoModule } from './periodo-academico/periodo-academico.module';
+import { GradoModule } from './grado/grado.module';
 
 @Module({
   imports: [
@@ -23,6 +24,8 @@ import { PeriodoAcademicoModule } from './periodo-academico/periodo-academico.mo
     UsuarioRolModule,
 
     PeriodoAcademicoModule,
+
+    GradoModule,
   ],
 })
 export class AppModule {}
