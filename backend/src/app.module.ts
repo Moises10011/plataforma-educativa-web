@@ -6,6 +6,7 @@ import { databaseConfig } from './config/database.config';
 import { UsuarioModule } from './usuario/usuario.module';
 import { RolModule } from './rol/rol.module';
 import { UsuarioRolModule } from './usuario-rol/usuario-rol.module';
+import { PeriodoAcademicoModule } from './periodo-academico/periodo-academico.module';
 
 @Module({
   imports: [
@@ -20,6 +21,8 @@ import { UsuarioRolModule } from './usuario-rol/usuario-rol.module';
     RolModule,
 
     UsuarioRolModule,
+
+    PeriodoAcademicoModule,
   ],
 })
 export class AppModule {}
