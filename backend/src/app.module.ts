@@ -18,6 +18,7 @@ import { EntregaTareaModule } from './entrega-tarea/entrega-tarea.module';
 import { NotaModule } from './nota/nota.module';
 import { AsistenciaModule } from './asistencia/asistencia.module';
 import { ComunicadoModule } from './comunicado/comunicado.module';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
@@ -56,6 +57,8 @@ import { ComunicadoModule } from './comunicado/comunicado.module';
     AsistenciaModule,
 
     ComunicadoModule,
+
+    AuthModule,
   ],
 })
 export class AppModule {}
