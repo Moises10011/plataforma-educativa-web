@@ -13,6 +13,8 @@ import { UsuarioService } from './usuario.service';
 import { CreateUsuarioDto } from './dto/create-usuario.dto';
 import { UpdateUsuarioDto } from './dto/update-usuario.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../common/guards/roles.guard';
+import { Roles } from '../common/decorators/roles.decorator';
 
 @Controller('usuario')
 export class UsuarioController {
@@ -44,7 +46,8 @@ export class UsuarioController {
     return this.usuarioService.update(id, updateUsuarioDto);
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('Administrador')
   @Delete(':id')
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.usuarioService.remove(id);

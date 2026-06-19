@@ -30,9 +30,12 @@ export class AuthService {
     if (!passwordValido)
       throw new UnauthorizedException('Credenciales incorrectas');
 
+    const nombresRoles = usuario.roles.map((rol) => rol.nombre_rol);
+
     const payload = {
       sub: usuario.id_usuario,
       correo: usuario.correo,
+      roles: nombresRoles,
     };
 
     return {
@@ -41,6 +44,7 @@ export class AuthService {
         id_usuario: usuario.id_usuario,
         nombres: usuario.nombres,
         correo: usuario.correo,
+        roles: nombresRoles,
       },
     };
   }
