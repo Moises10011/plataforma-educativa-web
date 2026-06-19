@@ -8,32 +8,49 @@ import {
   Param,
   ParseIntPipe,
   UseGuards,
+  Req,
 } from '@nestjs/common';
+import { Request } from 'express';
 import { AsistenciaService } from './asistencia.service';
 import { CreateAsistenciaDto } from './dto/create-asistencia.dto';
 import { UpdateAsistenciaDto } from './dto/update-asistencia.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../common/guards/roles.guard';
+import { Roles } from '../common/decorators/roles.decorator';
 
-@UseGuards(JwtAuthGuard)
+interface AuthRequest extends Request {
+  user: {
+    id_usuario: number;
+    correo: string;
+    roles?: string[];
+  };
+}
+
 @Controller('asistencia')
 export class AsistenciaController {
   constructor(private readonly asistenciaService: AsistenciaService) {}
 
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('Docente')
   @Post()
   create(@Body() createAsistenciaDto: CreateAsistenciaDto) {
     return this.asistenciaService.create(createAsistenciaDto);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Get()
-  findAll() {
-    return this.asistenciaService.findAll();
+  findAll(@Req() req: AuthRequest) {
+    return this.asistenciaService.findAll(req.user);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Get(':id')
   findOne(@Param('id', ParseIntPipe) id: number) {
     return this.asistenciaService.findOne(id);
   }
 
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('Docente')
   @Put(':id')
   update(
     @Param('id', ParseIntPipe) id: number,
@@ -42,6 +59,8 @@ export class AsistenciaController {
     return this.asistenciaService.update(id, updateAsistenciaDto);
   }
 
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('Administrador')
   @Delete(':id')
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.asistenciaService.remove(id);

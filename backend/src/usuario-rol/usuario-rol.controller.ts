@@ -11,8 +11,11 @@ import {
 import { UsuarioRolService } from './usuario-rol.service';
 import { CreateUsuarioRolDto } from './dto/create-usuario-rol.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../common/guards/roles.guard';
+import { Roles } from '../common/decorators/roles.decorator';
 
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles('Administrador')
 @Controller('usuario-rol')
 export class UsuarioRolController {
   constructor(private readonly usuarioRolService: UsuarioRolService) {}
