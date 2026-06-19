@@ -6,6 +6,11 @@ import { Nota } from './entities/nota.entity';
 import { CreateNotaDto } from './dto/create-nota.dto';
 import { UpdateNotaDto } from './dto/update-nota.dto';
 
+interface AuthUser {
+  id_usuario: number;
+  roles?: string[];
+}
+
 @Injectable()
 export class NotaService {
   constructor(
@@ -18,7 +23,16 @@ export class NotaService {
     return await this.notaRepository.save(nota);
   }
 
-  findAll() {
+  async findAll(authUser: AuthUser) {
+    const esEstudiante = authUser.roles?.includes('Estudiante');
+
+    if (esEstudiante) {
+      return this.notaRepository.find({
+        where: { id_usuario_estudiante: authUser.id_usuario },
+        relations: { entrega: true, estudiante: true },
+      });
+    }
+
     return this.notaRepository.find({
       relations: { entrega: true, estudiante: true },
     });

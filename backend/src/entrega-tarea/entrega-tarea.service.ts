@@ -1,10 +1,19 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
 import { EntregaTarea } from './entities/entrega-tarea.entity';
 import { CreateEntregaTareaDto } from './dto/create-entrega-tarea.dto';
 import { UpdateEntregaTareaDto } from './dto/update-entrega-tarea.dto';
+
+interface AuthUser {
+  id_usuario: number;
+  roles?: string[];
+}
 
 @Injectable()
 export class EntregaTareaService {
@@ -13,12 +22,30 @@ export class EntregaTareaService {
     private readonly entregaRepository: Repository<EntregaTarea>,
   ) {}
 
-  async create(createEntregaTareaDto: CreateEntregaTareaDto) {
+  async create(
+    createEntregaTareaDto: CreateEntregaTareaDto,
+    authUser: AuthUser,
+  ) {
+    if (createEntregaTareaDto.id_usuario_estudiante !== authUser.id_usuario) {
+      throw new ForbiddenException(
+        'No puedes entregar una tarea en nombre de otro estudiante',
+      );
+    }
+
     const entrega = this.entregaRepository.create(createEntregaTareaDto);
     return await this.entregaRepository.save(entrega);
   }
 
-  findAll() {
+  async findAll(authUser: AuthUser) {
+    const esEstudiante = authUser.roles?.includes('Estudiante');
+
+    if (esEstudiante) {
+      return this.entregaRepository.find({
+        where: { id_usuario_estudiante: authUser.id_usuario },
+        relations: { tarea: true, estudiante: true },
+      });
+    }
+
     return this.entregaRepository.find({
       relations: { tarea: true, estudiante: true },
     });
@@ -33,8 +60,19 @@ export class EntregaTareaService {
     return entrega;
   }
 
-  async update(id: number, updateEntregaTareaDto: UpdateEntregaTareaDto) {
+  async update(
+    id: number,
+    updateEntregaTareaDto: UpdateEntregaTareaDto,
+    authUser: AuthUser,
+  ) {
     const entrega = await this.findOne(id);
+
+    if (entrega.id_usuario_estudiante !== authUser.id_usuario) {
+      throw new ForbiddenException(
+        'No puedes modificar la entrega de otro estudiante',
+      );
+    }
+
     Object.assign(entrega, updateEntregaTareaDto);
     return await this.entregaRepository.save(entrega);
   }

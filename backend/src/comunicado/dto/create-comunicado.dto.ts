@@ -1,4 +1,4 @@
-import { IsInt, IsNotEmpty, IsString } from 'class-validator';
+import { IsNotEmpty, IsString } from 'class-validator';
 
 export class CreateComunicadoDto {
   @IsString()
@@ -8,8 +8,4 @@ export class CreateComunicadoDto {
   @IsString()
   @IsNotEmpty()
   contenido!: string;
-
-  @IsInt()
-  @IsNotEmpty()
-  id_usuario_admin!: number;
 }

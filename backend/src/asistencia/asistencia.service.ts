@@ -6,6 +6,11 @@ import { Asistencia } from './entities/asistencia.entity';
 import { CreateAsistenciaDto } from './dto/create-asistencia.dto';
 import { UpdateAsistenciaDto } from './dto/update-asistencia.dto';
 
+interface AuthUser {
+  id_usuario: number;
+  roles?: string[];
+}
+
 @Injectable()
 export class AsistenciaService {
   constructor(
@@ -18,7 +23,16 @@ export class AsistenciaService {
     return await this.asistenciaRepository.save(asistencia);
   }
 
-  findAll() {
+  async findAll(authUser: AuthUser) {
+    const esEstudiante = authUser.roles?.includes('Estudiante');
+
+    if (esEstudiante) {
+      return this.asistenciaRepository.find({
+        where: { id_usuario_estudiante: authUser.id_usuario },
+        relations: { asignacion: true, estudiante: true },
+      });
+    }
+
     return this.asistenciaRepository.find({
       relations: { asignacion: true, estudiante: true },
     });
