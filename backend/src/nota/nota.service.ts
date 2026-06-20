@@ -5,6 +5,9 @@ import { Repository } from 'typeorm';
 import { Nota } from './entities/nota.entity';
 import { CreateNotaDto } from './dto/create-nota.dto';
 import { UpdateNotaDto } from './dto/update-nota.dto';
+import { generarExcel } from '../common/utils/excel.util';
+import { EntregaTarea } from '../entrega-tarea/entities/entrega-tarea.entity';
+import { InjectRepository as InjectRepo } from '@nestjs/typeorm';
 
 interface AuthUser {
   id_usuario: number;
@@ -16,6 +19,8 @@ export class NotaService {
   constructor(
     @InjectRepository(Nota)
     private readonly notaRepository: Repository<Nota>,
+    @InjectRepo(EntregaTarea)
+    private readonly entregaRepository: Repository<EntregaTarea>,
   ) {}
 
   async create(createNotaDto: CreateNotaDto) {
@@ -57,5 +62,42 @@ export class NotaService {
     const nota = await this.findOne(id);
     await this.notaRepository.remove(nota);
     return { message: `Nota #${id} eliminada correctamente` };
+  }
+
+  async exportarExcel(id_asignacion: number) {
+    const entregas = await this.entregaRepository.find({
+      where: {},
+      relations: { tarea: true },
+    });
+
+    const idsEntregasDeLaAsignacion = entregas
+      .filter((entrega) => entrega.tarea?.id_asignacion === id_asignacion)
+      .map((entrega) => entrega.id_entrega);
+
+    const notas = await this.notaRepository.find({
+      relations: { entrega: true, estudiante: true },
+    });
+
+    const notasFiltradas = notas.filter((nota) =>
+      idsEntregasDeLaAsignacion.includes(nota.id_entrega),
+    );
+
+    const filas = notasFiltradas.map((nota) => ({
+      id_usuario_estudiante: nota.id_usuario_estudiante,
+      nombre: `${nota.estudiante.nombres} ${nota.estudiante.apellidos}`,
+      valor: nota.valor,
+      observacion: nota.observacion ?? '',
+    }));
+
+    return generarExcel(
+      'Notas',
+      [
+        { header: 'ID Estudiante', key: 'id_usuario_estudiante', width: 15 },
+        { header: 'Nombre', key: 'nombre', width: 30 },
+        { header: 'Nota', key: 'valor', width: 10 },
+        { header: 'Observacion', key: 'observacion', width: 30 },
+      ],
+      filas,
+    );
   }
 }

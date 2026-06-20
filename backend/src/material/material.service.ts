@@ -5,6 +5,8 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { unlink } from 'fs/promises';
+import { join } from 'path';
 
 import { Material } from './entities/material.entity';
 import { CreateMaterialDto } from './dto/create-material.dto';
@@ -28,7 +30,11 @@ export class MaterialService {
     private readonly matriculaRepository: Repository<Matricula>,
   ) {}
 
-  async create(createMaterialDto: CreateMaterialDto, authUser: AuthUser) {
+  async create(
+    createMaterialDto: CreateMaterialDto,
+    authUser: AuthUser,
+    archivo?: Express.Multer.File,
+  ) {
     const esAdmin = authUser.roles?.includes('Administrador');
 
     if (!esAdmin) {
@@ -45,7 +51,10 @@ export class MaterialService {
       }
     }
 
-    const material = this.materialRepository.create(createMaterialDto);
+    const material = this.materialRepository.create({
+      ...createMaterialDto,
+      archivo: archivo ? archivo.filename : undefined,
+    });
     return await this.materialRepository.save(material);
   }
 
@@ -119,6 +128,16 @@ export class MaterialService {
 
   async remove(id: number, authUser: AuthUser) {
     const material = await this.verificarPropietario(id, authUser);
+
+    if (material.archivo) {
+      const ruta = join(process.cwd(), 'uploads', 'material', material.archivo);
+      try {
+        await unlink(ruta);
+      } catch {
+        // si el archivo ya no existe en disco, no detenemos el proceso
+      }
+    }
+
     await this.materialRepository.remove(material);
     return { message: `Material #${id} eliminado correctamente` };
   }

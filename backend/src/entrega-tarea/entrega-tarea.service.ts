@@ -5,6 +5,8 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { unlink } from 'fs/promises';
+import { join } from 'path';
 
 import { EntregaTarea } from './entities/entrega-tarea.entity';
 import { CreateEntregaTareaDto } from './dto/create-entrega-tarea.dto';
@@ -25,6 +27,7 @@ export class EntregaTareaService {
   async create(
     createEntregaTareaDto: CreateEntregaTareaDto,
     authUser: AuthUser,
+    archivo?: Express.Multer.File,
   ) {
     if (createEntregaTareaDto.id_usuario_estudiante !== authUser.id_usuario) {
       throw new ForbiddenException(
@@ -32,7 +35,10 @@ export class EntregaTareaService {
       );
     }
 
-    const entrega = this.entregaRepository.create(createEntregaTareaDto);
+    const entrega = this.entregaRepository.create({
+      ...createEntregaTareaDto,
+      archivo: archivo ? archivo.filename : undefined,
+    });
     return await this.entregaRepository.save(entrega);
   }
 
@@ -64,6 +70,7 @@ export class EntregaTareaService {
     id: number,
     updateEntregaTareaDto: UpdateEntregaTareaDto,
     authUser: AuthUser,
+    archivo?: Express.Multer.File,
   ) {
     const entrega = await this.findOne(id);
 
@@ -73,12 +80,40 @@ export class EntregaTareaService {
       );
     }
 
+    if (archivo && entrega.archivo) {
+      const rutaAnterior = join(
+        process.cwd(),
+        'uploads',
+        'entregas',
+        entrega.archivo,
+      );
+      try {
+        await unlink(rutaAnterior);
+      } catch {
+        // si no existe el archivo anterior, continuamos sin problema
+      }
+    }
+
     Object.assign(entrega, updateEntregaTareaDto);
+    if (archivo) {
+      entrega.archivo = archivo.filename;
+    }
+
     return await this.entregaRepository.save(entrega);
   }
 
   async remove(id: number) {
     const entrega = await this.findOne(id);
+
+    if (entrega.archivo) {
+      const ruta = join(process.cwd(), 'uploads', 'entregas', entrega.archivo);
+      try {
+        await unlink(ruta);
+      } catch {
+        // si el archivo ya no existe en disco, no detenemos el proceso
+      }
+    }
+
     await this.entregaRepository.remove(entrega);
     return { message: `Entrega #${id} eliminada correctamente` };
   }

@@ -19,6 +19,8 @@ import { NotaModule } from './nota/nota.module';
 import { AsistenciaModule } from './asistencia/asistencia.module';
 import { ComunicadoModule } from './comunicado/comunicado.module';
 import { AuthModule } from './auth/auth.module';
+import { InstitucionModule } from './institucion/institucion.module';
+import { GaleriaModule } from './galeria/galeria.module';
 
 @Module({
   imports: [
@@ -59,6 +61,10 @@ import { AuthModule } from './auth/auth.module';
     ComunicadoModule,
 
     AuthModule,
+
+    InstitucionModule,
+
+    GaleriaModule,
   ],
 })
 export class AppModule {}

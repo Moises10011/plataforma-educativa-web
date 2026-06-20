@@ -9,8 +9,9 @@ import {
   ParseIntPipe,
   UseGuards,
   Req,
+  Res,
 } from '@nestjs/common';
-import { Request } from 'express';
+import type { Request, Response } from 'express';
 import { NotaService } from './nota.service';
 import { CreateNotaDto } from './dto/create-nota.dto';
 import { UpdateNotaDto } from './dto/update-nota.dto';
@@ -41,6 +42,23 @@ export class NotaController {
   @Get()
   findAll(@Req() req: AuthRequest) {
     return this.notaService.findAll(req.user);
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('Administrador', 'Docente')
+  @Get('exportar/:id_asignacion')
+  async exportar(
+    @Param('id_asignacion', ParseIntPipe) id_asignacion: number,
+    @Res() res: Response,
+  ) {
+    const buffer = await this.notaService.exportarExcel(id_asignacion);
+
+    res.set({
+      'Content-Type':
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'Content-Disposition': `attachment; filename=notas_${id_asignacion}.xlsx`,
+    });
+    res.send(buffer);
   }
 
   @UseGuards(JwtAuthGuard)

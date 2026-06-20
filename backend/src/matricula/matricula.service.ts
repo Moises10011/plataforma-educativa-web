@@ -6,6 +6,7 @@ import { Matricula } from './entities/matricula.entity';
 import { CreateMatriculaDto } from './dto/create-matricula.dto';
 import { UpdateMatriculaDto } from './dto/update-matricula.dto';
 import { AsignacionCurso } from '../asignacion-curso/entities/asignacion-curso.entity';
+import { generarExcel } from '../common/utils/excel.util';
 
 interface AuthUser {
   id_usuario: number;
@@ -92,5 +93,34 @@ export class MatriculaService {
     const matricula = await this.findOne(id);
     await this.matriculaRepository.remove(matricula);
     return { message: `Matricula #${id} eliminada correctamente` };
+  }
+
+  async exportarExcel(id_periodo: number) {
+    const matriculas = await this.matriculaRepository.find({
+      where: { id_periodo },
+      relations: { usuario: true, grado: true, seccion: true },
+    });
+
+    const filas = matriculas.map((matricula) => ({
+      id_usuario: matricula.id_usuario,
+      nombre: `${matricula.usuario.nombres} ${matricula.usuario.apellidos}`,
+      correo: matricula.usuario.correo,
+      grado: matricula.grado.nombre,
+      seccion: matricula.seccion.nombre,
+      estado: matricula.estado ? 'Activo' : 'Inactivo',
+    }));
+
+    return generarExcel(
+      'Matriculados',
+      [
+        { header: 'ID Usuario', key: 'id_usuario', width: 12 },
+        { header: 'Nombre', key: 'nombre', width: 30 },
+        { header: 'Correo', key: 'correo', width: 30 },
+        { header: 'Grado', key: 'grado', width: 15 },
+        { header: 'Seccion', key: 'seccion', width: 15 },
+        { header: 'Estado', key: 'estado', width: 15 },
+      ],
+      filas,
+    );
   }
 }

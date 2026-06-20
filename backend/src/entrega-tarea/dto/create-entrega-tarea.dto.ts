@@ -5,12 +5,15 @@ import {
   IsOptional,
   IsDateString,
 } from 'class-validator';
+import { Type } from 'class-transformer';
 
 export class CreateEntregaTareaDto {
+  @Type(() => Number)
   @IsInt()
   @IsNotEmpty()
   id_tarea!: number;
 
+  @Type(() => Number)
   @IsInt()
   @IsNotEmpty()
   id_usuario_estudiante!: number;
