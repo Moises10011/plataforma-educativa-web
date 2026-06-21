@@ -9,8 +9,9 @@ import {
   ParseIntPipe,
   UseGuards,
   Req,
+  Res,
 } from '@nestjs/common';
-import { Request } from 'express';
+import type { Request, Response } from 'express';
 import { MatriculaService } from './matricula.service';
 import { CreateMatriculaDto } from './dto/create-matricula.dto';
 import { UpdateMatriculaDto } from './dto/update-matricula.dto';
@@ -41,6 +42,23 @@ export class MatriculaController {
   @Get()
   findAll(@Req() req: AuthRequest) {
     return this.matriculaService.findAll(req.user);
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('Administrador')
+  @Get('exportar/:id_periodo')
+  async exportar(
+    @Param('id_periodo', ParseIntPipe) id_periodo: number,
+    @Res() res: Response,
+  ) {
+    const buffer = await this.matriculaService.exportarExcel(id_periodo);
+
+    res.set({
+      'Content-Type':
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'Content-Disposition': `attachment; filename=matriculados_${id_periodo}.xlsx`,
+    });
+    res.send(buffer);
   }
 
   @UseGuards(JwtAuthGuard)

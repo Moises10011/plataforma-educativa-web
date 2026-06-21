@@ -19,6 +19,9 @@ export class Comunicado {
   @Column({ type: 'text' })
   contenido!: string;
 
+  @Column({ type: 'varchar', length: 255, nullable: true })
+  archivo!: string;
+
   @CreateDateColumn({ name: 'fecha_publicacion' })
   fecha_publicacion!: Date;
 

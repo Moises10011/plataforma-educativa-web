@@ -1,0 +1,115 @@
+<div class="relative min-h-screen flex items-center justify-center px-4 py-10 overflow-hidden">
+
+  <div class="absolute inset-0 bg-institucional-700">
+      @if (urlFondo) {
+        <img
+          [src]="urlFondo"
+          alt=""
+          (load)="onFondoCargado()"
+          class="w-full h-full object-cover transition-opacity duration-700"
+          [class.opacity-100]="fondoCargado()"
+          [class.opacity-0]="!fondoCargado()"
+        />
+      }
+      <div class="absolute inset-0 bg-institucional-800/90"></div>
+    </div>
+
+  <a routerLink="/" class="absolute top-5 left-5 z-10 flex items-center gap-1.5 text-white/80 hover:text-white text-sm transition-colors">
+    <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+    Volver al inicio
+  </a>
+
+  <div class="relative z-10 w-full max-w-sm bg-white rounded-xl shadow-xl p-8">
+
+    <div class="text-center mb-6">
+      @if (institucion?.logo) {
+        <img
+          [src]="obtenerUrlLogo()"
+          alt="Logo institucional"
+          class="w-14 h-14 rounded-lg object-contain mx-auto mb-3 bg-white p-1"
+        />
+      } @else {
+        <div class="w-14 h-14 rounded-lg bg-institucional-600 flex items-center justify-center text-white font-semibold mx-auto mb-3">
+          IE
+        </div>
+      }
+      <h1 class="text-xl font-bold text-gray-900">Iniciar sesion</h1>
+      <p class="text-sm text-gray-500 mt-1">Ingresa tus credenciales para continuar</p>
+    </div>
+
+    <form (ngSubmit)="onSubmit()" class="space-y-4">
+
+      <div>
+        <label for="correo" class="block text-sm font-medium text-gray-700 mb-1">
+          Correo electronico
+        </label>
+        <div class="relative">
+          <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
+            <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+          </span>
+          <input
+            id="correo"
+            type="email"
+            [(ngModel)]="correo"
+            name="correo"
+            placeholder="tu@correo.com"
+            class="w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-institucional-600 focus:border-transparent"
+          />
+        </div>
+      </div>
+
+      <div>
+        <label for="password" class="block text-sm font-medium text-gray-700 mb-1">
+          Contrasena
+        </label>
+        <div class="relative">
+          <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
+            <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+          </span>
+          <input
+            id="password"
+            [type]="mostrarPassword() ? 'text' : 'password'"
+            [(ngModel)]="password"
+            name="password"
+            placeholder="••••••••"
+            class="w-full pl-10 pr-10 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-institucional-600 focus:border-transparent"
+          />
+          <button
+            type="button"
+            (click)="toggleMostrarPassword()"
+            class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600"
+          >
+            @if (mostrarPassword()) {
+              <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88"/></svg>
+            } @else {
+              <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+            }
+          </button>
+        </div>
+      </div>
+
+      <div class="text-right">
+        <a routerLink="/recuperar-contrasena" class="text-xs text-institucional-600 hover:underline">
+          Olvidaste tu contrasena?
+        </a>
+      </div>
+
+      @if (error()) {
+        <p class="text-sm text-red-600 bg-red-50 px-3 py-2 rounded-lg">
+          {{ error() }}
+        </p>
+      }
+
+      <button
+        type="submit"
+        [disabled]="cargando()"
+        class="w-full bg-institucional-600 text-white font-semibold text-sm py-2.5 rounded-lg hover:bg-institucional-700 transition-colors disabled:opacity-60"
+      >
+        {{ cargando() ? 'Ingresando...' : 'Ingresar' }}
+      </button>
+
+    </form>
+
+  </div>
+
+</div>

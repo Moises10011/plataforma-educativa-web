@@ -9,8 +9,12 @@ import {
   ParseIntPipe,
   UseGuards,
   Req,
+  Res,
+  UseInterceptors,
+  UploadedFile,
 } from '@nestjs/common';
-import { Request } from 'express';
+import { FileInterceptor } from '@nestjs/platform-express';
+import type { Request, Response } from 'express';
 import { AsistenciaService } from './asistencia.service';
 import { CreateAsistenciaDto } from './dto/create-asistencia.dto';
 import { UpdateAsistenciaDto } from './dto/update-asistencia.dto';
@@ -41,6 +45,34 @@ export class AsistenciaController {
   @Get()
   findAll(@Req() req: AuthRequest) {
     return this.asistenciaService.findAll(req.user);
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('Administrador', 'Docente')
+  @Get('exportar/:id_asignacion')
+  async exportar(
+    @Param('id_asignacion', ParseIntPipe) id_asignacion: number,
+    @Res() res: Response,
+  ) {
+    const buffer = await this.asistenciaService.exportarExcel(id_asignacion);
+
+    res.set({
+      'Content-Type':
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'Content-Disposition': `attachment; filename=asistencia_${id_asignacion}.xlsx`,
+    });
+    res.send(buffer);
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('Docente')
+  @Post('importar/:id_asignacion')
+  @UseInterceptors(FileInterceptor('archivo'))
+  async importar(
+    @Param('id_asignacion', ParseIntPipe) id_asignacion: number,
+    @UploadedFile() archivo: Express.Multer.File,
+  ) {
+    return this.asistenciaService.importarExcel(id_asignacion, archivo.buffer);
   }
 
   @UseGuards(JwtAuthGuard)

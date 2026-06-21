@@ -1,0 +1,86 @@
+<section id="nosotros" class="w-full bg-gray-50 px-4 sm:px-6 md:px-10 py-12 sm:py-16">
+
+  <div class="text-center mb-8 sm:mb-10">
+    <div class="flex items-center justify-center gap-2 mb-3">
+      <span class="w-6 h-0.5 bg-institucional-600"></span>
+      <p class="text-xs font-bold text-institucional-600 uppercase tracking-widest">
+        Conocenos
+      </p>
+      <span class="w-6 h-0.5 bg-institucional-600"></span>
+    </div>
+    <h2 class="text-3xl sm:text-4xl font-extrabold text-gray-900 tracking-tight mb-2">
+      Quienes somos
+    </h2>
+    <p class="text-sm text-gray-500 max-w-md mx-auto">
+      Conoce nuestra mision y vision como institucion educativa
+    </p>
+  </div>
+
+  <div class="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-4">
+
+    <div class="bg-white rounded-xl shadow-sm">
+      <button
+        (click)="toggleMision()"
+        class="w-full flex items-center gap-3 px-5 py-4 border-l-4 border-institucional-600 hover:bg-gray-50 transition-colors rounded-xl"
+      >
+        <div class="w-10 h-10 rounded-lg bg-institucional-50 flex items-center justify-center flex-shrink-0">
+          <svg class="w-5 h-5 text-institucional-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 9V3a1 1 0 011-1h4a1 1 0 011 1v6m-6 0h6m-6 0L6 21l6-3 6 3-3-12" />
+          </svg>
+        </div>
+        <span class="text-sm sm:text-base font-semibold text-gray-800 flex-1 text-left">Mision</span>
+        <svg
+          class="w-5 h-5 text-institucional-600 transition-transform duration-300 flex-shrink-0"
+          [class.rotate-45]="misionAbierta()"
+          xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+        >
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+        </svg>
+      </button>
+
+      <div
+        class="overflow-hidden transition-all duration-300 ease-in-out"
+        [class.max-h-40]="misionAbierta()"
+        [class.max-h-0]="!misionAbierta()"
+      >
+        <p class="text-sm text-gray-600 leading-relaxed px-5 pb-4 pl-[68px]">
+          {{ institucion?.mision }}
+        </p>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-xl shadow-sm">
+      <button
+        (click)="toggleVision()"
+        class="w-full flex items-center gap-3 px-5 py-4 border-l-4 border-institucional-600 hover:bg-gray-50 transition-colors rounded-xl"
+      >
+        <div class="w-10 h-10 rounded-lg bg-institucional-50 flex items-center justify-center flex-shrink-0">
+          <svg class="w-5 h-5 text-institucional-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+          </svg>
+        </div>
+        <span class="text-sm sm:text-base font-semibold text-gray-800 flex-1 text-left">Vision</span>
+        <svg
+          class="w-5 h-5 text-institucional-600 transition-transform duration-300 flex-shrink-0"
+          [class.rotate-45]="visionAbierta()"
+          xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+        >
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+        </svg>
+      </button>
+
+      <div
+        class="overflow-hidden transition-all duration-300 ease-in-out"
+        [class.max-h-40]="visionAbierta()"
+        [class.max-h-0]="!visionAbierta()"
+      >
+        <p class="text-sm text-gray-600 leading-relaxed px-5 pb-4 pl-[68px]">
+          {{ institucion?.vision }}
+        </p>
+      </div>
+    </div>
+
+  </div>
+
+</section>

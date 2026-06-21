@@ -1,6 +1,8 @@
 import { IsInt, IsNotEmpty, IsString, IsOptional } from 'class-validator';
+import { Type } from 'class-transformer';
 
 export class CreateMaterialDto {
+  @Type(() => Number)
   @IsInt()
   @IsNotEmpty()
   id_asignacion!: number;
