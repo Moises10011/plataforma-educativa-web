@@ -1,3 +1,29 @@
-/* You can add global styles to this file, and also import other style files */
-
 @import 'tailwindcss';
+
+@theme {
+  --color-institucional-50: #fdf2f3;
+  --color-institucional-100: #fce4e6;
+  --color-institucional-600: #8b2332;
+  --color-institucional-700: #6e1c28;
+  --color-institucional-800: #511620;
+
+  --color-secundario-600: #5c5c5c;
+  --color-secundario-700: #444444;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+}
+@keyframes ola-respirar {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(4px);
+  }
+}
+
+.animar-ola {
+  animation: ola-respirar 4s ease-in-out infinite;
+}

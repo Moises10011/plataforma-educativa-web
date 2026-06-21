@@ -1,0 +1,30 @@
+<section id="inicio" class="relative w-full overflow-hidden">
+
+  <div class="absolute inset-0">
+    @if (fotoFondo) {
+      <img
+        [src]="obtenerUrlImagen(fotoFondo.id_galeria)"
+        [alt]="fotoFondo.titulo"
+        class="w-full h-full object-cover"
+      />
+    }
+    <div class="absolute inset-0 bg-institucional-800/85"></div>
+  </div>
+
+  <div class="relative z-10 px-6 sm:px-10 md:px-16 pt-16 pb-32 sm:pt-20 sm:pb-36 max-w-3xl">
+    <h1 class="text-2xl sm:text-3xl md:text-4xl font-bold text-white leading-tight">
+      Institucion Educativa
+    </h1>
+    <h2 class="text-2xl sm:text-3xl md:text-4xl font-bold text-amber-300 leading-tight mb-4">
+      {{ institucion?.nombre ?? 'Micaela Bastidas' }}
+    </h2>
+    <p class="text-sm sm:text-base text-white/85 max-w-md">
+      {{ institucion?.descripcion ?? 'Formando estudiantes con valores, identidad cultural y excelencia academica.' }}
+    </p>
+  </div>
+
+  <div class="absolute bottom-0 left-0 w-full h-[65px] overflow-hidden">
+      <svg class="absolute -bottom-px left-0 w-full block animar-ola" viewBox="0 0 1200 60" preserveAspectRatio="none"><path d="M0,30 C300,65 900,-5 1200,30 L1200,61 L0,61 Z" fill="white"/></svg>
+    </div>
+
+</section>
