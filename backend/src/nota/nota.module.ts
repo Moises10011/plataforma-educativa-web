@@ -5,9 +5,10 @@ import { Nota } from './entities/nota.entity';
 import { NotaService } from './nota.service';
 import { NotaController } from './nota.controller';
 import { EntregaTarea } from '../entrega-tarea/entities/entrega-tarea.entity';
+import { Competencia } from '../competencia/entities/competencia.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Nota, EntregaTarea])],
+  imports: [TypeOrmModule.forFeature([Nota, EntregaTarea, Competencia])],
   controllers: [NotaController],
   providers: [NotaService],
 })
