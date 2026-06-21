@@ -1,5 +1,6 @@
 import { Component, signal } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
+import { RouterOutlet, Router, NavigationEnd } from '@angular/router';
+import { filter } from 'rxjs';
 import { Header } from './shared/components/header/header';
 import { Footer } from './shared/components/footer/footer';
 
@@ -11,4 +12,16 @@ import { Footer } from './shared/components/footer/footer';
 })
 export class App {
   protected readonly title = signal('frontend');
+  mostrarLayout = signal(true);
+
+  private rutasSinLayout = ['/login', '/recuperar-contrasena', '/restablecer-contrasena'];
+
+  constructor(private router: Router) {
+    this.router.events.pipe(
+      filter((evento) => evento instanceof NavigationEnd),
+    ).subscribe((evento) => {
+      const url = (evento as NavigationEnd).urlAfterRedirects.split('?')[0];
+      this.mostrarLayout.set(!this.rutasSinLayout.includes(url));
+    });
+  }
 }

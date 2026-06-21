@@ -17,8 +17,7 @@ export class MailService {
   }
 
   async enviarCorreoRecuperacion(correoDestino: string, token: string) {
-    const urlRecuperacion = `${this.configService.get<string>('FRONTEND_URL')}/reset-password?token=${token}`;
-
+    const urlRecuperacion = `${this.configService.get<string>('FRONTEND_URL')}/restablecer-contrasena?token=${token}`;
     await this.transporter.sendMail({
       from: `"Plataforma Educativa" <${this.configService.get<string>('MAIL_USER')}>`,
       to: correoDestino,

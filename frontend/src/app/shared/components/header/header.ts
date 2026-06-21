@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { Router } from '@angular/router';
 import { InstitucionService } from '../../../core/services/institucion.service';
 import { Institucion } from '../../../core/models/institucion.model';
 import { environment } from '../../../../environments/environment';
@@ -13,7 +14,10 @@ export class Header implements OnInit {
   institucion: Institucion | null = null;
   menuAbierto = false;
 
-  constructor(private institucionService: InstitucionService) {}
+  constructor(
+    private institucionService: InstitucionService,
+    private router: Router,
+  ) {}
 
   ngOnInit(): void {
     this.institucionService.obtener().subscribe({
@@ -29,5 +33,10 @@ export class Header implements OnInit {
 
   obtenerUrlLogo(): string {
     return `${environment.apiUrl}/uploads/institucion/${this.institucion?.logo}`;
+  }
+
+  irALogin(): void {
+    this.router.navigate(['/login']);
+    this.menuAbierto = false;
   }
 }
