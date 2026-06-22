@@ -50,6 +50,11 @@ export class UsuarioController {
     return this.usuarioService.findMyProfile(req.user);
   }
 
+  @Get('estadisticas/conteo')
+  contarPorRol() {
+    return this.usuarioService.contarPorRol();
+  }
+
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('Administrador', 'Docente')
   @Get(':id')

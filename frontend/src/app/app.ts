@@ -14,14 +14,15 @@ export class App {
   protected readonly title = signal('frontend');
   mostrarLayout = signal(true);
 
-  private rutasSinLayout = ['/login', '/recuperar-contrasena', '/restablecer-contrasena'];
+  private rutasConLayout = ['/', '/recuperar-contrasena', '/restablecer-contrasena'];
 
   constructor(private router: Router) {
     this.router.events.pipe(
       filter((evento) => evento instanceof NavigationEnd),
     ).subscribe((evento) => {
       const url = (evento as NavigationEnd).urlAfterRedirects.split('?')[0];
-      this.mostrarLayout.set(!this.rutasSinLayout.includes(url));
+      const esRutaPublica = this.rutasConLayout.some(ruta => url === ruta);
+      this.mostrarLayout.set(esRutaPublica);
     });
   }
 }

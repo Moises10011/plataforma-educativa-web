@@ -71,7 +71,7 @@ export class Login implements OnInit {
     this.authService.login({ correo: this.correo, password: this.password }).subscribe({
       next: () => {
         this.cargando.set(false);
-        this.router.navigate(['/']);
+        this.router.navigate(['/admin']);
       },
       error: () => {
         this.cargando.set(false);

@@ -95,6 +95,22 @@ export class UsuarioService {
     return this.findOne(authUser.id_usuario);
   }
 
+  async contarPorRol() {
+    const usuarios = await this.usuarioRepository.find({
+      relations: { roles: true },
+    });
+
+    const totalEstudiantes = usuarios.filter((u) =>
+      u.roles.some((r) => r.nombre_rol === 'Estudiante'),
+    ).length;
+
+    const totalDocentes = usuarios.filter((u) =>
+      u.roles.some((r) => r.nombre_rol === 'Docente'),
+    ).length;
+
+    return { totalEstudiantes, totalDocentes };
+  }
+
   async update(
     id: number,
     updateUsuarioDto: UpdateUsuarioDto,

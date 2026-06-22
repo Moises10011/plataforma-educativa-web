@@ -1,0 +1,43 @@
+<div>
+
+  <div class="mb-6">
+    <h1 class="text-xl font-bold text-gray-900">Dashboard</h1>
+    <p class="text-sm text-gray-500 mt-1">Resumen general de la institucion</p>
+  </div>
+
+  @if (cargando()) {
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div class="bg-white rounded-xl shadow-sm p-5 h-24 animate-pulse"></div>
+      <div class="bg-white rounded-xl shadow-sm p-5 h-24 animate-pulse"></div>
+    </div>
+  } @else {
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
+      <div class="bg-white rounded-xl shadow-sm p-5 border-t-[3px] border-institucional-600 hover:shadow-md transition-shadow">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-xs text-gray-500 font-medium mb-1">Estudiantes</p>
+            <p class="text-3xl font-bold text-gray-900">{{ estadisticas()?.totalEstudiantes ?? 0 }}</p>
+          </div>
+          <div class="w-12 h-12 rounded-xl bg-institucional-50 flex items-center justify-center">
+            <svg class="w-6 h-6 text-institucional-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 14l9-5-9-5-9 5 9 5z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z"/></svg>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-xl shadow-sm p-5 border-t-[3px] border-gray-700 hover:shadow-md transition-shadow">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-xs text-gray-500 font-medium mb-1">Docentes</p>
+            <p class="text-3xl font-bold text-gray-900">{{ estadisticas()?.totalDocentes ?? 0 }}</p>
+          </div>
+          <div class="w-12 h-12 rounded-xl bg-gray-50 flex items-center justify-center">
+            <svg class="w-6 h-6 text-gray-700" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  }
+
+</div>
