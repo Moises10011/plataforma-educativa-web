@@ -21,6 +21,7 @@ import { ComunicadoModule } from './comunicado/comunicado.module';
 import { AuthModule } from './auth/auth.module';
 import { InstitucionModule } from './institucion/institucion.module';
 import { GaleriaModule } from './galeria/galeria.module';
+import { CompetenciaModule } from './competencia/competencia.module';
 
 @Module({
   imports: [
@@ -65,6 +66,8 @@ import { GaleriaModule } from './galeria/galeria.module';
     InstitucionModule,
 
     GaleriaModule,
+
+    CompetenciaModule,
   ],
 })
 export class AppModule {}

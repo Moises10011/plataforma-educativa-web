@@ -1,0 +1,125 @@
+<div class="flex h-screen bg-gray-50 overflow-hidden">
+
+  @if (menuMovilAbierto()) {
+    <div (click)="cerrarMenuMovil()" class="fixed inset-0 bg-black/40 z-40 md:hidden"></div>
+  }
+
+  <aside
+    class="fixed md:relative z-50 h-full bg-white border-r border-gray-100 flex flex-col transition-all duration-300 ease-in-out"
+    [class.w-64]="!menuColapsado()"
+    [class.w-[68px]]="menuColapsado()"
+    [class.-translate-x-full]="!menuMovilAbierto()"
+    [class.translate-x-0]="menuMovilAbierto()"
+    [class.md:translate-x-0]="true"
+  >
+
+    <div class="flex items-center justify-between gap-2 px-4 py-4 border-b border-gray-100 flex-shrink-0">
+      @if (!menuColapsado()) {
+        <div class="flex items-center gap-2 min-w-0">
+          <div class="w-8 h-8 rounded-lg bg-institucional-600 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">IE</div>
+          <span class="text-sm font-bold text-gray-900 truncate">Panel Admin</span>
+        </div>
+      } @else {
+        <div class="w-8 h-8 rounded-lg bg-institucional-600 flex items-center justify-center text-white text-xs font-bold mx-auto">IE</div>
+      }
+
+      @if (!menuColapsado()) {
+        <button (click)="toggleMenuColapsado()" class="hidden md:flex p-1 text-gray-400 hover:text-gray-600 transition-colors flex-shrink-0">
+          <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 19l-7-7 7-7m8 14l-7-7 7-7"></path></svg>
+        </button>
+      }
+    </div>
+
+    @if (menuColapsado()) {
+      <button (click)="toggleMenuColapsado()" class="hidden md:flex items-center justify-center py-3 text-gray-400 hover:text-gray-600 transition-colors border-b border-gray-100">
+        <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 5l7 7-7 7M5 5l7 7-7 7"></path></svg>
+      </button>
+    }
+
+    <nav class="flex-1 overflow-y-auto px-2 py-3 space-y-1">
+      @for (categoria of categoriasMenu(); track categoria.etiqueta) {
+        <div>
+          <button (click)="toggleCategoria(categoria.etiqueta)" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors" [class.justify-center]="menuColapsado()">
+
+            <span class="text-institucional-600 flex-shrink-0">
+              @if (categoria.icono === 'academic') {
+                <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 14l9-5-9-5-9 5 9 5z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z"></path></svg>
+              }
+              @if (categoria.icono === 'document') {
+                <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+              }
+              @if (categoria.icono === 'megaphone') {
+                <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"></path></svg>
+              }
+              @if (categoria.icono === 'building') {
+                <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2M5 21H3m16 0h-5m-6 0H5m11-14h.01M9 7h.01M9 11h.01M15 11h.01M9 15h.01M15 15h.01"></path></svg>
+              }
+            </span>
+
+            @if (!menuColapsado()) {
+              <span class="text-sm font-medium flex-1 text-left truncate">{{ categoria.etiqueta }}</span>
+              <svg class="w-3.5 h-3.5 text-gray-400 transition-transform duration-300 flex-shrink-0" [class.rotate-180]="categoriaAbierta() === categoria.etiqueta" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+            }
+          </button>
+
+          @if (!menuColapsado()) {
+            <div class="overflow-hidden transition-all duration-300 ease-in-out" [class.max-h-40]="categoriaAbierta() === categoria.etiqueta" [class.max-h-0]="categoriaAbierta() !== categoria.etiqueta">
+              <div class="pl-4 pt-1 pb-1 space-y-0.5">
+                @for (item of categoria.items; track item.ruta) {
+                  <a [routerLink]="item.ruta" routerLinkActive="bg-institucional-50 text-institucional-700 font-medium border-l-2 border-institucional-600" (click)="cerrarMenuMovil()" class="block px-3 py-2 rounded-lg text-sm text-gray-600 hover:bg-gray-50 transition-colors">{{ item.etiqueta }}</a>
+                }
+              </div>
+            </div>
+          }
+        </div>
+      }
+    </nav>
+
+  </aside>
+
+  <div class="flex-1 flex flex-col overflow-hidden">
+
+    <header class="bg-white border-b border-gray-100 flex items-center justify-between px-4 sm:px-6 h-16 flex-shrink-0">
+
+      <button (click)="toggleMenuMovil()" class="md:hidden p-2 text-gray-600">
+        <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+      </button>
+
+      <div class="hidden md:block"></div>
+
+      <div class="flex items-center gap-3">
+        <div class="relative w-9 h-9 rounded-lg bg-gray-50 flex items-center justify-center text-gray-500 hover:bg-gray-100 transition-colors cursor-pointer">
+          <svg class="w-4.5 h-4.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
+          <span class="absolute top-1 right-1.5 w-1.5 h-1.5 rounded-full bg-institucional-600"></span>
+        </div>
+
+        <div class="relative">
+          <button (click)="toggleMenuPerfil()" class="flex items-center gap-2 hover:bg-gray-50 rounded-lg px-2 py-1.5 transition-colors">
+            <div class="w-8 h-8 rounded-full bg-institucional-600 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">{{ iniciales() }}</div>
+            <div class="hidden sm:block text-left">
+              <p class="text-xs font-semibold text-gray-800 leading-tight">{{ authService.usuarioActual()?.nombres }}</p>
+              <p class="text-[10px] text-gray-400 leading-tight">{{ authService.usuarioActual()?.roles?.[0] }}</p>
+            </div>
+            <svg class="w-3 h-3 text-gray-400 hidden sm:block" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+          </button>
+
+          @if (menuPerfilAbierto()) {
+            <div class="absolute right-0 top-12 w-44 bg-white rounded-lg shadow-lg border border-gray-100 py-1 z-50">
+              <button (click)="cerrarSesion()" class="w-full text-left px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors flex items-center gap-2">
+                <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+                Cerrar sesion
+              </button>
+            </div>
+          }
+        </div>
+      </div>
+
+    </header>
+
+    <main class="flex-1 overflow-y-auto p-4 sm:p-6">
+      <router-outlet></router-outlet>
+    </main>
+
+  </div>
+
+</div>

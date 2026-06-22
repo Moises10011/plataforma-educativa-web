@@ -28,19 +28,35 @@ export class AuthService {
   ) {}
 
   async login(loginDto: LoginDto) {
+    // 1. Buscar usuario por correo incluyendo roles
     const usuario = await this.usuarioRepository.findOne({
       where: { correo: loginDto.correo },
       relations: { roles: true },
     });
 
-    if (!usuario) throw new UnauthorizedException('Credenciales incorrectas');
+    // 2. Si no existe, mismo mensaje que contraseña incorrecta (evita enumeración de usuarios)
+    if (!usuario) {
+      throw new UnauthorizedException('Credenciales incorrectas');
+    }
 
+    // 3. Verificar que la cuenta esté activa
+    if (!usuario.estado) {
+      throw new UnauthorizedException('La cuenta está desactivada');
+    }
+
+    // 4. Verificar contraseña
     const passwordValido = await bcrypt.compare(
       loginDto.password,
       usuario.password,
     );
-    if (!passwordValido)
+    if (!passwordValido) {
       throw new UnauthorizedException('Credenciales incorrectas');
+    }
+
+    // 5. Verificar que tenga al menos un rol asignado
+    if (!usuario.roles || usuario.roles.length === 0) {
+      throw new UnauthorizedException('El usuario no tiene roles asignados');
+    }
 
     const nombresRoles = usuario.roles.map((rol) => rol.nombre_rol);
 
@@ -55,6 +71,7 @@ export class AuthService {
       usuario: {
         id_usuario: usuario.id_usuario,
         nombres: usuario.nombres,
+        apellidos: usuario.apellidos,
         correo: usuario.correo,
         roles: nombresRoles,
       },
@@ -66,11 +83,19 @@ export class AuthService {
       correo: forgotPasswordDto.correo,
     });
 
-    if (!usuario) {
-      return {
-        message: 'Si el correo existe, se enviara un enlace de recuperacion',
-      };
-    }
+    // Respuesta genérica para evitar enumeración de correos
+    const respuestaGenerica = {
+      message: 'Si el correo existe, se enviará un enlace de recuperación',
+    };
+
+    if (!usuario) return respuestaGenerica;
+    if (!usuario.estado) return respuestaGenerica;
+
+    // Invalidar tokens anteriores del mismo usuario
+    await this.passwordResetRepository.update(
+      { id_usuario: usuario.id_usuario, usado: false },
+      { usado: true },
+    );
 
     const token = crypto.randomBytes(32).toString('hex');
     const fechaExpiracion = new Date();
@@ -80,15 +105,13 @@ export class AuthService {
       id_usuario: usuario.id_usuario,
       token,
       fecha_expiracion: fechaExpiracion,
+      usado: false,
     });
 
     await this.passwordResetRepository.save(passwordReset);
-
     await this.mailService.enviarCorreoRecuperacion(usuario.correo, token);
 
-    return {
-      message: 'Si el correo existe, se enviara un enlace de recuperacion',
-    };
+    return respuestaGenerica;
   }
 
   async resetPassword(resetPasswordDto: ResetPasswordDto) {
@@ -101,7 +124,7 @@ export class AuthService {
     });
 
     if (!passwordReset) {
-      throw new BadRequestException('El token es invalido o ha expirado');
+      throw new BadRequestException('El token es inválido o ha expirado');
     }
 
     const usuario = await this.usuarioRepository.findOneBy({
@@ -112,12 +135,38 @@ export class AuthService {
       throw new BadRequestException('Usuario no encontrado');
     }
 
+    // Actualizar contraseña
     usuario.password = await bcrypt.hash(resetPasswordDto.password, 10);
     await this.usuarioRepository.save(usuario);
 
+    // Marcar token como usado
     passwordReset.usado = true;
     await this.passwordResetRepository.save(passwordReset);
 
     return { message: 'Contraseña actualizada correctamente' };
+  }
+
+  /**
+   * Valida el JWT y retorna el payload.
+   * Usado por JwtStrategy para poblar req.user.
+   */
+  async validateJwtPayload(payload: {
+    sub: number;
+    correo: string;
+    roles: string[];
+  }) {
+    const usuario = await this.usuarioRepository.findOne({
+      where: { id_usuario: payload.sub, estado: true },
+    });
+
+    if (!usuario) {
+      throw new UnauthorizedException('Token inválido o usuario inactivo');
+    }
+
+    return {
+      id_usuario: payload.sub,
+      correo: payload.correo,
+      roles: payload.roles,
+    };
   }
 }

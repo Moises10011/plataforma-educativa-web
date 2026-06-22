@@ -34,22 +34,46 @@ export class NotaService {
     if (esEstudiante) {
       return this.notaRepository.find({
         where: { id_usuario_estudiante: authUser.id_usuario },
-        relations: { entrega: true, estudiante: true },
+        relations: {
+          entrega: true,
+          estudiante: true,
+          competencia: { curso: true },
+        },
       });
     }
 
     return this.notaRepository.find({
-      relations: { entrega: true, estudiante: true },
+      relations: {
+        entrega: true,
+        estudiante: true,
+        competencia: { curso: true },
+      },
     });
   }
 
   async findOne(id: number) {
     const nota = await this.notaRepository.findOne({
       where: { id_nota: id },
-      relations: { entrega: true, estudiante: true },
+      relations: {
+        entrega: true,
+        estudiante: true,
+        competencia: { curso: true },
+      },
     });
     if (!nota) throw new NotFoundException(`Nota #${id} no encontrada`);
     return nota;
+  }
+
+  async findPorEstudianteYCurso(
+    id_usuario_estudiante: number,
+    id_curso: number,
+  ) {
+    const notas = await this.notaRepository.find({
+      where: { id_usuario_estudiante },
+      relations: { competencia: { curso: true } },
+    });
+
+    return notas.filter((nota) => nota.competencia?.id_curso === id_curso);
   }
 
   async update(id: number, updateNotaDto: UpdateNotaDto) {
@@ -75,7 +99,7 @@ export class NotaService {
       .map((entrega) => entrega.id_entrega);
 
     const notas = await this.notaRepository.find({
-      relations: { entrega: true, estudiante: true },
+      relations: { entrega: true, estudiante: true, competencia: true },
     });
 
     const notasFiltradas = notas.filter((nota) =>
@@ -85,6 +109,7 @@ export class NotaService {
     const filas = notasFiltradas.map((nota) => ({
       id_usuario_estudiante: nota.id_usuario_estudiante,
       nombre: `${nota.estudiante.nombres} ${nota.estudiante.apellidos}`,
+      competencia: nota.competencia?.nombre ?? '',
       valor: nota.valor,
       observacion: nota.observacion ?? '',
     }));
@@ -94,6 +119,37 @@ export class NotaService {
       [
         { header: 'ID Estudiante', key: 'id_usuario_estudiante', width: 15 },
         { header: 'Nombre', key: 'nombre', width: 30 },
+        { header: 'Competencia', key: 'competencia', width: 40 },
+        { header: 'Nota', key: 'valor', width: 10 },
+        { header: 'Observacion', key: 'observacion', width: 30 },
+      ],
+      filas,
+    );
+  }
+
+  async exportarExcelPorCurso(id_curso: number) {
+    const notas = await this.notaRepository.find({
+      relations: { estudiante: true, competencia: { curso: true } },
+    });
+
+    const notasFiltradas = notas.filter(
+      (nota) => nota.competencia?.id_curso === id_curso,
+    );
+
+    const filas = notasFiltradas.map((nota) => ({
+      id_usuario_estudiante: nota.id_usuario_estudiante,
+      nombre: `${nota.estudiante.nombres} ${nota.estudiante.apellidos}`,
+      competencia: nota.competencia?.nombre ?? '',
+      valor: nota.valor,
+      observacion: nota.observacion ?? '',
+    }));
+
+    return generarExcel(
+      'Notas por curso',
+      [
+        { header: 'ID Estudiante', key: 'id_usuario_estudiante', width: 15 },
+        { header: 'Nombre', key: 'nombre', width: 30 },
+        { header: 'Competencia', key: 'competencia', width: 40 },
         { header: 'Nota', key: 'valor', width: 10 },
         { header: 'Observacion', key: 'observacion', width: 30 },
       ],

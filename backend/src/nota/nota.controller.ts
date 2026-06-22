@@ -61,6 +61,35 @@ export class NotaController {
     res.send(buffer);
   }
 
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('Administrador', 'Docente')
+  @Get('exportar-curso/:id_curso')
+  async exportarPorCurso(
+    @Param('id_curso', ParseIntPipe) id_curso: number,
+    @Res() res: Response,
+  ) {
+    const buffer = await this.notaService.exportarExcelPorCurso(id_curso);
+
+    res.set({
+      'Content-Type':
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'Content-Disposition': `attachment; filename=notas_curso_${id_curso}.xlsx`,
+    });
+    res.send(buffer);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('estudiante/:id_usuario_estudiante/curso/:id_curso')
+  findPorEstudianteYCurso(
+    @Param('id_usuario_estudiante', ParseIntPipe) id_usuario_estudiante: number,
+    @Param('id_curso', ParseIntPipe) id_curso: number,
+  ) {
+    return this.notaService.findPorEstudianteYCurso(
+      id_usuario_estudiante,
+      id_curso,
+    );
+  }
+
   @UseGuards(JwtAuthGuard)
   @Get(':id')
   findOne(@Param('id', ParseIntPipe) id: number) {
