@@ -15,6 +15,7 @@ import { Matricula } from '../matricula/entities/matricula.entity';
 
 interface AuthUser {
   id_usuario: number;
+  correo?: string;
   roles?: string[];
 }
 
@@ -29,14 +30,14 @@ export class UsuarioService {
     private readonly matriculaRepository: Repository<Matricula>,
   ) {}
 
+  // ─── CRUD BASE ─────────────────────────────────────────────────────────────
+
   async create(createUsuarioDto: CreateUsuarioDto) {
     const passwordEncriptado = await bcrypt.hash(createUsuarioDto.password, 10);
-
     const usuario = this.usuarioRepository.create({
       ...createUsuarioDto,
       password: passwordEncriptado,
     });
-
     return await this.usuarioRepository.save(usuario);
   }
 
@@ -65,7 +66,6 @@ export class UsuarioService {
     });
 
     const idsEstudiantes = new Set<number>();
-
     for (const matricula of matriculas) {
       const coincide = combinaciones.some(
         (c) =>
@@ -75,6 +75,8 @@ export class UsuarioService {
       );
       if (coincide) idsEstudiantes.add(matricula.id_usuario);
     }
+
+    if (idsEstudiantes.size === 0) return [];
 
     return this.usuarioRepository.find({
       where: Array.from(idsEstudiantes).map((id) => ({ id_usuario: id })),
@@ -108,7 +110,11 @@ export class UsuarioService {
       u.roles.some((r) => r.nombre_rol === 'Docente'),
     ).length;
 
-    return { totalEstudiantes, totalDocentes };
+    const totalAdministradores = usuarios.filter((u) =>
+      u.roles.some((r) => r.nombre_rol === 'Administrador'),
+    ).length;
+
+    return { totalEstudiantes, totalDocentes, totalAdministradores };
   }
 
   async update(
@@ -142,5 +148,195 @@ export class UsuarioService {
     const usuario = await this.findOne(id);
     await this.usuarioRepository.remove(usuario);
     return { message: `Usuario #${id} eliminado correctamente` };
+  }
+
+  // ─── DASHBOARDS ────────────────────────────────────────────────────────────
+
+  /**
+   * Dashboard del Estudiante
+   * Devuelve: perfil, matrícula activa (grado, sección, periodo),
+   * cursos asignados a su sección y conteo de tareas pendientes.
+   */
+  async getEstudianteDashboard(authUser: AuthUser) {
+    const perfil = await this.usuarioRepository.findOne({
+      where: { id_usuario: authUser.id_usuario },
+      relations: { roles: true },
+      select: {
+        id_usuario: true,
+        nombres: true,
+        apellidos: true,
+        correo: true,
+        estado: true,
+        fecha_registro: true,
+      },
+    });
+
+    if (!perfil) throw new NotFoundException('Usuario no encontrado');
+
+    // Matrícula activa del estudiante
+    const matricula = await this.matriculaRepository.findOne({
+      where: { id_usuario: authUser.id_usuario, estado: true },
+      relations: { grado: true, seccion: true, periodo: true },
+      order: { fecha_matricula: 'DESC' },
+    });
+
+    // Cursos de su sección (si tiene matrícula activa)
+    let cursos: AsignacionCurso[] = [];
+    if (matricula) {
+      cursos = await this.asignacionRepository.find({
+        where: {
+          id_grado: matricula.id_grado,
+          id_seccion: matricula.id_seccion,
+          id_periodo: matricula.id_periodo,
+        },
+        relations: { curso: true, docente: true },
+      });
+    }
+
+    return {
+      perfil: {
+        id_usuario: perfil.id_usuario,
+        nombres: perfil.nombres,
+        apellidos: perfil.apellidos,
+        correo: perfil.correo,
+        estado: perfil.estado,
+        fecha_registro: perfil.fecha_registro,
+      },
+      matricula: matricula
+        ? {
+            id_matricula: matricula.id_matricula,
+            grado: matricula.grado,
+            seccion: matricula.seccion,
+            periodo: matricula.periodo,
+            fecha_matricula: matricula.fecha_matricula,
+          }
+        : null,
+      cursos: cursos.map((a) => ({
+        id_asignacion: a.id_asignacion,
+        curso: a.curso,
+        docente: {
+          id_usuario: a.docente.id_usuario,
+          nombres: a.docente.nombres,
+          apellidos: a.docente.apellidos,
+        },
+      })),
+      resumen: {
+        total_cursos: cursos.length,
+        tiene_matricula_activa: !!matricula,
+      },
+    };
+  }
+
+  /**
+   * Dashboard del Docente
+   * Devuelve: perfil, cursos asignados con sus secciones/grados/periodos,
+   * y conteo de estudiantes por sección.
+   */
+  async getDocenteDashboard(authUser: AuthUser) {
+    const perfil = await this.usuarioRepository.findOne({
+      where: { id_usuario: authUser.id_usuario },
+      relations: { roles: true },
+    });
+
+    if (!perfil) throw new NotFoundException('Usuario no encontrado');
+
+    // Todas las asignaciones del docente
+    const asignaciones = await this.asignacionRepository.find({
+      where: { id_usuario_docente: authUser.id_usuario },
+      relations: { curso: true, grado: true, seccion: true, periodo: true },
+    });
+
+    // Para cada asignación, contar estudiantes matriculados en esa sección
+    const asignacionesConEstudiantes = await Promise.all(
+      asignaciones.map(async (asignacion) => {
+        const totalEstudiantes = await this.matriculaRepository.count({
+          where: {
+            id_grado: asignacion.id_grado,
+            id_seccion: asignacion.id_seccion,
+            id_periodo: asignacion.id_periodo,
+            estado: true,
+          },
+        });
+
+        return {
+          id_asignacion: asignacion.id_asignacion,
+          curso: asignacion.curso,
+          grado: asignacion.grado,
+          seccion: asignacion.seccion,
+          periodo: asignacion.periodo,
+          total_estudiantes: totalEstudiantes,
+        };
+      }),
+    );
+
+    // Secciones únicas a cargo del docente
+    const seccionesUnicas = new Map<string, object>();
+    for (const a of asignaciones) {
+      const key = `${a.id_grado}-${a.id_seccion}-${a.id_periodo}`;
+      if (!seccionesUnicas.has(key)) {
+        seccionesUnicas.set(key, {
+          grado: a.grado,
+          seccion: a.seccion,
+          periodo: a.periodo,
+        });
+      }
+    }
+
+    return {
+      perfil: {
+        id_usuario: perfil.id_usuario,
+        nombres: perfil.nombres,
+        apellidos: perfil.apellidos,
+        correo: perfil.correo,
+        estado: perfil.estado,
+      },
+      asignaciones: asignacionesConEstudiantes,
+      resumen: {
+        total_cursos_asignados: asignaciones.length,
+        total_secciones: seccionesUnicas.size,
+      },
+    };
+  }
+
+  /**
+   * Dashboard del Administrador
+   * Devuelve: conteo global de usuarios, docentes, estudiantes y matrículas activas.
+   */
+  async getAdminDashboard(authUser: AuthUser) {
+    const perfil = await this.findOne(authUser.id_usuario);
+
+    const [totalUsuarios, totalMatriculas, conteoRoles] = await Promise.all([
+      this.usuarioRepository.count(),
+      this.matriculaRepository.count({ where: { estado: true } }),
+      this.contarPorRol(),
+    ]);
+
+    const ultimosUsuarios = await this.usuarioRepository.find({
+      relations: { roles: true },
+      order: { fecha_registro: 'DESC' },
+      take: 5,
+      select: {
+        id_usuario: true,
+        nombres: true,
+        apellidos: true,
+        correo: true,
+        fecha_registro: true,
+      },
+    });
+
+    return {
+      perfil: {
+        id_usuario: perfil.id_usuario,
+        nombres: perfil.nombres,
+        apellidos: perfil.apellidos,
+        correo: perfil.correo,
+      },
+      resumen: {
+        total_usuarios: totalUsuarios,
+        total_matriculas_activas: totalMatriculas,
+        ...conteoRoles,
+      },
+      ultimos_usuarios_registrados: ultimosUsuarios,
+    };
   }
 }

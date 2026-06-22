@@ -71,7 +71,19 @@ export class Login implements OnInit {
     this.authService.login({ correo: this.correo, password: this.password }).subscribe({
       next: () => {
         this.cargando.set(false);
-        this.router.navigate(['/admin']);
+
+        // --- INICIO DE CAMBIO: Redirección según el rol del usuario ---
+        if (this.authService.tieneRol('Administrador')) {
+          this.router.navigate(['/admin']);
+        } else if (this.authService.tieneRol('Docente')) {
+          this.router.navigate(['/docente']);
+        } else if (this.authService.tieneRol('Estudiante')) {
+          this.router.navigate(['/estudiante']);
+        } else {
+          this.error.set('Rol no autorizado o no reconocido');
+        }
+        // --- FIN DE CAMBIO ---
+
       },
       error: () => {
         this.cargando.set(false);

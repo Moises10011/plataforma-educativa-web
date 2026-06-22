@@ -1,10 +1,17 @@
-import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common';
+import {
+  Injectable,
+  CanActivate,
+  ExecutionContext,
+  ForbiddenException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { ROLES_KEY } from '../decorators/roles.decorator';
 
 interface RequestWithUser {
-  user: {
+  user?: {
     roles?: string[];
+    id_usuario?: number;
   };
 }
 
@@ -18,12 +25,32 @@ export class RolesGuard implements CanActivate {
       [context.getHandler(), context.getClass()],
     );
 
-    if (!requiredRoles) {
+    // Si no hay roles requeridos en el decorador, permitir acceso
+    if (!requiredRoles || requiredRoles.length === 0) {
       return true;
     }
 
     const { user } = context.switchToHttp().getRequest<RequestWithUser>();
 
-    return requiredRoles.some((role) => user?.roles?.includes(role));
+    // Si no hay usuario en la request (JWT no validado previamente)
+    if (!user) {
+      throw new UnauthorizedException('No autenticado');
+    }
+
+    // Si el usuario no tiene roles
+    if (!user.roles || user.roles.length === 0) {
+      throw new ForbiddenException('El usuario no tiene roles asignados');
+    }
+
+    // Verificar si tiene al menos uno de los roles requeridos
+    const tieneRol = requiredRoles.some((role) => user.roles!.includes(role));
+
+    if (!tieneRol) {
+      throw new ForbiddenException(
+        `Acceso denegado. Se requiere uno de los siguientes roles: ${requiredRoles.join(', ')}`,
+      );
+    }
+
+    return true;
   }
 }
