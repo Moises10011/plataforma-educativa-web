@@ -6,10 +6,19 @@ import { RestablecerPassword } from './auth/restablecer-password/restablecer-pas
 import { Layout } from './layout/layout';
 import { roleGuard } from './core/guards/role-guard';
 
-// Importamos tus tres componentes utilizando sus nombres reales de clase
 import { Dashboard as AdminDashboard } from './admin/dashboard/dashboard';
 import { DocenteDashboard } from './docente/dashboard/dashboard';
 import { EstudianteDashboard } from './estudiante/dashboard/dashboard';
+
+import { ListaCursos } from './pages/estudiante/lista-cursos/lista-cursos';
+import { Materiales } from './pages/estudiante/materiales/materiales';
+import { Tareas } from './pages/estudiante/tareas/tareas';
+import { Notas } from './pages/estudiante/notas/notas';
+import { Libreta } from './pages/estudiante/libreta/libreta';
+import { Documentos } from './pages/estudiante/documentos/documentos';
+import { Horarios } from './pages/estudiante/horarios/horarios';
+import { Comunicados } from './pages/estudiante/comunicados/comunicados';
+
 
 export const routes: Routes = [
   {
@@ -61,6 +70,39 @@ export const routes: Routes = [
       { 
         path: '', 
         component: EstudianteDashboard 
+      },
+      { 
+        path: 'cursos', 
+        component: ListaCursos 
+      },
+      { 
+        path: 'cursos/materiales', 
+        component: Materiales 
+      },
+      { 
+        path: 'cursos/tareas', 
+        component: Tareas 
+      },
+      { 
+        path: 'cursos/notas', 
+        component: Notas 
+      },
+      { 
+        path: 'libreta', 
+        component: Libreta 
+      },
+      
+      { 
+        path: 'documentos', 
+        component: Documentos 
+      },
+      { 
+        path: 'horarios', 
+        component: Horarios 
+      },
+      { 
+        path: 'comunicados', 
+        component: Comunicados 
       },
     ],
   },
