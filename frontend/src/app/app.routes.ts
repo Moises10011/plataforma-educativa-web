@@ -19,7 +19,6 @@ import { Documentos } from './pages/estudiante/documentos/documentos';
 import { Horarios } from './pages/estudiante/horarios/horarios';
 import { Comunicados } from './pages/estudiante/comunicados/comunicados';
 
-
 export const routes: Routes = [
   {
     path: '',
@@ -64,11 +63,16 @@ export const routes: Routes = [
   {
     path: 'estudiante',
     component: Layout,
-    canActivate: [roleGuard],
-    data: { roles: ['Estudiante'] },
+    // canActivate: [roleGuard],
+    // data: { roles: ['Estudiante'] },
     children: [
       { 
         path: '', 
+        redirectTo: 'dashboard', // Si entra a /estudiante directo, lo manda al inicio
+        pathMatch: 'full'
+      },
+      { 
+        path: 'dashboard', // <-- Conectado con el item.ruta de tu menú
         component: EstudianteDashboard 
       },
       { 
@@ -91,7 +95,6 @@ export const routes: Routes = [
         path: 'libreta', 
         component: Libreta 
       },
-      
       { 
         path: 'documentos', 
         component: Documentos 

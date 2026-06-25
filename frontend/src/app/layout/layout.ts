@@ -15,6 +15,7 @@ interface CategoriaMenu {
 
 @Component({
   selector: 'app-layout',
+  standalone: true,
   imports: [RouterOutlet, RouterLink, RouterLinkActive],
   templateUrl: './layout.html',
   styleUrl: './layout.css',
@@ -29,11 +30,11 @@ export class Layout {
     public authService: AuthService,
     private router: Router,
   ) {
-    // Categoría inicial según rol
+    // Categoría inicial desplegada automáticamente según el rol
     if (this.authService.tieneRol('Administrador')) {
       this.categoriaAbierta.set('Gestion Academica');
     } else if (this.authService.tieneRol('Estudiante')) {
-      this.categoriaAbierta.set('Mis Cursos');
+      this.categoriaAbierta.set('Panel Principal');
     }
   }
 
@@ -81,9 +82,15 @@ export class Layout {
     if (this.authService.tieneRol('Estudiante')) {
       return [
         {
-          // Notas, materiales y tareas viven aquí → eliminados de las otras categorías
+          etiqueta: 'Panel Principal',
+          icono: 'building',
+          items: [
+            { etiqueta: 'Inicio', ruta: '/estudiante/dashboard' },
+          ],
+        },
+        {
           etiqueta: 'Mis Cursos',
-          icono: 'book-open',
+          icono: 'academic',
           items: [
             { etiqueta: 'Lista de Cursos', ruta: '/estudiante/cursos'           },
             { etiqueta: 'Materiales',      ruta: '/estudiante/cursos/materiales' },
@@ -91,9 +98,7 @@ export class Layout {
             { etiqueta: 'Notas',           ruta: '/estudiante/cursos/notas'      },
           ],
         },
-        
         {
-          // Solo libreta queda aquí; notas se consolidaron en Mis Cursos
           etiqueta: 'Mi Aprendizaje',
           icono: 'academic',
           items: [
@@ -101,7 +106,6 @@ export class Layout {
           ],
         },
         {
-          // Solo documentos y horarios; tareas/materiales se consolidaron en Mis Cursos
           etiqueta: 'Recursos',
           icono: 'document',
           items: [
@@ -116,7 +120,6 @@ export class Layout {
             { etiqueta: 'Comunicados', ruta: '/estudiante/comunicados' },
           ],
         },
-        
       ];
     }
 

@@ -1,49 +1,32 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { HttpClient } from '@angular/common/http';
-import { environment } from '../../../environments/environment';
-
-interface CursoNota {
-  nombre: string;
-  nota: number;
-  asistencia: number;
-}
-
-interface EstadisticasEstudiante {
-  nombre: string;
-  grado: string;
-  seccion: string;
-  promedioGeneral: number;
-  asistencias: number;
-  inasistencias: number;
-  tareasPendientes: number;
-  cursos: CursoNota[];
-}
+import { CursoService, Curso } from '../../core/services/curso';
+import { AuthService } from '../../core/services/auth';
 
 @Component({
   selector: 'app-estudiante-dashboard',
   standalone: true,
   imports: [CommonModule],
   templateUrl: './dashboard.html',
-  styleUrl: './dashboard.css',
+  styleUrl: './dashboard.css'
 })
 export class EstudianteDashboard implements OnInit {
-  estadisticas = signal<EstadisticasEstudiante | null>(null);
-  cargando = signal(true);
+  private cursoService = inject(CursoService);
+  public authService = inject(AuthService);
 
-  constructor(private http: HttpClient) {}
+  cursos = signal<Curso[]>([]);
 
   ngOnInit(): void {
-    this.http
-      .get<EstadisticasEstudiante>(`${environment.apiUrl}/usuario/estudiante/dashboard`)
-      .subscribe({
-        next: (data) => {
-          this.estadisticas.set(data);
-          this.cargando.set(false);
-        },
-        error: () => {
-          this.cargando.set(false);
-        },
-      });
+    // Consultamos los cursos en base de datos para contar el total del estudiante
+    const gradoConsulta = '1'; 
+
+    this.cursoService.obtenerCursosPorGrado(gradoConsulta).subscribe({
+      next: (data) => {
+        this.cursos.set(data);
+      },
+      error: (err) => {
+        console.error('Error al cargar métricas de inicio:', err);
+      }
+    });
   }
 }

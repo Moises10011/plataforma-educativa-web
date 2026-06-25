@@ -33,6 +33,15 @@ export class CursoController {
     return this.cursoService.findAll();
   }
 
+  // ==========================================
+  // NUEVA RUTA: Obtener cursos por ID de Grado
+  // ==========================================
+  @UseGuards(JwtAuthGuard)
+  @Get('grado/:idGrado')
+  findByGrado(@Param('idGrado', ParseIntPipe) idGrado: number) {
+    return this.cursoService.findByGrado(idGrado);
+  }
+
   @UseGuards(JwtAuthGuard)
   @Get(':id')
   findOne(@Param('id', ParseIntPipe) id: number) {

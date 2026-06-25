@@ -22,6 +22,17 @@ export class CursoService {
     return this.cursoRepository.find();
   }
 
+  // ==========================================
+  // NUEVA FUNCIÓN: Filtrar cursos por ID de Grado
+  // ==========================================
+  async findByGrado(idGrado: number) {
+    return await this.cursoRepository
+      .createQueryBuilder('curso')
+      .innerJoin('asignacion_curso', 'ac', 'ac.id_curso = curso.id_curso')
+      .where('ac.id_grado = :idGrado', { idGrado })
+      .getMany();
+  }
+
   async findOne(id: number) {
     const curso = await this.cursoRepository.findOneBy({ id_curso: id });
     if (!curso) throw new NotFoundException(`Curso #${id} no encontrado`);

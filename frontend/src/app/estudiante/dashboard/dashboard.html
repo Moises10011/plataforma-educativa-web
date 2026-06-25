@@ -1,0 +1,106 @@
+<div class="p-6 bg-gray-50 min-h-screen">
+  
+  <div class="mb-8">
+    <h1 class="text-3xl font-bold text-gray-950">
+      ¡Bienvenida, {{ authService.usuarioActual()?.nombres || 'Estudiante' }}! 👋
+    </h1>
+    <p class="text-sm text-gray-500 mt-1">
+      Este es el resumen de tu estado académico para el periodo actual.
+    </p>
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+    
+    <div class="bg-white border border-gray-100 p-6 rounded-2xl flex items-center justify-between shadow-sm">
+      <div>
+        <p class="text-sm font-medium text-gray-400">Tareas Pendientes</p>
+        <h3 class="text-3xl font-bold text-red-600 mt-1">3</h3>
+        <p class="text-xs text-gray-400 mt-1">Sin entregar</p>
+      </div>
+      <div class="w-12 h-12 bg-red-50 text-red-600 rounded-xl flex items-center justify-center text-xl border border-red-100">
+        🚨
+      </div>
+    </div>
+
+    <div class="bg-white border border-gray-100 p-6 rounded-2xl flex items-center justify-between shadow-sm">
+      <div>
+        <p class="text-sm font-medium text-gray-400">Cursos Activos</p>
+        <h3 class="text-3xl font-bold text-blue-600 mt-1">{{ cursos().length }}</h3>
+        <p class="text-xs text-gray-400 mt-1">Materias matriculadas</p>
+      </div>
+      <div class="w-12 h-12 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center text-xl border border-blue-100">
+        📖
+      </div>
+    </div>
+
+  </div>
+
+  <div class="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
+    <div class="flex items-center gap-2 mb-6 pb-4 border-b border-gray-100">
+      <span class="text-lg">🕒</span>
+      <h2 class="text-lg font-bold text-gray-900">Próximas Entregas</h2>
+      <span class="ml-auto text-xs font-semibold px-2.5 py-1 bg-amber-50 text-amber-700 rounded-full border border-amber-100">
+        3 pendiente(s)
+      </span>
+    </div>
+
+    <div class="space-y-4">
+      
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between p-4 border border-gray-100 rounded-xl hover:border-red-100 hover:bg-gray-50/50 transition-all gap-4">
+        <div class="flex items-start gap-4">
+          <div class="w-10 h-10 bg-amber-50 text-amber-600 rounded-lg flex items-center justify-center text-lg border border-amber-100 shrink-0">
+            📄
+          </div>
+          <div>
+            <h4 class="font-semibold text-gray-900 text-sm">Ejercicios de Álgebra - Capítulo 5</h4>
+            <p class="text-xs text-gray-400 mt-0.5">Resolver ejercicios del 1 al 20 de la página 145</p>
+            <div class="flex items-center gap-1 text-amber-600 text-[11px] font-medium mt-1.5">
+              <span>📅 Vence: 2026-06-25</span>
+            </div>
+          </div>
+        </div>
+        <button class="px-4 py-2 border border-gray-200 text-gray-700 bg-white rounded-lg text-xs font-semibold hover:bg-gray-50 transition-colors shadow-sm self-end sm:self-center">
+          Ver tarea
+        </button>
+      </div>
+
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between p-4 border border-gray-100 rounded-xl hover:border-red-100 hover:bg-gray-50/50 transition-all gap-4">
+        <div class="flex items-start gap-4">
+          <div class="w-10 h-10 bg-amber-50 text-amber-600 rounded-lg flex items-center justify-center text-lg border border-amber-100 shrink-0">
+            📄
+          </div>
+          <div>
+            <h4 class="font-semibold text-gray-900 text-sm">Ensayo sobre la Independencia del Perú</h4>
+            <p class="text-xs text-gray-400 mt-0.5">Mínimo 3 páginas, incluir bibliografía básica.</p>
+            <div class="flex items-center gap-1 text-amber-600 text-[11px] font-medium mt-1.5">
+              <span>📅 Vence: 2026-06-28</span>
+            </div>
+          </div>
+        </div>
+        <button class="px-4 py-2 border border-gray-200 text-gray-700 bg-white rounded-lg text-xs font-semibold hover:bg-gray-50 transition-colors shadow-sm self-end sm:self-center">
+          Ver tarea
+        </button>
+      </div>
+
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between p-4 border border-gray-100 rounded-xl hover:border-red-100 hover:bg-gray-50/50 transition-all gap-4">
+        <div class="flex items-start gap-4">
+          <div class="w-10 h-10 bg-amber-50 text-amber-600 rounded-lg flex items-center justify-center text-lg border border-amber-100 shrink-0">
+            📄
+          </div>
+          <div>
+            <h4 class="font-semibold text-gray-900 text-sm">Análisis de la Guerra del Pacífico</h4>
+            <p class="text-xs text-gray-400 mt-0.5">Presentación en PowerPoint, 10 diapositivas mínimo.</p>
+            <div class="flex items-center gap-1 text-amber-600 text-[11px] font-medium mt-1.5">
+              <span>📅 Vence: 2026-06-30</span>
+            </div>
+          </div>
+        </div>
+        <button class="px-4 py-2 border border-gray-200 text-gray-700 bg-white rounded-lg text-xs font-semibold hover:bg-gray-50 transition-colors shadow-sm self-end sm:self-center">
+          Ver tarea
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+</div>

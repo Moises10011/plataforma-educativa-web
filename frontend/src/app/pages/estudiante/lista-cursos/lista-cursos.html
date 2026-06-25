@@ -1,1 +1,61 @@
-<p>lista-cursos works!</p>
+<div class="p-6 bg-gray-50 min-h-screen">
+  
+  <div class="mb-8">
+    <h1 class="text-3xl font-bold text-gray-900">
+      ¡Hola, {{ authService.usuarioActual()?.nombres || 'Estudiante' }}! 👋
+    </h1>
+    <p class="text-sm text-gray-500 mt-1">
+      Aquí tienes la lista de tus asignaturas asignadas para el periodo académico actual.
+    </p>
+  </div>
+
+  @if (cargando()) {
+    <div class="flex flex-col items-center justify-center py-20">
+      <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-red-700"></div>
+      <p class="text-sm text-gray-400 mt-3">Consultando asignaturas en la base de datos...</p>
+    </div>
+  } @else {
+    
+    @if (cursos().length === 0) {
+      <div class="bg-white p-8 rounded-xl border border-gray-200 text-center max-w-md mx-auto mt-10 shadow-sm">
+        <span class="text-4xl">📭</span>
+        <h3 class="mt-4 font-bold text-gray-900 text-lg">No se encontraron cursos</h3>
+        <p class="text-sm text-gray-400 mt-1">Tu cuenta no tiene materias registradas en este grado.</p>
+      </div>
+    } @else {
+      
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        @for (curso of cursos(); track curso.id_curso) {
+          <div class="bg-white border border-gray-200 rounded-xl p-5 flex flex-col justify-between hover:shadow-md hover:border-red-200 transition-all">
+            
+            <div>
+              <div class="flex justify-between items-start mb-4">
+                <div class="w-12 h-12 bg-red-50 text-red-800 rounded-lg flex items-center justify-center text-2xl shadow-sm border border-red-100">
+                  📚
+                </div>
+                <span class="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-red-50 text-red-700 border border-red-100">
+                  ID: {{ curso.id_curso }}
+                </span>
+              </div>
+
+              <h3 class="font-bold text-gray-950 text-lg mb-1 line-clamp-1">{{ curso.nombre }}</h3>
+              <p class="text-xs text-gray-500 line-clamp-2 min-h-[2.5rem]">{{ curso.descripcion }}</p>
+            </div>
+
+            <div class="mt-4 pt-4 border-t border-gray-100 grid grid-cols-2 gap-2">
+              <button class="w-full text-center bg-red-700 text-white py-2 px-3 rounded-lg text-xs font-semibold hover:bg-red-800 transition-colors shadow-sm">
+                Entrar al Aula
+              </button>
+              <button class="w-full text-center bg-white border border-gray-200 text-gray-700 py-2 px-3 rounded-lg text-xs font-semibold hover:bg-gray-100 transition-colors">
+                Ver Notas
+              </button>
+            </div>
+
+          </div>
+        }
+      </div>
+
+    }
+  }
+
+</div>
