@@ -1,0 +1,96 @@
+.contenedor-comunicados {
+  padding: 24px;
+  max-width: 1000px;
+  margin: 0 auto;
+  font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+}
+
+.titulo-seccion {
+  font-size: 1.8rem;
+  color: #1a1a1a;
+  margin-bottom: 24px;
+  font-weight: 600;
+}
+
+.lista-tarjetas {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.tarjeta-comunicado {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  border-left: 5px solid #ccc;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.tarjeta-comunicado:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+/* Bordes Dinámicos según el tipo */
+.borde-importante { border-left-color: #ff3b30 !important; }
+.borde-informativo { border-left-color: #007aff !important; }
+.borde-evento { border-left-color: #af52de !important; }
+
+.cabecera-tarjeta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.cabecera-tarjeta h3 {
+  margin: 0;
+  font-size: 1.2rem;
+  color: #1c1c1e;
+  font-weight: 600;
+}
+
+.badge {
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+/* Colores de las etiquetas (badges) */
+.importante { background-color: #ffe5e5; color: #ff3b30; }
+.informativo { background-color: #e5f1ff; color: #007aff; }
+.evento { background-color: #f5e6fe; color: #af52de; }
+
+.contenido {
+  color: #3a3a3c;
+  font-size: 0.98rem;
+  line-height: 1.6;
+  margin: 0 0 16px 0;
+}
+
+.pie-tarjeta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 1px solid #f2f2f7;
+  padding-top: 12px;
+}
+
+.fecha {
+  color: #8e8e93;
+  font-size: 0.85rem;
+}
+
+.adjunto a {
+  color: #007aff;
+  text-decoration: none;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.adjunto a:hover {
+  text-decoration: underline;
+}

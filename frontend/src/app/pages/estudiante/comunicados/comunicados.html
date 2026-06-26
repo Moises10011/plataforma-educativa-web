@@ -1,1 +1,26 @@
-<p>comunicados works!</p>
+
+<div class="contenedor-comunicados">
+  <h2 class="titulo-seccion">Comunicados Institucionales</h2>
+
+  <div class="lista-tarjetas">
+    <div class="tarjeta-comunicado" *ngFor="let comunicado of comunicados()" [ngClass]="'borde-' + comunicado.tipo">
+      
+      <div class="cabecera-tarjeta">
+        <h3>{{ comunicado.titulo }}</h3>
+        <span class="badge" [ngClass]="comunicado.tipo">{{ comunicado.tipo | uppercase }}</span>
+      </div>
+
+      <p class="contenido">{{ comunicado.contenido }}</p>
+      
+      <div class="pie-tarjeta">
+        <div *ngIf="comunicado.archivo" class="adjunto">
+          <a [href]="'http://localhost:3000/comunicado/' + comunicado.id_comunicado + '/descargar'" target="_blank">
+            📁 Descargar Archivo Adjunto
+          </a>
+        </div>
+        <span class="fecha">Fecha: {{ comunicado.fecha_publicacion | date:'yyyy-MM-dd' }}</span>
+      </div>
+
+    </div>
+  </div>
+</div>

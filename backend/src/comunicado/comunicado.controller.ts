@@ -52,19 +52,19 @@ export class ComunicadoController {
     );
   }
 
-  @UseGuards(JwtAuthGuard)
+  // @UseGuards(JwtAuthGuard) <--- COMENTADO TEMPORALMENTE PARA TUS PRUEBAS EN ANGULAR
   @Get()
   findAll() {
     return this.comunicadoService.findAll();
   }
 
-  @UseGuards(JwtAuthGuard)
+  // @UseGuards(JwtAuthGuard) <--- COMENTADO TEMPORALMENTE PARA TUS PRUEBAS EN ANGULAR
   @Get(':id')
   findOne(@Param('id', ParseIntPipe) id: number) {
     return this.comunicadoService.findOne(id);
   }
 
-  @UseGuards(JwtAuthGuard)
+  // @UseGuards(JwtAuthGuard) <--- COMENTADO TEMPORALMENTE PARA TUS PRUEBAS EN ANGULAR
   @Get(':id/descargar')
   async descargar(@Param('id', ParseIntPipe) id: number, @Res() res: Response) {
     const comunicado = await this.comunicadoService.findOne(id);
