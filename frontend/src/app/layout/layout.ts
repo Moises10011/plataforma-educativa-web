@@ -30,7 +30,6 @@ export class Layout {
     public authService: AuthService,
     private router: Router,
   ) {
-    // Categoría inicial desplegada automáticamente según el rol
     if (this.authService.tieneRol('Administrador')) {
       this.categoriaAbierta.set('Gestion Academica');
     } else if (this.authService.tieneRol('Estudiante')) {
@@ -39,8 +38,6 @@ export class Layout {
   }
 
   categoriasMenu = computed<CategoriaMenu[]>(() => {
-
-    // ── ADMINISTRADOR ──────────────────────────────────────────────
     if (this.authService.tieneRol('Administrador')) {
       return [
         {
@@ -78,7 +75,6 @@ export class Layout {
       ];
     }
 
-    // ── ESTUDIANTE ─────────────────────────────────────────────────
     if (this.authService.tieneRol('Estudiante')) {
       return [
         {
@@ -88,14 +84,12 @@ export class Layout {
             { etiqueta: 'Inicio', ruta: '/estudiante/dashboard' },
           ],
         },
-        {
+{
           etiqueta: 'Mis Cursos',
           icono: 'academic',
           items: [
-            { etiqueta: 'Lista de Cursos', ruta: '/estudiante/cursos'           },
+            { etiqueta: 'Lista de Cursos', ruta: '/estudiante/cursos'            },
             { etiqueta: 'Materiales',      ruta: '/estudiante/cursos/materiales' },
-            { etiqueta: 'Tareas',          ruta: '/estudiante/cursos/tareas'     },
-            { etiqueta: 'Notas',           ruta: '/estudiante/cursos/notas'      },
           ],
         },
         {
@@ -109,8 +103,7 @@ export class Layout {
           etiqueta: 'Recursos',
           icono: 'document',
           items: [
-            { etiqueta: 'Documentos', ruta: '/estudiante/documentos' },
-            { etiqueta: 'Horarios',   ruta: '/estudiante/horarios'   },
+            { etiqueta: 'Horarios', ruta: '/estudiante/horarios' }
           ],
         },
         {
