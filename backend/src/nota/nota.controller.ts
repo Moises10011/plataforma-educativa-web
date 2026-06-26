@@ -39,8 +39,14 @@ export class NotaController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @Get()
-  findAll(@Req() req: AuthRequest) {
+  @Get('estudiante/mis-notas')
+  misNotasEstudiante(@Req() req: AuthRequest) {
+    return this.notaService.findAll(req.user);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('docente/mis-notas')
+  misNotasDocente(@Req() req: AuthRequest) {
     return this.notaService.findAll(req.user);
   }
 
@@ -88,6 +94,12 @@ export class NotaController {
       id_usuario_estudiante,
       id_curso,
     );
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get()
+  findAll(@Req() req: AuthRequest) {
+    return this.notaService.findAll(req.user);
   }
 
   @UseGuards(JwtAuthGuard)

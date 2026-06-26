@@ -1,0 +1,43 @@
+<div>
+  <div class="mb-6">
+    <h1 class="text-xl font-bold text-gray-900">Mis Notas</h1>
+    <p class="text-sm text-gray-500 mt-1">Calificaciones por curso y periodo</p>
+  </div>
+ 
+  @if (cargando()) {
+    <div class="bg-white rounded-xl shadow-sm p-5 h-40 animate-pulse"></div>
+  } @else if (!notas().length) {
+    <div class="bg-white rounded-xl shadow-sm p-10 text-center">
+      <p class="text-sm text-gray-400">No hay notas registradas</p>
+    </div>
+  } @else {
+    <div class="bg-white rounded-xl shadow-sm p-5">
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="border-b border-gray-100">
+              <th class="text-left text-xs text-gray-500 font-medium pb-3">Curso</th>
+              <th class="text-left text-xs text-gray-500 font-medium pb-3">Periodo</th>
+              <th class="text-left text-xs text-gray-500 font-medium pb-3">Descripción</th>
+              <th class="text-center text-xs text-gray-500 font-medium pb-3">Nota</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-50">
+            @for (nota of notas(); track nota.id_nota) {
+              <tr class="hover:bg-gray-50 transition-colors">
+                <td class="py-3 text-gray-800 font-medium">{{ nota.curso.nombre }}</td>
+                <td class="py-3 text-gray-500">{{ nota.periodo.nombre }}</td>
+                <td class="py-3 text-gray-500">{{ nota.descripcion ?? '—' }}</td>
+                <td class="py-3 text-center">
+                  <span class="inline-flex items-center justify-center w-10 h-6 rounded-full text-xs font-semibold" [ngClass]="colorNota(nota.valor)">
+                    {{ nota.valor }}
+                  </span>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  }
+</div>

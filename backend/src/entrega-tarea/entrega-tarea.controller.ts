@@ -53,6 +53,12 @@ export class EntregaTareaController {
   }
 
   @UseGuards(JwtAuthGuard)
+  @Get('estudiante/mis-entregas')
+  misEntregasEstudiante(@Req() req: AuthRequest) {
+    return this.entregaTareaService.findAll(req.user);
+  }
+
+  @UseGuards(JwtAuthGuard)
   @Get()
   findAll(@Req() req: AuthRequest) {
     return this.entregaTareaService.findAll(req.user);

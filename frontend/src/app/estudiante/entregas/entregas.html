@@ -1,0 +1,43 @@
+<div>
+  <div class="mb-6">
+    <h1 class="text-xl font-bold text-gray-900">Mis Entregas</h1>
+    <p class="text-sm text-gray-500 mt-1">Historial de tareas entregadas</p>
+  </div>
+ 
+  @if (cargando()) {
+    <div class="space-y-3">
+      @for (i of [1,2,3]; track i) {
+        <div class="bg-white rounded-xl shadow-sm p-5 h-20 animate-pulse"></div>
+      }
+    </div>
+  } @else if (!entregas().length) {
+    <div class="bg-white rounded-xl shadow-sm p-10 text-center">
+      <p class="text-sm text-gray-400">No has realizado entregas aún</p>
+    </div>
+  } @else {
+    <div class="space-y-3">
+      @for (e of entregas(); track e.id_entrega) {
+        <div class="bg-white rounded-xl shadow-sm p-4 flex items-center justify-between hover:shadow-md transition-shadow">
+          <div class="min-w-0">
+            <p class="text-sm font-medium text-gray-800 truncate">{{ e.tarea.titulo }}</p>
+            <p class="text-xs text-gray-400 mt-0.5">{{ e.tarea.curso.nombre }} · Entregado: {{ e.fecha_entrega | date:'dd/MM/yyyy' }}</p>
+            @if (e.comentario) {
+              <p class="text-xs text-gray-500 mt-1">{{ e.comentario }}</p>
+            }
+          </div>
+          @if (e.calificacion !== null && e.calificacion !== undefined) {
+            <span class="ml-3 flex-shrink-0 inline-flex items-center justify-center w-10 h-7 rounded-full text-sm font-bold"
+              [class.bg-green-100]="e.calificacion >= 14"
+              [class.text-green-700]="e.calificacion >= 14"
+              [class.bg-amber-100]="e.calificacion >= 11 && e.calificacion < 14"
+              [class.text-amber-700]="e.calificacion >= 11 && e.calificacion < 14"
+              [class.bg-red-100]="e.calificacion < 11"
+              [class.text-red-700]="e.calificacion < 11">
+              {{ e.calificacion }}
+            </span>
+          }
+        </div>
+      }
+    </div>
+  }
+</div>

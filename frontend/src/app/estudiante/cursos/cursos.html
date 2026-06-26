@@ -1,0 +1,47 @@
+<div>
+  <div class="mb-6">
+    <h1 class="text-xl font-bold text-gray-900">Mis Cursos</h1>
+    <p class="text-sm text-gray-500 mt-1">Cursos asignados a tu sección</p>
+  </div>
+
+  @if (cargando()) {
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      @for (i of [1,2,3,4,5,6]; track i) {
+        <div class="bg-white rounded-xl shadow-sm p-5 h-32 animate-pulse"></div>
+      }
+    </div>
+  } @else if (!cursos().length) {
+    <div class="bg-white rounded-xl shadow-sm p-10 text-center">
+      <svg class="w-12 h-12 text-gray-300 mx-auto mb-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+      </svg>
+      <p class="text-sm text-gray-400">No tienes cursos asignados</p>
+    </div>
+  } @else {
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      @for (item of cursos(); track item.id_asignacion) {
+        <div class="bg-white rounded-xl shadow-sm p-5 border-t-[3px] border-institucional-600 hover:shadow-md transition-shadow">
+          <div class="flex items-start gap-3">
+            <div class="w-10 h-10 rounded-lg bg-institucional-50 flex items-center justify-center flex-shrink-0">
+              <svg class="w-5 h-5 text-institucional-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+              </svg>
+            </div>
+            <div class="min-w-0 flex-1">
+              <p class="text-sm font-semibold text-gray-900 truncate">{{ item.curso.nombre }}</p>
+              @if (item.curso.descripcion) {
+                <p class="text-xs text-gray-400 mt-0.5 line-clamp-2">{{ item.curso.descripcion }}</p>
+              }
+              <div class="flex items-center gap-1 mt-2">
+                <svg class="w-3.5 h-3.5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                </svg>
+                <p class="text-xs text-gray-500">{{ item.docente.nombres }} {{ item.docente.apellidos }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+  }
+</div>

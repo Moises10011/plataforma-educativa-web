@@ -1,0 +1,43 @@
+<div>
+  <div class="mb-6">
+    <h1 class="text-xl font-bold text-gray-900">Tareas</h1>
+    <p class="text-sm text-gray-500 mt-1">Tareas que has creado por curso</p>
+  </div>
+ 
+  @if (cargando()) {
+    <div class="space-y-3">
+      @for (i of [1,2,3]; track i) {
+        <div class="bg-white rounded-xl shadow-sm p-5 h-20 animate-pulse"></div>
+      }
+    </div>
+  } @else if (!tareas().length) {
+    <div class="bg-white rounded-xl shadow-sm p-10 text-center">
+      <p class="text-sm text-gray-400">No has creado tareas aún</p>
+    </div>
+  } @else {
+    <div class="space-y-3">
+      @for (t of tareas(); track t.id_tarea) {
+        <div class="bg-white rounded-xl shadow-sm p-4 flex items-center justify-between hover:shadow-md transition-shadow">
+          <div class="flex items-center gap-3 min-w-0">
+            <div class="w-9 h-9 rounded-lg bg-amber-50 flex items-center justify-center flex-shrink-0">
+              <svg class="w-4.5 h-4.5 text-amber-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+              </svg>
+            </div>
+            <div class="min-w-0">
+              <p class="text-sm font-medium text-gray-800 truncate">{{ t.titulo }}</p>
+              <p class="text-xs text-gray-400">{{ t.curso.nombre }} · Entrega: {{ t.fecha_entrega | date:'dd/MM/yyyy' }}</p>
+            </div>
+          </div>
+          <span class="ml-3 flex-shrink-0 text-xs font-medium px-2.5 py-1 rounded-full"
+            [class.bg-red-100]="estaVencida(t.fecha_entrega)"
+            [class.text-red-600]="estaVencida(t.fecha_entrega)"
+            [class.bg-green-100]="!estaVencida(t.fecha_entrega)"
+            [class.text-green-700]="!estaVencida(t.fecha_entrega)">
+            {{ estaVencida(t.fecha_entrega) ? 'Vencida' : 'Activa' }}
+          </span>
+        </div>
+      }
+    </div>
+  }
+</div>

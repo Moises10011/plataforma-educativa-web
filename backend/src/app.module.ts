@@ -22,6 +22,9 @@ import { AuthModule } from './auth/auth.module';
 import { InstitucionModule } from './institucion/institucion.module';
 import { GaleriaModule } from './galeria/galeria.module';
 import { CompetenciaModule } from './competencia/competencia.module';
+import { DocumentoInstitucionalModule } from './documento-institucional/documento-institucional.module';
+import { HorarioModule } from './horario/horario.module';
+import { LibretaModule } from './libreta/libreta.module';
 
 @Module({
   imports: [
@@ -68,6 +71,12 @@ import { CompetenciaModule } from './competencia/competencia.module';
     GaleriaModule,
 
     CompetenciaModule,
+
+    DocumentoInstitucionalModule,
+
+    HorarioModule,
+
+    LibretaModule,
   ],
 })
 export class AppModule {}

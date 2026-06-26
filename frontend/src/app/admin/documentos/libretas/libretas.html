@@ -1,0 +1,92 @@
+<div class="documentos-page">
+  <header class="page-header">
+    <h1>Libretas de Notas</h1>
+    <button class="btn btn-primary" (click)="abrirModal()">+ Subir libreta</button>
+  </header>
+
+  <div class="filtros">
+    <select [ngModel]="filtroPeriodo()" (ngModelChange)="filtroPeriodo.set($event)">
+      <option [ngValue]="null">Todos los periodos</option>
+      <option *ngFor="let p of periodos()" [ngValue]="p.id_periodo">{{ p.nombre }}</option>
+    </select>
+
+    <input
+      type="text"
+      placeholder="Buscar estudiante..."
+      [ngModel]="filtroBusqueda()"
+      (ngModelChange)="filtroBusqueda.set($event)"
+    />
+  </div>
+
+  <div *ngIf="cargando()" class="loading">Cargando libretas...</div>
+
+  <table *ngIf="!cargando()" class="tabla">
+    <thead>
+      <tr>
+        <th>Estudiante</th>
+        <th>Periodo</th>
+        <th>Fecha de subida</th>
+        <th>Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let l of libretasFiltradas">
+        <td>{{ l.estudiante.nombres }} {{ l.estudiante.apellidos }}</td>
+        <td>{{ l.periodo.nombre }}</td>
+        <td>{{ l.fecha_subida | date: 'dd/MM/yyyy' }}</td>
+        <td class="acciones">
+          <button class="btn btn-link" (click)="descargar(l)">Descargar</button>
+          <button class="btn btn-danger" (click)="confirmarEliminar(l.id_libreta)">Eliminar</button>
+        </td>
+      </tr>
+      <tr *ngIf="libretasFiltradas.length === 0">
+        <td colspan="4" class="vacio">No hay libretas registradas.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- Modal Subir -->
+  <div class="modal-overlay" *ngIf="modalSubir()">
+    <div class="modal">
+      <h2>Subir libreta de notas</h2>
+
+      <div *ngIf="error()" class="alerta-error">{{ error() }}</div>
+
+      <label>Estudiante</label>
+      <select [(ngModel)]="nuevo.id_estudiante">
+        <option [ngValue]="null">Selecciona un estudiante</option>
+        <option *ngFor="let e of estudiantes()" [ngValue]="e.id_usuario">
+          {{ e.nombres }} {{ e.apellidos }}
+        </option>
+      </select>
+
+      <label>Periodo académico</label>
+      <select [(ngModel)]="nuevo.id_periodo">
+        <option [ngValue]="null">Selecciona un periodo</option>
+        <option *ngFor="let p of periodos()" [ngValue]="p.id_periodo">{{ p.nombre }}</option>
+      </select>
+
+      <label>Archivo</label>
+      <input type="file" (change)="onArchivoChange($event)" accept=".pdf" />
+
+      <div class="modal-acciones">
+        <button class="btn btn-secundario" (click)="cerrarModal()">Cancelar</button>
+        <button class="btn btn-primary" [disabled]="guardando()" (click)="guardar()">
+          {{ guardando() ? 'Guardando...' : 'Guardar' }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Eliminar -->
+  <div class="modal-overlay" *ngIf="modalEliminar()">
+    <div class="modal modal-confirmacion">
+      <h2>¿Eliminar libreta?</h2>
+      <p>Esta acción no se puede deshacer.</p>
+      <div class="modal-acciones">
+        <button class="btn btn-secundario" (click)="cerrarModal()">Cancelar</button>
+        <button class="btn btn-danger" (click)="eliminar()">Eliminar</button>
+      </div>
+    </div>
+  </div>
+</div>

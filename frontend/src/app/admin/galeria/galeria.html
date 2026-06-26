@@ -1,0 +1,109 @@
+<div>
+  <div class="mb-6 flex items-center justify-between">
+    <div>
+      <h1 class="text-xl font-bold text-gray-900">Galería</h1>
+      <p class="text-sm text-gray-500 mt-1">Fotos y eventos del colegio</p>
+    </div>
+    <button (click)="abrirModal()"
+      class="flex items-center gap-2 bg-institucional-600 text-white text-sm font-medium px-4 py-2 rounded-lg hover:bg-institucional-700 transition-colors">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+      Subir Imágenes
+    </button>
+  </div>
+
+  @if (cargando()) {
+    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+      @for (i of [1,2,3,4,5,6]; track i) {
+        <div class="bg-white rounded-xl shadow-sm aspect-square animate-pulse"></div>
+      }
+    </div>
+  } @else if (!imagenes().length) {
+    <div class="bg-white rounded-xl shadow-sm p-10 text-center">
+      <p class="text-sm text-gray-400">No hay imágenes en la galería</p>
+    </div>
+  } @else {
+    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+      @for (img of imagenes(); track img.id_imagen) {
+        <div class="group relative bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+          <img [src]="imagenUrl(img.imagen)" [alt]="img.titulo"
+            (error)="$event.target.src='assets/placeholder.png'"
+            class="w-full aspect-square object-cover">
+          <div class="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all flex items-end">
+            <div class="w-full p-2 translate-y-full group-hover:translate-y-0 transition-transform">
+              <p class="text-white text-xs font-medium truncate">{{ img.titulo }}</p>
+            </div>
+          </div>
+          <button (click)="confirmarEliminar(img.id_imagen)"
+            class="absolute top-2 right-2 w-7 h-7 rounded-lg bg-white/90 flex items-center justify-center text-red-500 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-white shadow-sm">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+          </button>
+        </div>
+      }
+    </div>
+  }
+</div>
+
+<!-- Modal Subir -->
+@if (modalSubir()) {
+  <div class="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-xl shadow-xl w-full max-w-md">
+      <div class="flex items-center justify-between p-5 border-b border-gray-100">
+        <h2 class="font-bold text-gray-900">Subir Imágenes</h2>
+        <button (click)="cerrarModal()" class="text-gray-400 hover:text-gray-600">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div class="p-5 space-y-4">
+        @if (error()) {
+          <p class="text-xs text-red-600 bg-red-50 rounded-lg px-3 py-2">{{ error() }}</p>
+        }
+        <div>
+          <label class="block text-xs font-medium text-gray-600 mb-1">Título del álbum / evento *</label>
+          <input [(ngModel)]="nuevo.titulo" type="text" placeholder="Ej: Día del Logro 2025"
+            class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-institucional-500">
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-gray-600 mb-1">Descripción (opcional)</label>
+          <input [(ngModel)]="nuevo.descripcion" type="text"
+            class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-institucional-500">
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-gray-600 mb-1">Imágenes *</label>
+          <input (change)="onArchivosChange($event)" type="file" accept="image/*" multiple
+            class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm file:mr-3 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-medium file:bg-institucional-50 file:text-institucional-700 hover:file:bg-institucional-100">
+        </div>
+        @if (previews.length) {
+          <div class="grid grid-cols-4 gap-2">
+            @for (p of previews; track p) {
+              <img [src]="p" class="w-full aspect-square object-cover rounded-lg">
+            }
+          </div>
+        }
+      </div>
+      <div class="flex gap-3 p-5 border-t border-gray-100">
+        <button (click)="cerrarModal()" class="flex-1 text-sm font-medium text-gray-600 border border-gray-200 rounded-lg py-2 hover:bg-gray-50 transition-colors">Cancelar</button>
+        <button (click)="guardar()" [disabled]="guardando()"
+          class="flex-1 text-sm font-medium text-white bg-institucional-600 rounded-lg py-2 hover:bg-institucional-700 transition-colors disabled:opacity-50">
+          {{ guardando() ? 'Subiendo...' : 'Subir' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Modal Eliminar -->
+@if (modalEliminar()) {
+  <div class="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-xl shadow-xl w-full max-w-sm p-6 text-center">
+      <div class="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-4">
+        <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
+      </div>
+      <h3 class="font-bold text-gray-900 mb-1">¿Eliminar imagen?</h3>
+      <p class="text-sm text-gray-500 mb-5">Esta acción no se puede deshacer.</p>
+      <div class="flex gap-3">
+        <button (click)="cerrarModal()" class="flex-1 text-sm font-medium text-gray-600 border border-gray-200 rounded-lg py-2 hover:bg-gray-50 transition-colors">Cancelar</button>
+        <button (click)="eliminar()" class="flex-1 text-sm font-medium text-white bg-red-600 rounded-lg py-2 hover:bg-red-700 transition-colors">Eliminar</button>
+      </div>
+    </div>
+  </div>
+}

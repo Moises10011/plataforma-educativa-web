@@ -1,0 +1,275 @@
+<div>
+  <div class="mb-6 flex items-center justify-between">
+    <div>
+      <h1 class="text-xl font-bold text-gray-900">Estudiantes</h1>
+      <p class="text-sm text-gray-500 mt-1">Gestión de matrículas y estudiantes</p>
+    </div>
+    <div class="flex gap-2">
+      <button (click)="exportar()" [disabled]="exportando()"
+        class="flex items-center gap-2 border border-gray-200 text-gray-600 text-sm font-medium px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+        {{ exportando() ? 'Exportando...' : 'Exportar Excel' }}
+      </button>
+      <button (click)="abrirModalMatricular()"
+        class="flex items-center gap-2 bg-institucional-600 text-white text-sm font-medium px-4 py-2 rounded-lg hover:bg-institucional-700 transition-colors">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+        Matricular
+      </button>
+    </div>
+  </div>
+
+  <!-- Filtros -->
+  <div class="flex flex-wrap gap-3 mb-4">
+    <input [ngModel]="filtroBusqueda()" (ngModelChange)="filtroBusqueda.set($event)"
+      type="text" placeholder="Buscar por nombre o correo..."
+      class="border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-institucional-500 w-56">
+
+    <select [ngModel]="filtroGrado()" (ngModelChange)="filtroGrado.set($event)"
+      class="border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-institucional-500">
+      <option [ngValue]="null">Todos los grados</option>
+      @for (g of grados(); track g.id_grado) {
+        <option [ngValue]="g.id_grado">{{ g.nombre }}</option>
+      }
+    </select>
+
+    <select [ngModel]="filtroSeccion()" (ngModelChange)="filtroSeccion.set($event)"
+      class="border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-institucional-500">
+      <option [ngValue]="null">Todas las secciones</option>
+      @for (s of secciones(); track s.id_seccion) {
+        <option [ngValue]="s.id_seccion">{{ s.nombre }}</option>
+      }
+    </select>
+
+    <select [ngModel]="filtroPeriodo()" (ngModelChange)="filtroPeriodo.set($event)"
+      class="border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-institucional-500">
+      <option [ngValue]="null">Todos los periodos</option>
+      @for (p of periodos(); track p.id_periodo) {
+        <option [ngValue]="p.id_periodo">{{ p.nombre }}</option>
+      }
+    </select>
+
+    @if (filtroGrado() || filtroSeccion() || filtroPeriodo() || filtroBusqueda()) {
+      <button (click)="limpiarFiltros()" class="text-xs text-gray-400 hover:text-gray-600 px-2">
+        Limpiar filtros
+      </button>
+    }
+  </div>
+
+  <!-- Contador -->
+  <p class="text-xs text-gray-400 mb-3">{{ matriculasFiltradas.length }} matrícula(s) encontrada(s)</p>
+
+  @if (cargando()) {
+    <div class="bg-white rounded-xl shadow-sm p-5 h-40 animate-pulse"></div>
+  } @else if (!matriculasFiltradas.length) {
+    <div class="bg-white rounded-xl shadow-sm p-10 text-center">
+      <p class="text-sm text-gray-400">No hay matrículas que coincidan con los filtros</p>
+    </div>
+  } @else {
+    <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="border-b border-gray-100">
+              <th class="text-left text-xs text-gray-500 font-medium px-5 py-3">Estudiante</th>
+              <th class="text-left text-xs text-gray-500 font-medium px-5 py-3">Grado</th>
+              <th class="text-left text-xs text-gray-500 font-medium px-5 py-3">Sección</th>
+              <th class="text-left text-xs text-gray-500 font-medium px-5 py-3">Periodo</th>
+              <th class="text-center text-xs text-gray-500 font-medium px-5 py-3">Estado</th>
+              <th class="text-center text-xs text-gray-500 font-medium px-5 py-3">Acciones</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-50">
+            @for (m of matriculasFiltradas; track m.id_matricula) {
+              <tr class="hover:bg-gray-50 transition-colors">
+                <td class="px-5 py-3">
+                  <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 rounded-full bg-institucional-100 flex items-center justify-center text-xs font-bold text-institucional-700 shrink-0">
+                      {{ m.usuario.nombres[0] }}{{ m.usuario.apellidos[0] }}
+                    </div>
+                    <div>
+                      <p class="font-medium text-gray-800">{{ m.usuario.nombres }} {{ m.usuario.apellidos }}</p>
+                      <p class="text-xs text-gray-400">{{ m.usuario.correo }}</p>
+                    </div>
+                  </div>
+                </td>
+                <td class="px-5 py-3 text-gray-600">{{ m.grado.nombre }}</td>
+                <td class="px-5 py-3 text-gray-600">{{ m.seccion.nombre }}</td>
+                <td class="px-5 py-3 text-gray-600">{{ m.periodo.nombre }}</td>
+                <td class="px-5 py-3 text-center">
+                  <span class="inline-flex px-2 py-0.5 rounded-full text-xs font-medium"
+                    [class.bg-green-100]="m.estado" [class.text-green-700]="m.estado"
+                    [class.bg-red-100]="!m.estado" [class.text-red-700]="!m.estado">
+                    {{ m.estado ? 'Activo' : 'Inactivo' }}
+                  </span>
+                </td>
+                <td class="px-5 py-3">
+                  <div class="flex items-center justify-center gap-2">
+                    <button (click)="abrirModalEditar(m)"
+                      class="w-7 h-7 rounded-lg bg-gray-50 flex items-center justify-center text-gray-500 hover:bg-institucional-50 hover:text-institucional-600 transition-colors" title="Editar">
+                      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                    </button>
+                    <button (click)="confirmarEliminar(m.id_matricula)"
+                      class="w-7 h-7 rounded-lg bg-gray-50 flex items-center justify-center text-gray-500 hover:bg-red-50 hover:text-red-600 transition-colors" title="Eliminar">
+                      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  }
+</div>
+
+<!-- Modal Matricular -->
+@if (modalMatricular()) {
+  <div class="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-xl shadow-xl w-full max-w-md">
+      <div class="flex items-center justify-between p-5 border-b border-gray-100">
+        <h2 class="font-bold text-gray-900">Nueva Matrícula</h2>
+        <button (click)="cerrarModal()" class="text-gray-400 hover:text-gray-600">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div class="p-5 space-y-4">
+        @if (error()) {
+          <p class="text-xs text-red-600 bg-red-50 rounded-lg px-3 py-2">{{ error() }}</p>
+        }
+        <div>
+          <label class="block text-xs font-medium text-gray-600 mb-1">Estudiante</label>
+          <select [(ngModel)]="nuevaMatricula.id_usuario"
+            class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-institucional-500">
+            <option [ngValue]="null">Seleccionar estudiante</option>
+            @for (e of estudiantes(); track e.id_usuario) {
+              <option [ngValue]="e.id_usuario">{{ e.nombres }} {{ e.apellidos }}</option>
+            }
+          </select>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-medium text-gray-600 mb-1">Grado</label>
+            <select [(ngModel)]="nuevaMatricula.id_grado"
+              class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-institucional-500">
+              <option [ngValue]="null">Seleccionar</option>
+              @for (g of grados(); track g.id_grado) {
+                <option [ngValue]="g.id_grado">{{ g.nombre }}</option>
+              }
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-600 mb-1">Sección</label>
+            <select [(ngModel)]="nuevaMatricula.id_seccion"
+              class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-institucional-500">
+              <option [ngValue]="null">Seleccionar</option>
+              @for (s of secciones(); track s.id_seccion) {
+                <option [ngValue]="s.id_seccion">{{ s.nombre }}</option>
+              }
+            </select>
+          </div>
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-gray-600 mb-1">Periodo Académico</label>
+          <select [(ngModel)]="nuevaMatricula.id_periodo"
+            class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-institucional-500">
+            <option [ngValue]="null">Seleccionar periodo</option>
+            @for (p of periodos(); track p.id_periodo) {
+              <option [ngValue]="p.id_periodo">{{ p.nombre }}{{ p.estado ? ' (activo)' : '' }}</option>
+            }
+          </select>
+        </div>
+      </div>
+      <div class="flex gap-3 p-5 border-t border-gray-100">
+        <button (click)="cerrarModal()" class="flex-1 text-sm font-medium text-gray-600 border border-gray-200 rounded-lg py-2 hover:bg-gray-50 transition-colors">Cancelar</button>
+        <button (click)="matricular()" [disabled]="guardando()"
+          class="flex-1 text-sm font-medium text-white bg-institucional-600 rounded-lg py-2 hover:bg-institucional-700 transition-colors disabled:opacity-50">
+          {{ guardando() ? 'Guardando...' : 'Matricular' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Modal Editar Matrícula -->
+@if (modalEditar()) {
+  <div class="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-xl shadow-xl w-full max-w-md">
+      <div class="flex items-center justify-between p-5 border-b border-gray-100">
+        <div>
+          <h2 class="font-bold text-gray-900">Editar Matrícula</h2>
+          <p class="text-xs text-gray-400 mt-0.5">{{ matriculaAEditar()?.usuario?.nombres }} {{ matriculaAEditar()?.usuario?.apellidos }}</p>
+        </div>
+        <button (click)="cerrarModal()" class="text-gray-400 hover:text-gray-600">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div class="p-5 space-y-4">
+        @if (error()) {
+          <p class="text-xs text-red-600 bg-red-50 rounded-lg px-3 py-2">{{ error() }}</p>
+        }
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-medium text-gray-600 mb-1">Grado</label>
+            <select [(ngModel)]="editarForm.id_grado"
+              class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-institucional-500">
+              @for (g of grados(); track g.id_grado) {
+                <option [ngValue]="g.id_grado">{{ g.nombre }}</option>
+              }
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-600 mb-1">Sección</label>
+            <select [(ngModel)]="editarForm.id_seccion"
+              class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-institucional-500">
+              @for (s of secciones(); track s.id_seccion) {
+                <option [ngValue]="s.id_seccion">{{ s.nombre }}</option>
+              }
+            </select>
+          </div>
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-gray-600 mb-1">Periodo</label>
+          <select [(ngModel)]="editarForm.id_periodo"
+            class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-institucional-500">
+            @for (p of periodos(); track p.id_periodo) {
+              <option [ngValue]="p.id_periodo">{{ p.nombre }}</option>
+            }
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-gray-600 mb-1">Estado</label>
+          <select [(ngModel)]="editarForm.estado"
+            class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-institucional-500">
+            <option [ngValue]="true">Activo</option>
+            <option [ngValue]="false">Inactivo</option>
+          </select>
+        </div>
+      </div>
+      <div class="flex gap-3 p-5 border-t border-gray-100">
+        <button (click)="cerrarModal()" class="flex-1 text-sm font-medium text-gray-600 border border-gray-200 rounded-lg py-2 hover:bg-gray-50 transition-colors">Cancelar</button>
+        <button (click)="guardarEdicion()" [disabled]="guardando()"
+          class="flex-1 text-sm font-medium text-white bg-institucional-600 rounded-lg py-2 hover:bg-institucional-700 transition-colors disabled:opacity-50">
+          {{ guardando() ? 'Guardando...' : 'Guardar' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Modal Eliminar -->
+@if (modalEliminar()) {
+  <div class="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-xl shadow-xl w-full max-w-sm p-6 text-center">
+      <div class="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-4">
+        <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
+      </div>
+      <h3 class="font-bold text-gray-900 mb-1">¿Eliminar matrícula?</h3>
+      <p class="text-sm text-gray-500 mb-5">Esta acción no se puede deshacer.</p>
+      <div class="flex gap-3">
+        <button (click)="cerrarModal()" class="flex-1 text-sm font-medium text-gray-600 border border-gray-200 rounded-lg py-2 hover:bg-gray-50 transition-colors">Cancelar</button>
+        <button (click)="eliminar()" class="flex-1 text-sm font-medium text-white bg-red-600 rounded-lg py-2 hover:bg-red-700 transition-colors">Eliminar</button>
+      </div>
+    </div>
+  </div>
+}

@@ -38,6 +38,18 @@ export class TareaController {
   }
 
   @UseGuards(JwtAuthGuard)
+  @Get('estudiante/mis-tareas')
+  misTareasEstudiante(@Req() req: AuthRequest) {
+    return this.tareaService.findAll(req.user);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('docente/mis-tareas')
+  misTareasDocente(@Req() req: AuthRequest) {
+    return this.tareaService.findAll(req.user);
+  }
+
+  @UseGuards(JwtAuthGuard)
   @Get()
   findAll(@Req() req: AuthRequest) {
     return this.tareaService.findAll(req.user);
