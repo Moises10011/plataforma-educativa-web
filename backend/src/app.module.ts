@@ -25,6 +25,7 @@ import { CompetenciaModule } from './competencia/competencia.module';
 import { DocumentoInstitucionalModule } from './documento-institucional/documento-institucional.module';
 import { HorarioModule } from './horario/horario.module';
 import { LibretaModule } from './libreta/libreta.module';
+import { DestinatarioModule } from './destinatario/destinatario.module';
 
 @Module({
   imports: [
@@ -77,6 +78,8 @@ import { LibretaModule } from './libreta/libreta.module';
     HorarioModule,
 
     LibretaModule,
+
+    DestinatarioModule,
   ],
 })
 export class AppModule {}

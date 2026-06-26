@@ -1,6 +1,9 @@
-import { Component, signal, computed } from '@angular/core';
+import { Component, signal, computed, OnInit } from '@angular/core';
 import { RouterOutlet, RouterLink, RouterLinkActive, Router } from '@angular/router';
+import { HttpClient } from '@angular/common/http';
+import { CommonModule } from '@angular/common';
 import { AuthService } from '../core/services/auth';
+import { environment } from '../../environments/environment';
 
 interface SubMenuItem {
   etiqueta: string;
@@ -13,22 +16,42 @@ interface CategoriaMenu {
   items: SubMenuItem[];
 }
 
+interface Institucion {
+  nombre: string;
+  logo?: string;
+  direccion?: string;
+}
+
 @Component({
   selector: 'app-layout',
-  imports: [RouterOutlet, RouterLink, RouterLinkActive],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, CommonModule],
   templateUrl: './layout.html',
   styleUrl: './layout.css',
 })
-export class Layout {
+export class Layout implements OnInit {
   menuColapsado = signal(false);
   menuMovilAbierto = signal(false);
   menuPerfilAbierto = signal(false);
   categoriaAbierta = signal<string | null>('Gestion Academica');
+  institucion = signal<Institucion | null>(null);
 
   constructor(
     public authService: AuthService,
     private router: Router,
+    private http: HttpClient,
   ) {}
+
+  ngOnInit(): void {
+    this.http.get<Institucion>(`${environment.apiUrl}/institucion`).subscribe({
+      next: (data) => this.institucion.set(data),
+    });
+  }
+
+  logoUrl = computed(() => {
+    const logo = this.institucion()?.logo;
+    if (!logo) return null;
+    return `${environment.apiUrl}/uploads/institucion/${logo}`;
+  });
 
   // ─── MENÚS POR ROL ────────────────────────────────────────────────────────
 
@@ -145,8 +168,6 @@ export class Layout {
     return [];
   });
 
-  // ─── ETIQUETA DEL PANEL SEGÚN ROL ─────────────────────────────────────────
-
   etiquetaPanel = computed(() => {
     if (this.authService.tieneRol('Administrador')) return 'Panel Admin';
     if (this.authService.tieneRol('Docente')) return 'Panel Docente';
@@ -154,24 +175,16 @@ export class Layout {
     return 'Panel';
   });
 
-  // ─── INICIALES DEL USUARIO ────────────────────────────────────────────────
-
   iniciales = computed(() => {
     const nombre = this.authService.usuarioActual()?.nombres ?? '';
     const partes = nombre.trim().split(' ');
-    if (partes.length >= 2) {
-      return (partes[0][0] + partes[1][0]).toUpperCase();
-    }
+    if (partes.length >= 2) return (partes[0][0] + partes[1][0]).toUpperCase();
     return nombre.slice(0, 2).toUpperCase();
   });
 
-  // ─── ACCIONES ─────────────────────────────────────────────────────────────
-
   toggleMenuColapsado(): void {
     this.menuColapsado.set(!this.menuColapsado());
-    if (this.menuColapsado()) {
-      this.categoriaAbierta.set(null);
-    }
+    if (this.menuColapsado()) this.categoriaAbierta.set(null);
   }
 
   toggleMenuMovil(): void {
@@ -183,9 +196,7 @@ export class Layout {
   }
 
   toggleCategoria(etiqueta: string): void {
-    if (this.menuColapsado()) {
-      this.menuColapsado.set(false);
-    }
+    if (this.menuColapsado()) this.menuColapsado.set(false);
     this.categoriaAbierta.set(
       this.categoriaAbierta() === etiqueta ? null : etiqueta,
     );

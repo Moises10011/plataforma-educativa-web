@@ -1,70 +1,193 @@
 <div class="documentos-page">
+
+  <!-- Encabezado -->
   <header class="page-header">
-    <h1>Documentos Institucionales</h1>
-    <button class="btn btn-primary" (click)="abrirModal()">+ Subir documento</button>
+    <div class="page-header__info">
+      <h1 class="page-title">Documentos institucionales</h1>
+      <p class="page-subtitle">Gestión de archivos y resoluciones</p>
+    </div>
+    <button class="btn btn-primary" (click)="abrirModal()">
+      <i class="ti ti-upload"></i> Subir documento
+    </button>
   </header>
 
-  <div *ngIf="cargando()" class="loading">Cargando documentos...</div>
+  <!-- Estado de carga -->
+  <div *ngIf="cargando()" class="loading-state">
+    <i class="ti ti-loader-2 spin"></i>
+    <span>Cargando documentos...</span>
+  </div>
 
-  <table *ngIf="!cargando()" class="tabla">
-    <thead>
-      <tr>
-        <th>Título</th>
-        <th>Descripción</th>
-        <th>Fecha de subida</th>
-        <th>Acciones</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr *ngFor="let d of documentos()">
-        <td>{{ d.titulo }}</td>
-        <td>{{ d.descripcion || '-' }}</td>
-        <td>{{ d.fecha_subida | date: 'dd/MM/yyyy' }}</td>
-        <td class="acciones">
-          <button class="btn btn-link" (click)="descargar(d)">Descargar</button>
-          <button class="btn btn-danger" (click)="confirmarEliminar(d.id_documento)">Eliminar</button>
-        </td>
-      </tr>
-      <tr *ngIf="documentos().length === 0">
-        <td colspan="4" class="vacio">No hay documentos institucionales registrados.</td>
-      </tr>
-    </tbody>
-  </table>
+  <!-- Lista de documentos -->
+  <div *ngIf="!cargando()" class="doc-list">
 
-  <!-- Modal Subir -->
-  <div class="modal-overlay" *ngIf="modalSubir()">
-    <div class="modal">
-      <h2>Subir documento institucional</h2>
+    <div class="doc-row" *ngFor="let d of documentos(); trackBy: trackByDocumento">
+      <div class="doc-icon">
+        <i class="ti ti-file-type-pdf" *ngIf="esPdf(d.archivo)"></i>
+        <i class="ti ti-file-type-doc" *ngIf="!esPdf(d.archivo)"></i>
+      </div>
 
-      <div *ngIf="error()" class="alerta-error">{{ error() }}</div>
+      <div class="doc-info">
+        <span class="doc-title">{{ d.titulo }}</span>
+        <span class="doc-desc">{{ d.descripcion || 'Sin descripción' }}</span>
+      </div>
 
-      <label>Título</label>
-      <input type="text" [(ngModel)]="nuevo.titulo" placeholder="Ej. Resolución Directoral N° 001" />
+      <span class="badge" [ngClass]="esPdf(d.archivo) ? 'badge-pdf' : 'badge-doc'">
+        {{ esPdf(d.archivo) ? 'PDF' : 'DOCX' }}
+      </span>
 
-      <label>Descripción (opcional)</label>
-      <textarea [(ngModel)]="nuevo.descripcion" placeholder="Breve descripción del documento"></textarea>
+      <div class="doc-meta">
+        <i class="ti ti-calendar"></i>
+        {{ d.fecha_subida | date: 'dd/MM/yyyy' }}
+      </div>
 
-      <label>Archivo</label>
-      <input type="file" (change)="onArchivoChange($event)" accept=".pdf,.doc,.docx" />
-
-      <div class="modal-acciones">
-        <button class="btn btn-secundario" (click)="cerrarModal()">Cancelar</button>
-        <button class="btn btn-primary" [disabled]="guardando()" (click)="guardar()">
-          {{ guardando() ? 'Guardando...' : 'Guardar' }}
+      <div class="doc-actions">
+        <button class="btn btn-ghost" (click)="descargar(d)">
+          <i class="ti ti-download"></i> Descargar
+        </button>
+        <button class="btn btn-danger-ghost" (click)="confirmarEliminar(d.id_documento)" aria-label="Eliminar documento">
+          <i class="ti ti-trash"></i>
         </button>
       </div>
     </div>
+
+    <!-- Estado vacío -->
+    <div class="empty-state" *ngIf="documentos().length === 0">
+      <i class="ti ti-folder-open"></i>
+      <p>No hay documentos registrados.</p>
+      <button class="btn btn-primary" (click)="abrirModal()">Subir el primero</button>
+    </div>
+
   </div>
 
-  <!-- Modal Eliminar -->
-  <div class="modal-overlay" *ngIf="modalEliminar()">
-    <div class="modal modal-confirmacion">
-      <h2>¿Eliminar documento?</h2>
-      <p>Esta acción no se puede deshacer.</p>
-      <div class="modal-acciones">
-        <button class="btn btn-secundario" (click)="cerrarModal()">Cancelar</button>
-        <button class="btn btn-danger" (click)="eliminar()">Eliminar</button>
+  <!-- Modal: Subir documento -->
+  <div class="modal-overlay" *ngIf="modalSubir()" (click)="cerrarModal()">
+    <div class="modal" (click)="$event.stopPropagation()">
+
+      <div class="modal-header">
+        <div class="modal-header__icon">
+          <i class="ti ti-upload"></i>
+        </div>
+        <h2 class="modal-title">Subir documento institucional</h2>
       </div>
+
+      <div class="alerta-error" *ngIf="error()" role="alert" aria-live="polite">
+        <i class="ti ti-alert-circle"></i>
+        {{ error() }}
+      </div>
+
+      <div class="form-field">
+        <label for="titulo">Título</label>
+        <input
+          id="titulo"
+          type="text"
+          [(ngModel)]="nuevo.titulo"
+          placeholder="Ej. Resolución Directoral N° 001"
+          required
+        />
+      </div>
+
+      <div class="form-field">
+        <label for="descripcion">Descripción <span class="label-opcional">(opcional)</span></label>
+        <textarea
+          id="descripcion"
+          [(ngModel)]="nuevo.descripcion"
+          placeholder="Breve descripción del contenido"
+          rows="3"
+        ></textarea>
+      </div>
+
+      <!-- ===== Destinatario ===== -->
+      <div class="form-field">
+        <label for="tipo">Dirigido a</label>
+        <select id="tipo" [(ngModel)]="nuevo.tipo" (ngModelChange)="onTipoChange()">
+          <option value="todos">Todos</option>
+          <option value="estudiantes">Estudiantes</option>
+          <option value="docentes">Docentes</option>
+        </select>
+      </div>
+
+      <ng-container *ngIf="nuevo.tipo === 'estudiantes'">
+        <div class="form-field">
+          <label for="grado">Grado</label>
+          <select id="grado" [(ngModel)]="nuevo.id_grado" required>
+            <option [ngValue]="null" disabled>Selecciona un grado</option>
+            <option *ngFor="let g of grados(); trackBy: trackByGrado" [ngValue]="g.id_grado">
+              {{ g.nombre }}
+            </option>
+          </select>
+        </div>
+
+        <div class="form-field">
+          <label for="seccion">Sección <span class="label-opcional">(opcional)</span></label>
+          <select id="seccion" [(ngModel)]="nuevo.id_seccion">
+            <option [ngValue]="null">Todas las secciones</option>
+            <option *ngFor="let s of secciones(); trackBy: trackBySeccion" [ngValue]="s.id_seccion">
+              {{ s.nombre }}
+            </option>
+          </select>
+        </div>
+      </ng-container>
+
+      <div class="form-field" *ngIf="nuevo.tipo === 'docentes'">
+        <label for="docente">Docente específico <span class="label-opcional">(opcional)</span></label>
+        <select id="docente" [(ngModel)]="nuevo.id_usuario">
+          <option [ngValue]="null">Todos los docentes</option>
+          <option *ngFor="let doc of docentes(); trackBy: trackByDocente" [ngValue]="doc.id_usuario">
+            {{ doc.nombres }} {{ doc.apellidos }}
+          </option>
+        </select>
+      </div>
+      <!-- ===== Fin Destinatario ===== -->
+
+      <div class="form-field">
+        <label>Archivo</label>
+        <label class="file-drop" for="archivo">
+          <i class="ti ti-cloud-upload"></i>
+          <span>{{ archivoNombre || 'Seleccionar archivo' }}</span>
+          <small>.pdf, .doc, .docx</small>
+          <input
+            id="archivo"
+            type="file"
+            (change)="onArchivoChange($event)"
+            accept=".pdf,.doc,.docx"
+            hidden
+          />
+        </label>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-cancel" (click)="cerrarModal()">Cancelar</button>
+        <button class="btn btn-primary" [disabled]="guardando() || !puedeGuardar()" (click)="guardar()">
+          <i class="ti ti-loader-2 spin" *ngIf="guardando()"></i>
+          <i class="ti ti-check" *ngIf="!guardando()"></i>
+          {{ guardando() ? 'Guardando...' : 'Guardar' }}
+        </button>
+      </div>
+
     </div>
   </div>
+
+  <!-- Modal: Confirmar eliminación -->
+  <div class="modal-overlay modal-overlay--danger" *ngIf="modalEliminar()" (click)="cerrarModal()">
+    <div class="modal modal--confirm" (click)="$event.stopPropagation()">
+
+      <div class="modal-header">
+        <div class="modal-header__icon modal-header__icon--danger">
+          <i class="ti ti-trash"></i>
+        </div>
+        <h2 class="modal-title">Eliminar documento</h2>
+      </div>
+
+      <p class="confirm-body">Esta acción no se puede deshacer.</p>
+
+      <div class="modal-footer">
+        <button class="btn btn-cancel" (click)="cerrarModal()">Cancelar</button>
+        <button class="btn btn-danger" (click)="eliminar()">
+          <i class="ti ti-trash"></i> Eliminar
+        </button>
+      </div>
+
+    </div>
+  </div>
+
 </div>

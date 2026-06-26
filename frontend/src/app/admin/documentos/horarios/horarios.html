@@ -1,84 +1,147 @@
-<div class="documentos-page">
-  <header class="page-header">
-    <h1>Horarios de Clases</h1>
-    <button class="btn btn-primary" (click)="abrirModal()">+ Subir horario</button>
-  </header>
+<div>
+  <!-- Header -->
+  <div class="mb-6 flex items-center justify-between">
+    <div>
+      <h1 class="text-xl font-bold text-gray-900">Horarios de Clases</h1>
+      <p class="text-sm text-gray-500 mt-1">Gestiona los horarios por grado y sección</p>
+    </div>
+    <button (click)="abrirModal()"
+      class="flex items-center gap-2 bg-institucional-600 text-white text-sm font-medium px-4 py-2 rounded-lg hover:bg-institucional-700 transition-colors">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+      Subir Horario
+    </button>
+  </div>
 
-  <div *ngIf="cargando()" class="loading">Cargando horarios...</div>
+  <!-- Loading -->
+  @if (cargando()) {
+    <div class="bg-white rounded-xl shadow-sm p-10 text-center">
+      <p class="text-sm text-gray-400 animate-pulse">Cargando horarios...</p>
+    </div>
+  } @else if (horarios().length === 0) {
+    <div class="bg-white rounded-xl shadow-sm p-10 text-center">
+      <svg class="w-10 h-10 text-gray-300 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+      <p class="text-sm text-gray-400">No hay horarios registrados</p>
+    </div>
+  } @else {
+    <!-- Tabla -->
+    <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="bg-gray-50 border-b border-gray-100">
+            <th class="text-left text-xs font-semibold text-gray-500 uppercase tracking-wide px-5 py-3">Grado</th>
+            <th class="text-left text-xs font-semibold text-gray-500 uppercase tracking-wide px-5 py-3">Sección</th>
+            <th class="text-left text-xs font-semibold text-gray-500 uppercase tracking-wide px-5 py-3">Periodo</th>
+            <th class="text-left text-xs font-semibold text-gray-500 uppercase tracking-wide px-5 py-3">Fecha subida</th>
+            <th class="text-right text-xs font-semibold text-gray-500 uppercase tracking-wide px-5 py-3">Acciones</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-50">
+          @for (h of horarios(); track h.id_horario) {
+            <tr class="hover:bg-gray-50 transition-colors">
+              <td class="px-5 py-3 font-medium text-gray-900">{{ h.grado.nombre }}</td>
+              <td class="px-5 py-3 text-gray-600">{{ h.seccion.nombre }}</td>
+              <td class="px-5 py-3">
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700">
+                  {{ h.periodo.nombre }}
+                </span>
+              </td>
+              <td class="px-5 py-3 text-gray-500">{{ h.fecha_subida | date: 'dd/MM/yyyy' }}</td>
+              <td class="px-5 py-3">
+                <div class="flex items-center justify-end gap-2">
+                  <button (click)="descargar(h)"
+                    class="flex items-center gap-1.5 text-xs font-medium text-institucional-600 hover:text-institucional-700 px-3 py-1.5 rounded-lg hover:bg-institucional-50 transition-colors">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                    Descargar
+                  </button>
+                  <button (click)="confirmarEliminar(h.id_horario)"
+                    class="flex items-center gap-1.5 text-xs font-medium text-red-500 hover:text-red-700 px-3 py-1.5 rounded-lg hover:bg-red-50 transition-colors">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                    Eliminar
+                  </button>
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</div>
 
-  <table *ngIf="!cargando()" class="tabla">
-    <thead>
-      <tr>
-        <th>Grado</th>
-        <th>Sección</th>
-        <th>Periodo</th>
-        <th>Fecha de subida</th>
-        <th>Acciones</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr *ngFor="let h of horarios()">
-        <td>{{ h.grado.nombre }}</td>
-        <td>{{ h.seccion.nombre }}</td>
-        <td>{{ h.periodo.nombre }}</td>
-        <td>{{ h.fecha_subida | date: 'dd/MM/yyyy' }}</td>
-        <td class="acciones">
-          <button class="btn btn-link" (click)="descargar(h)">Descargar</button>
-          <button class="btn btn-danger" (click)="confirmarEliminar(h.id_horario)">Eliminar</button>
-        </td>
-      </tr>
-      <tr *ngIf="horarios().length === 0">
-        <td colspan="5" class="vacio">No hay horarios registrados.</td>
-      </tr>
-    </tbody>
-  </table>
-
-  <!-- Modal Subir -->
-  <div class="modal-overlay" *ngIf="modalSubir()">
-    <div class="modal">
-      <h2>Subir horario</h2>
-
-      <div *ngIf="error()" class="alerta-error">{{ error() }}</div>
-
-      <label>Grado</label>
-      <select [(ngModel)]="nuevo.id_grado">
-        <option [ngValue]="null">Selecciona un grado</option>
-        <option *ngFor="let g of grados()" [ngValue]="g.id_grado">{{ g.nombre }}</option>
-      </select>
-
-      <label>Sección</label>
-      <select [(ngModel)]="nuevo.id_seccion">
-        <option [ngValue]="null">Selecciona una sección</option>
-        <option *ngFor="let s of secciones()" [ngValue]="s.id_seccion">{{ s.nombre }}</option>
-      </select>
-
-      <label>Periodo académico</label>
-      <select [(ngModel)]="nuevo.id_periodo">
-        <option [ngValue]="null">Selecciona un periodo</option>
-        <option *ngFor="let p of periodos()" [ngValue]="p.id_periodo">{{ p.nombre }}</option>
-      </select>
-
-      <label>Archivo</label>
-      <input type="file" (change)="onArchivoChange($event)" accept=".pdf,.jpg,.png" />
-
-      <div class="modal-acciones">
-        <button class="btn btn-secundario" (click)="cerrarModal()">Cancelar</button>
-        <button class="btn btn-primary" [disabled]="guardando()" (click)="guardar()">
+<!-- Modal Subir -->
+@if (modalSubir()) {
+  <div class="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-xl shadow-xl w-full max-w-md">
+      <div class="flex items-center justify-between p-5 border-b border-gray-100">
+        <h2 class="font-bold text-gray-900">Subir Horario</h2>
+        <button (click)="cerrarModal()" class="text-gray-400 hover:text-gray-600">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div class="p-5 space-y-4">
+        @if (error()) {
+          <p class="text-xs text-red-600 bg-red-50 rounded-lg px-3 py-2">{{ error() }}</p>
+        }
+        <div>
+          <label class="block text-xs font-medium text-gray-600 mb-1">Grado *</label>
+          <select [(ngModel)]="nuevo.id_grado"
+            class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-institucional-500">
+            <option [ngValue]="null">Selecciona un grado</option>
+            @for (g of grados(); track g.id_grado) {
+              <option [ngValue]="g.id_grado">{{ g.nombre }}</option>
+            }
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-gray-600 mb-1">Sección *</label>
+          <select [(ngModel)]="nuevo.id_seccion"
+            class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-institucional-500">
+            <option [ngValue]="null">Selecciona una sección</option>
+            @for (s of secciones(); track s.id_seccion) {
+              <option [ngValue]="s.id_seccion">{{ s.nombre }}</option>
+            }
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-gray-600 mb-1">Periodo Académico *</label>
+          <select [(ngModel)]="nuevo.id_periodo"
+            class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-institucional-500">
+            <option [ngValue]="null">Selecciona un periodo</option>
+            @for (p of periodos(); track p.id_periodo) {
+              <option [ngValue]="p.id_periodo">{{ p.nombre }}</option>
+            }
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-gray-600 mb-1">Archivo (PDF, JPG, PNG) *</label>
+          <input (change)="onArchivoChange($event)" type="file" accept=".pdf,.jpg,.png"
+            class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm file:mr-3 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-medium file:bg-institucional-50 file:text-institucional-700 hover:file:bg-institucional-100">
+        </div>
+      </div>
+      <div class="flex gap-3 p-5 border-t border-gray-100">
+        <button (click)="cerrarModal()" class="flex-1 text-sm font-medium text-gray-600 border border-gray-200 rounded-lg py-2 hover:bg-gray-50 transition-colors">Cancelar</button>
+        <button (click)="guardar()" [disabled]="guardando()"
+          class="flex-1 text-sm font-medium text-white bg-institucional-600 rounded-lg py-2 hover:bg-institucional-700 transition-colors disabled:opacity-50">
           {{ guardando() ? 'Guardando...' : 'Guardar' }}
         </button>
       </div>
     </div>
   </div>
+}
 
-  <!-- Modal Eliminar -->
-  <div class="modal-overlay" *ngIf="modalEliminar()">
-    <div class="modal modal-confirmacion">
-      <h2>¿Eliminar horario?</h2>
-      <p>Esta acción no se puede deshacer.</p>
-      <div class="modal-acciones">
-        <button class="btn btn-secundario" (click)="cerrarModal()">Cancelar</button>
-        <button class="btn btn-danger" (click)="eliminar()">Eliminar</button>
+<!-- Modal Eliminar -->
+@if (modalEliminar()) {
+  <div class="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-xl shadow-xl w-full max-w-sm p-6 text-center">
+      <div class="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-4">
+        <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
+      </div>
+      <h3 class="font-bold text-gray-900 mb-1">¿Eliminar horario?</h3>
+      <p class="text-sm text-gray-500 mb-5">Esta acción no se puede deshacer.</p>
+      <div class="flex gap-3">
+        <button (click)="cerrarModal()" class="flex-1 text-sm font-medium text-gray-600 border border-gray-200 rounded-lg py-2 hover:bg-gray-50 transition-colors">Cancelar</button>
+        <button (click)="eliminar()" class="flex-1 text-sm font-medium text-white bg-red-600 rounded-lg py-2 hover:bg-red-700 transition-colors">Eliminar</button>
       </div>
     </div>
   </div>
-</div>
+}

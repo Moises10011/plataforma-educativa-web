@@ -1,0 +1,432 @@
+/* ============================================
+   LAYOUT - Animaciones premium v2
+   ============================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+/* ── Keyframes ── */
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slide-in-left {
+  from { opacity: 0; transform: translateX(-16px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes scale-in-dropdown {
+  from { opacity: 0; transform: scale(0.92) translateY(-8px); }
+  to   { opacity: 1; transform: scale(1)    translateY(0); }
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1;   transform: scale(1);   box-shadow: 0 0 0 0 rgba(139,35,50,0.4); }
+  50%       { opacity: 0.8; transform: scale(1.2); box-shadow: 0 0 0 5px rgba(139,35,50,0); }
+}
+
+@keyframes icon-bounce {
+  0%   { transform: translateY(0)   scale(1); }
+  30%  { transform: translateY(-4px) scale(1.15); }
+  60%  { transform: translateY(2px)  scale(0.95); }
+  100% { transform: translateY(0)   scale(1); }
+}
+
+@keyframes ripple {
+  from { transform: scale(0); opacity: 0.3; }
+  to   { transform: scale(2.5); opacity: 0; }
+}
+
+@keyframes slide-right {
+  from { transform: translateX(0); }
+  to   { transform: translateX(4px); }
+}
+
+/* ── Base ── */
+body, html {
+  font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ══════════════════════════════
+   SIDEBAR
+══════════════════════════════ */
+aside {
+  animation: slide-in-left 0.4s cubic-bezier(0.4, 0, 0.2, 1) both;
+  box-shadow: 4px 0 32px rgba(139,35,50,0.06);
+  border-right: 1px solid #f0eef8 !important;
+}
+
+/* Header sidebar */
+aside > div:first-child {
+  background: linear-gradient(135deg, #fff 55%, #fdf2f3 100%);
+  border-bottom: 1px solid #fce4e6 !important;
+  min-height: 68px !important;
+}
+
+aside > div:first-child p {
+  font-size: 1rem !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.02em;
+  background: linear-gradient(110deg, #8b2332 30%, #c0394e 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Logo IE colapsado */
+aside div.bg-institucional-600.rounded-lg,
+aside div.bg-institucional-600.rounded-xl {
+  background: linear-gradient(135deg, #8b2332, #c0394e) !important;
+  box-shadow: 0 4px 14px rgba(139,35,50,0.35);
+  transition: transform 0.25s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.2s ease;
+}
+aside div.bg-institucional-600.rounded-lg:hover,
+aside div.bg-institucional-600.rounded-xl:hover {
+  transform: scale(1.08) rotate(-2deg);
+  box-shadow: 0 6px 20px rgba(139,35,50,0.45);
+}
+
+/* Botones colapso */
+aside > div:first-child button {
+  border-radius: 9px;
+  padding: 6px;
+  transition: all 0.2s cubic-bezier(0.4,0,0.2,1);
+}
+aside > div:first-child button:hover {
+  background: #fce4e6;
+  color: #8b2332;
+  transform: scale(1.15) rotate(5deg);
+}
+aside > div:first-child button:active {
+  transform: scale(0.95);
+}
+
+/* ── Nav categorías ── */
+nav button.rounded-xl {
+  border-radius: 12px !important;
+  padding: 11px 12px !important;
+  font-size: 0.875rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  transition:
+    background  0.22s cubic-bezier(0.4,0,0.2,1),
+    color       0.22s ease,
+    transform   0.18s cubic-bezier(0.34,1.56,0.64,1),
+    box-shadow  0.22s ease !important;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Ripple effect en click */
+nav button.rounded-xl::after {
+  content: '';
+  position: absolute;
+  inset: 50% 50%;
+  border-radius: 50%;
+  background: rgba(139,35,50,0.12);
+  transform: scale(0);
+  opacity: 0;
+  transition: none;
+}
+nav button.rounded-xl:active::after {
+  animation: ripple 0.5s ease-out forwards;
+}
+
+nav button.rounded-xl:hover {
+  transform: translateX(3px);
+  box-shadow: 0 3px 12px rgba(139,35,50,0.13);
+}
+nav button.rounded-xl:active {
+  transform: translateX(3px) scale(0.97);
+}
+
+/* Ícono bounce en hover */
+nav button.rounded-xl:hover span.flex-shrink-0 {
+  animation: icon-bounce 0.45s cubic-bezier(0.34,1.56,0.64,1);
+}
+
+/* Categoría activa */
+nav button.bg-institucional-50 {
+  background: linear-gradient(135deg, #fdf2f3, #fce4e6) !important;
+  box-shadow: 0 3px 12px rgba(139,35,50,0.14);
+  border-left: 3px solid #8b2332;
+}
+
+/* Flecha categoría */
+nav button svg.transition-transform {
+  transition: transform 0.4s cubic-bezier(0.4,0,0.2,1) !important;
+}
+
+/* ── Sub-items ── */
+nav div.overflow-hidden {
+  transition: max-height 0.38s cubic-bezier(0.4,0,0.2,1) !important;
+}
+
+nav a.rounded-lg {
+  border-radius: 9px !important;
+  font-size: 0.8125rem !important;
+  font-weight: 500;
+  transition:
+    background    0.18s ease,
+    color         0.18s ease,
+    padding-left  0.22s cubic-bezier(0.4,0,0.2,1),
+    box-shadow    0.18s ease !important;
+  position: relative;
+}
+
+nav a.rounded-lg:hover {
+  padding-left: 16px !important;
+  background: #fdf2f3 !important;
+  color: #6e1c28 !important;
+  box-shadow: inset 2px 0 0 #c0394e;
+}
+
+nav a.rounded-lg:active {
+  transform: scale(0.98);
+}
+
+/* Sub-item activo (routerLinkActive) */
+nav a.bg-institucional-100 {
+  background: linear-gradient(90deg, #fce4e6, #fdf2f3) !important;
+  border-left: 3px solid #8b2332 !important;
+  color: #6e1c28 !important;
+  font-weight: 700 !important;
+  box-shadow: 2px 0 0 #8b2332 inset;
+}
+
+/* ── Footer usuario ── */
+aside > div:last-child {
+  border-top: 1px solid #fce4e6 !important;
+  background: linear-gradient(135deg, #fff 60%, #fdf2f3);
+}
+
+aside > div:last-child > div {
+  border-radius: 12px !important;
+  background: #fdf2f3 !important;
+  border: 1px solid #fce4e6;
+  transition: all 0.22s cubic-bezier(0.34,1.56,0.64,1);
+  cursor: pointer;
+}
+aside > div:last-child > div:hover {
+  background: #fce4e6 !important;
+  transform: translateY(-2px) scale(1.01);
+  box-shadow: 0 6px 18px rgba(139,35,50,0.13);
+}
+
+aside > div:last-child p.text-xs {
+  font-size: 0.8125rem !important;
+  font-weight: 700 !important;
+  color: #1a1a2e;
+  letter-spacing: -0.01em;
+}
+aside > div:last-child p.text-\[10px\] {
+  font-size: 0.6875rem !important;
+  color: #8b2332;
+  font-weight: 600;
+}
+
+/* Avatar */
+.bg-institucional-600.rounded-full {
+  background: linear-gradient(135deg, #8b2332, #c0394e) !important;
+  box-shadow: 0 2px 10px rgba(139,35,50,0.35);
+  font-weight: 700 !important;
+}
+
+/* ══════════════════════════════
+   OVERLAY MÓVIL
+══════════════════════════════ */
+div.fixed.inset-0.bg-black\/50 {
+  animation: fade-in 0.22s ease both;
+  backdrop-filter: blur(6px);
+}
+
+/* ══════════════════════════════
+   HEADER / TOPBAR
+══════════════════════════════ */
+header {
+  animation: fade-in 0.35s ease both;
+  background: rgba(255,255,255,0.96) !important;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid #f0eef8 !important;
+  box-shadow: 0 2px 20px rgba(139,35,50,0.07);
+  height: 64px !important;
+}
+
+header p.font-bold {
+  font-size: 0.925rem !important;
+  font-weight: 700 !important;
+  color: #1a1a2e;
+  letter-spacing: -0.02em;
+}
+header p.text-\[11px\] {
+  font-size: 0.6875rem !important;
+  color: #9ca3af;
+  letter-spacing: 0.03em;
+  font-weight: 500;
+}
+
+/* Botón notificación */
+header button.relative.w-9 {
+  border-radius: 11px !important;
+  background: #fdf2f3 !important;
+  border: 1px solid #fce4e6;
+  transition: all 0.22s cubic-bezier(0.34,1.56,0.64,1);
+  color: #8b2332;
+}
+header button.relative.w-9:hover {
+  background: #fce4e6 !important;
+  transform: translateY(-2px) scale(1.08);
+  box-shadow: 0 5px 16px rgba(139,35,50,0.2);
+}
+header button.relative.w-9:hover svg {
+  animation: icon-bounce 0.45s cubic-bezier(0.34,1.56,0.64,1);
+}
+header button.relative.w-9:active {
+  transform: scale(0.94);
+}
+
+/* Punto notificación */
+header span.absolute.top-1\.5 {
+  animation: pulse-dot 2.2s ease-in-out infinite !important;
+  background: #8b2332 !important;
+  width: 7px !important;
+  height: 7px !important;
+  border: 2px solid white;
+}
+
+/* Botón perfil */
+header button.flex.items-center.gap-2,
+header button.flex.items-center.gap-2\.5 {
+  border-radius: 12px !important;
+  padding: 6px 10px !important;
+  transition: all 0.22s cubic-bezier(0.34,1.56,0.64,1);
+  border: 1px solid transparent;
+}
+header button.flex.items-center.gap-2:hover,
+header button.flex.items-center.gap-2\.5:hover {
+  background: #fdf2f3 !important;
+  border-color: #fce4e6;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(139,35,50,0.1);
+}
+header button.flex.items-center.gap-2:active,
+header button.flex.items-center.gap-2\.5:active {
+  transform: scale(0.97);
+}
+
+header p.font-semibold {
+  font-size: 0.8125rem !important;
+  font-weight: 700 !important;
+  color: #1a1a2e;
+  letter-spacing: -0.01em;
+}
+
+/* ══════════════════════════════
+   DROPDOWN PERFIL — FIX z-index + animación fuerte
+══════════════════════════════ */
+div.absolute.right-0.top-12 {
+  animation: scale-in-dropdown 0.25s cubic-bezier(0.34,1.56,0.64,1) both;
+  transform-origin: top right;
+  border-radius: 16px !important;
+  border: 1px solid #fce4e6 !important;
+  box-shadow:
+    0 20px 60px rgba(139,35,50,0.18),
+    0 6px 20px rgba(0,0,0,0.1),
+    0 0 0 1px rgba(139,35,50,0.04) !important;
+  overflow: hidden;
+  z-index: 9999 !important;
+  position: absolute !important;
+  background: #fff !important;
+  min-width: 200px;
+}
+
+div.absolute.right-0.top-12 > div:first-child {
+  background: linear-gradient(135deg, #fdf2f3, #fce4e6);
+  padding: 12px 16px !important;
+  border-bottom: 1px solid #fce4e6;
+}
+
+div.absolute.right-0.top-12 > div:first-child p:first-child {
+  font-size: 0.8125rem !important;
+  font-weight: 700 !important;
+  color: #1a1a2e;
+  letter-spacing: -0.01em;
+}
+div.absolute.right-0.top-12 > div:first-child p:last-child {
+  font-size: 0.6875rem !important;
+  color: #8b2332;
+  font-weight: 600;
+  margin-top: 1px;
+}
+
+/* Botón cerrar sesión — VISIBLE y CON MOVIMIENTO */
+div.absolute.right-0.top-12 button {
+  font-size: 0.875rem !important;
+  font-weight: 600 !important;
+  color: #dc2626 !important;
+  padding: 11px 16px !important;
+  width: 100%;
+  text-align: left;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition:
+    background    0.18s ease,
+    padding-left  0.22s cubic-bezier(0.4,0,0.2,1),
+    color         0.18s ease,
+    transform     0.18s cubic-bezier(0.34,1.56,0.64,1) !important;
+  position: relative;
+  z-index: 9999 !important;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+}
+
+div.absolute.right-0.top-12 button:hover {
+  padding-left: 22px !important;
+  background: #fef2f2 !important;
+  color: #b91c1c !important;
+}
+
+div.absolute.right-0.top-12 button:hover svg {
+  animation: icon-bounce 0.45s cubic-bezier(0.34,1.56,0.64,1);
+}
+
+div.absolute.right-0.top-12 button:active {
+  transform: scale(0.97);
+  background: #fee2e2 !important;
+}
+
+/* Hamburguesa móvil */
+header button.md\:hidden {
+  border-radius: 11px !important;
+  transition: all 0.22s cubic-bezier(0.34,1.56,0.64,1);
+}
+header button.md\:hidden:hover {
+  background: #fdf2f3 !important;
+  color: #8b2332 !important;
+  transform: scale(1.1);
+}
+header button.md\:hidden:active {
+  transform: scale(0.93);
+}
+
+/* ══════════════════════════════
+   MAIN
+══════════════════════════════ */
+main {
+  animation: fade-in 0.4s 0.1s ease both;
+  background: #f8f7fc;
+}
+
+/* ── Scrollbars ── */
+nav::-webkit-scrollbar        { width: 3px; }
+nav::-webkit-scrollbar-track  { background: transparent; }
+nav::-webkit-scrollbar-thumb  { background: #fce4e6; border-radius: 99px; }
+nav::-webkit-scrollbar-thumb:hover { background: #8b2332; }
+
+main::-webkit-scrollbar        { width: 4px; }
+main::-webkit-scrollbar-track  { background: transparent; }
+main::-webkit-scrollbar-thumb  { background: #e5e7eb; border-radius: 99px; }
