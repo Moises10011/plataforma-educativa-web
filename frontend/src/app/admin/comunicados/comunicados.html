@@ -1,0 +1,119 @@
+<div>
+  <div class="mb-6 flex items-center justify-between">
+    <div>
+      <h1 class="text-xl font-bold text-gray-900">Comunicados</h1>
+      <p class="text-sm text-gray-500 mt-1">Publicaciones para la comunidad educativa</p>
+    </div>
+    <button (click)="abrirModal()"
+      class="flex items-center gap-2 bg-institucional-600 text-white text-sm font-medium px-4 py-2 rounded-lg hover:bg-institucional-700 transition-colors">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+      Nuevo Comunicado
+    </button>
+  </div>
+
+  @if (cargando()) {
+    <div class="space-y-3">
+      @for (i of [1,2,3]; track i) {
+        <div class="bg-white rounded-xl shadow-sm p-5 h-24 animate-pulse"></div>
+      }
+    </div>
+  } @else if (!comunicados().length) {
+    <div class="bg-white rounded-xl shadow-sm p-10 text-center">
+      <p class="text-sm text-gray-400">No hay comunicados publicados</p>
+    </div>
+  } @else {
+    <div class="space-y-3">
+      @for (c of comunicados(); track c.id_comunicado) {
+        <div class="bg-white rounded-xl shadow-sm p-5 hover:shadow-md transition-shadow">
+          <div class="flex items-start justify-between gap-4">
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-2 mb-1">
+                <h3 class="font-semibold text-gray-900 text-sm">{{ c.titulo }}</h3>
+                @if (c.archivo) {
+                  <span class="bg-institucional-50 text-institucional-700 text-xs px-2 py-0.5 rounded-full">Con adjunto</span>
+                }
+              </div>
+              <p class="text-sm text-gray-500 line-clamp-2">{{ c.contenido }}</p>
+              <div class="flex items-center gap-3 mt-2">
+                <p class="text-xs text-gray-300">{{ c.fecha_publicacion | date:'dd/MM/yyyy HH:mm' }}</p>
+                @if (c.autor) {
+                  <p class="text-xs text-gray-400">— {{ c.autor.nombres }} {{ c.autor.apellidos }}</p>
+                }
+              </div>
+            </div>
+            <div class="flex gap-1 shrink-0">
+              @if (c.archivo) {
+                <button (click)="descargar(c)"
+                  class="w-8 h-8 rounded-lg bg-institucional-50 flex items-center justify-center text-institucional-600 hover:bg-institucional-100 transition-colors" title="Descargar">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                </button>
+              }
+              <button (click)="confirmarEliminar(c.id_comunicado)"
+                class="w-8 h-8 rounded-lg bg-red-50 flex items-center justify-center text-red-500 hover:bg-red-100 transition-colors" title="Eliminar">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+  }
+</div>
+
+<!-- Modal Nuevo Comunicado -->
+@if (modalNuevo()) {
+  <div class="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-xl shadow-xl w-full max-w-lg">
+      <div class="flex items-center justify-between p-5 border-b border-gray-100">
+        <h2 class="font-bold text-gray-900">Nuevo Comunicado</h2>
+        <button (click)="cerrarModal()" class="text-gray-400 hover:text-gray-600">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div class="p-5 space-y-4">
+        @if (error()) {
+          <p class="text-xs text-red-600 bg-red-50 rounded-lg px-3 py-2">{{ error() }}</p>
+        }
+        <div>
+          <label class="block text-xs font-medium text-gray-600 mb-1">Título *</label>
+          <input [(ngModel)]="nuevo.titulo" type="text" placeholder="Título del comunicado"
+            class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-institucional-500">
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-gray-600 mb-1">Contenido *</label>
+          <textarea [(ngModel)]="nuevo.contenido" rows="4" placeholder="Redacta el comunicado..."
+            class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-institucional-500 resize-none"></textarea>
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-gray-600 mb-1">Archivo adjunto (opcional)</label>
+          <input (change)="onArchivoChange($event)" type="file"
+            class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm file:mr-3 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-medium file:bg-institucional-50 file:text-institucional-700 hover:file:bg-institucional-100">
+        </div>
+      </div>
+      <div class="flex gap-3 p-5 border-t border-gray-100">
+        <button (click)="cerrarModal()" class="flex-1 text-sm font-medium text-gray-600 border border-gray-200 rounded-lg py-2 hover:bg-gray-50 transition-colors">Cancelar</button>
+        <button (click)="guardar()" [disabled]="guardando()"
+          class="flex-1 text-sm font-medium text-white bg-institucional-600 rounded-lg py-2 hover:bg-institucional-700 transition-colors disabled:opacity-50">
+          {{ guardando() ? 'Publicando...' : 'Publicar' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Modal Eliminar -->
+@if (modalEliminar()) {
+  <div class="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-xl shadow-xl w-full max-w-sm p-6 text-center">
+      <div class="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-4">
+        <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
+      </div>
+      <h3 class="font-bold text-gray-900 mb-1">¿Eliminar comunicado?</h3>
+      <p class="text-sm text-gray-500 mb-5">Esta acción no se puede deshacer.</p>
+      <div class="flex gap-3">
+        <button (click)="cerrarModal()" class="flex-1 text-sm font-medium text-gray-600 border border-gray-200 rounded-lg py-2 hover:bg-gray-50 transition-colors">Cancelar</button>
+        <button (click)="eliminar()" class="flex-1 text-sm font-medium text-white bg-red-600 rounded-lg py-2 hover:bg-red-700 transition-colors">Eliminar</button>
+      </div>
+    </div>
+  </div>
+}

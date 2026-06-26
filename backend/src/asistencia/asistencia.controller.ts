@@ -42,8 +42,14 @@ export class AsistenciaController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @Get()
-  findAll(@Req() req: AuthRequest) {
+  @Get('estudiante/mi-asistencia')
+  miAsistenciaEstudiante(@Req() req: AuthRequest) {
+    return this.asistenciaService.findAll(req.user);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('docente/mis-registros')
+  misRegistrosDocente(@Req() req: AuthRequest) {
     return this.asistenciaService.findAll(req.user);
   }
 
@@ -73,6 +79,12 @@ export class AsistenciaController {
     @UploadedFile() archivo: Express.Multer.File,
   ) {
     return this.asistenciaService.importarExcel(id_asignacion, archivo.buffer);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get()
+  findAll(@Req() req: AuthRequest) {
+    return this.asistenciaService.findAll(req.user);
   }
 
   @UseGuards(JwtAuthGuard)

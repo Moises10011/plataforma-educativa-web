@@ -1,0 +1,210 @@
+<div>
+  <div class="mb-6 flex items-center justify-between">
+    <div>
+      <h1 class="text-xl font-bold text-gray-900">Docentes</h1>
+      <p class="text-sm text-gray-500 mt-1">Gestión de docentes y asignaciones de cursos</p>
+    </div>
+    @if (vistaActual() === 'asignaciones') {
+      <button (click)="abrirModalAsignar()"
+        class="flex items-center gap-2 bg-institucional-600 text-white text-sm font-medium px-4 py-2 rounded-lg hover:bg-institucional-700 transition-colors">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+        Nueva Asignación
+      </button>
+    }
+  </div>
+
+  <!-- Tabs -->
+  <div class="flex gap-1 mb-5 bg-gray-100 p-1 rounded-lg w-fit">
+    <button (click)="vistaActual.set('docentes')"
+      class="text-sm font-medium px-4 py-1.5 rounded-md transition-all"
+      [class.bg-white]="vistaActual() === 'docentes'"
+      [class.shadow-sm]="vistaActual() === 'docentes'"
+      [class.text-gray-900]="vistaActual() === 'docentes'"
+      [class.text-gray-500]="vistaActual() !== 'docentes'">
+      Lista de Docentes
+    </button>
+    <button (click)="vistaActual.set('asignaciones')"
+      class="text-sm font-medium px-4 py-1.5 rounded-md transition-all"
+      [class.bg-white]="vistaActual() === 'asignaciones'"
+      [class.shadow-sm]="vistaActual() === 'asignaciones'"
+      [class.text-gray-900]="vistaActual() === 'asignaciones'"
+      [class.text-gray-500]="vistaActual() !== 'asignaciones'">
+      Asignaciones de Cursos
+    </button>
+  </div>
+
+  @if (cargando()) {
+    <div class="bg-white rounded-xl shadow-sm p-5 h-40 animate-pulse"></div>
+  } @else {
+
+    <!-- Vista Docentes -->
+    @if (vistaActual() === 'docentes') {
+      <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="border-b border-gray-100">
+              <th class="text-left text-xs text-gray-500 font-medium px-5 py-3">Docente</th>
+              <th class="text-left text-xs text-gray-500 font-medium px-5 py-3">Correo</th>
+              <th class="text-center text-xs text-gray-500 font-medium px-5 py-3">Estado</th>
+              <th class="text-center text-xs text-gray-500 font-medium px-5 py-3">Cursos asignados</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-50">
+            @for (doc of docentes(); track doc.id_usuario) {
+              <tr class="hover:bg-gray-50 transition-colors">
+                <td class="px-5 py-3">
+                  <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-xs font-bold text-gray-700">
+                      {{ doc.nombres[0] }}{{ doc.apellidos[0] }}
+                    </div>
+                    <span class="font-medium text-gray-800">{{ doc.nombres }} {{ doc.apellidos }}</span>
+                  </div>
+                </td>
+                <td class="px-5 py-3 text-gray-500">{{ doc.correo }}</td>
+                <td class="px-5 py-3 text-center">
+                  <span class="inline-flex px-2 py-0.5 rounded-full text-xs font-medium"
+                    [class.bg-green-100]="doc.estado" [class.text-green-700]="doc.estado"
+                    [class.bg-red-100]="!doc.estado" [class.text-red-700]="!doc.estado">
+                    {{ doc.estado ? 'Activo' : 'Inactivo' }}
+                  </span>
+                </td>
+                <td class="px-5 py-3 text-center text-gray-700 font-medium">
+                  {{ asignaciones().filter(a => a.docente.id_usuario === doc.id_usuario).length }}
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+        @if (!docentes().length) {
+          <div class="p-10 text-center text-sm text-gray-400">No hay docentes registrados</div>
+        }
+      </div>
+    }
+
+    <!-- Vista Asignaciones -->
+    @if (vistaActual() === 'asignaciones') {
+      <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="border-b border-gray-100">
+              <th class="text-left text-xs text-gray-500 font-medium px-5 py-3">Docente</th>
+              <th class="text-left text-xs text-gray-500 font-medium px-5 py-3">Curso</th>
+              <th class="text-left text-xs text-gray-500 font-medium px-5 py-3">Grado / Sección</th>
+              <th class="text-left text-xs text-gray-500 font-medium px-5 py-3">Periodo</th>
+              <th class="text-center text-xs text-gray-500 font-medium px-5 py-3">Acción</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-50">
+            @for (a of asignaciones(); track a.id_asignacion) {
+              <tr class="hover:bg-gray-50 transition-colors">
+                <td class="px-5 py-3 font-medium text-gray-800">{{ a.docente.nombres }} {{ a.docente.apellidos }}</td>
+                <td class="px-5 py-3 text-gray-600">{{ a.curso.nombre }}</td>
+                <td class="px-5 py-3 text-gray-600">{{ a.grado.nombre }} – {{ a.seccion.nombre }}</td>
+                <td class="px-5 py-3 text-gray-600">{{ a.periodo.nombre }}</td>
+                <td class="px-5 py-3 text-center">
+                  <button (click)="confirmarEliminar(a.id_asignacion)"
+                    class="text-red-500 hover:text-red-700 transition-colors">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                  </button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+        @if (!asignaciones().length) {
+          <div class="p-10 text-center text-sm text-gray-400">No hay asignaciones registradas</div>
+        }
+      </div>
+    }
+  }
+</div>
+
+<!-- Modal Asignar Curso -->
+@if (modalAsignar()) {
+  <div class="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-xl shadow-xl w-full max-w-md">
+      <div class="flex items-center justify-between p-5 border-b border-gray-100">
+        <h2 class="font-bold text-gray-900">Nueva Asignación de Curso</h2>
+        <button (click)="cerrarModal()" class="text-gray-400 hover:text-gray-600">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div class="p-5 space-y-4">
+        @if (error()) {
+          <p class="text-xs text-red-600 bg-red-50 rounded-lg px-3 py-2">{{ error() }}</p>
+        }
+        <div>
+          <label class="block text-xs font-medium text-gray-600 mb-1">Docente</label>
+          <select [(ngModel)]="nuevaAsignacion.id_docente" class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-institucional-500">
+            <option [ngValue]="null">Seleccionar docente</option>
+            @for (d of docentes(); track d.id_usuario) {
+              <option [ngValue]="d.id_usuario">{{ d.nombres }} {{ d.apellidos }}</option>
+            }
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-gray-600 mb-1">Curso</label>
+          <select [(ngModel)]="nuevaAsignacion.id_curso" class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-institucional-500">
+            <option [ngValue]="null">Seleccionar curso</option>
+            @for (c of cursos(); track c.id_curso) {
+              <option [ngValue]="c.id_curso">{{ c.nombre }}</option>
+            }
+          </select>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-medium text-gray-600 mb-1">Grado</label>
+            <select [(ngModel)]="nuevaAsignacion.id_grado" class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-institucional-500">
+              <option [ngValue]="null">Seleccionar</option>
+              @for (g of grados(); track g.id_grado) {
+                <option [ngValue]="g.id_grado">{{ g.nombre }}</option>
+              }
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-600 mb-1">Sección</label>
+            <select [(ngModel)]="nuevaAsignacion.id_seccion" class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-institucional-500">
+              <option [ngValue]="null">Seleccionar</option>
+              @for (s of secciones(); track s.id_seccion) {
+                <option [ngValue]="s.id_seccion">{{ s.nombre }}</option>
+              }
+            </select>
+          </div>
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-gray-600 mb-1">Periodo Académico</label>
+          <select [(ngModel)]="nuevaAsignacion.id_periodo" class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-institucional-500">
+            <option [ngValue]="null">Seleccionar periodo</option>
+            @for (p of periodos(); track p.id_periodo) {
+              <option [ngValue]="p.id_periodo">{{ p.nombre }}</option>
+            }
+          </select>
+        </div>
+      </div>
+      <div class="flex gap-3 p-5 border-t border-gray-100">
+        <button (click)="cerrarModal()" class="flex-1 text-sm font-medium text-gray-600 border border-gray-200 rounded-lg py-2 hover:bg-gray-50 transition-colors">Cancelar</button>
+        <button (click)="guardarAsignacion()" [disabled]="guardando()"
+          class="flex-1 text-sm font-medium text-white bg-institucional-600 rounded-lg py-2 hover:bg-institucional-700 transition-colors disabled:opacity-50">
+          {{ guardando() ? 'Guardando...' : 'Guardar' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Modal Confirmar Eliminar -->
+@if (modalEliminar()) {
+  <div class="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-xl shadow-xl w-full max-w-sm p-6 text-center">
+      <div class="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-4">
+        <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
+      </div>
+      <h3 class="font-bold text-gray-900 mb-1">¿Eliminar asignación?</h3>
+      <p class="text-sm text-gray-500 mb-5">Esta acción no se puede deshacer.</p>
+      <div class="flex gap-3">
+        <button (click)="cerrarModal()" class="flex-1 text-sm font-medium text-gray-600 border border-gray-200 rounded-lg py-2 hover:bg-gray-50 transition-colors">Cancelar</button>
+        <button (click)="eliminarAsignacion()" class="flex-1 text-sm font-medium text-white bg-red-600 rounded-lg py-2 hover:bg-red-700 transition-colors">Eliminar</button>
+      </div>
+    </div>
+  </div>
+}

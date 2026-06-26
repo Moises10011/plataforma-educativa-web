@@ -61,6 +61,11 @@ export class AllExceptionsFilter implements ExceptionFilter {
       } else {
         message = 'Error en la base de datos';
       }
+
+      // Log temporal de diagnóstico: detalle real del error SQL
+      this.logger.error(
+        `SQL real -> code: ${driverError.code} | message: ${driverError.message}`,
+      );
     } else if (exception instanceof Error) {
       message = exception.message;
     }

@@ -30,6 +30,8 @@ export class Layout {
     private router: Router,
   ) {}
 
+  // ─── MENÚS POR ROL ────────────────────────────────────────────────────────
+
   categoriasMenu = computed<CategoriaMenu[]>(() => {
     if (this.authService.tieneRol('Administrador')) {
       return [
@@ -67,8 +69,92 @@ export class Layout {
         },
       ];
     }
+
+    if (this.authService.tieneRol('Docente')) {
+      return [
+        {
+          etiqueta: 'Mi Aula',
+          icono: 'academic',
+          items: [
+            { etiqueta: 'Mis Cursos', ruta: '/docente/cursos' },
+            { etiqueta: 'Mis Estudiantes', ruta: '/docente/estudiantes' },
+          ],
+        },
+        {
+          etiqueta: 'Actividades',
+          icono: 'document',
+          items: [
+            { etiqueta: 'Tareas', ruta: '/docente/tareas' },
+            { etiqueta: 'Materiales', ruta: '/docente/materiales' },
+          ],
+        },
+        {
+          etiqueta: 'Evaluacion',
+          icono: 'chart',
+          items: [
+            { etiqueta: 'Notas', ruta: '/docente/notas' },
+            { etiqueta: 'Asistencia', ruta: '/docente/asistencia' },
+          ],
+        },
+        {
+          etiqueta: 'Comunicaciones',
+          icono: 'megaphone',
+          items: [
+            { etiqueta: 'Comunicados', ruta: '/docente/comunicados' },
+          ],
+        },
+      ];
+    }
+
+    if (this.authService.tieneRol('Estudiante')) {
+      return [
+        {
+          etiqueta: 'Mi Aprendizaje',
+          icono: 'academic',
+          items: [
+            { etiqueta: 'Mis Cursos', ruta: '/estudiante/cursos' },
+            { etiqueta: 'Materiales', ruta: '/estudiante/materiales' },
+          ],
+        },
+        {
+          etiqueta: 'Actividades',
+          icono: 'document',
+          items: [
+            { etiqueta: 'Tareas', ruta: '/estudiante/tareas' },
+            { etiqueta: 'Entregas', ruta: '/estudiante/entregas' },
+          ],
+        },
+        {
+          etiqueta: 'Mi Progreso',
+          icono: 'chart',
+          items: [
+            { etiqueta: 'Mis Notas', ruta: '/estudiante/notas' },
+            { etiqueta: 'Asistencia', ruta: '/estudiante/asistencia' },
+          ],
+        },
+        {
+          etiqueta: 'Comunicaciones',
+          icono: 'megaphone',
+          items: [
+            { etiqueta: 'Comunicados', ruta: '/estudiante/comunicados' },
+          ],
+        },
+      ];
+    }
+
     return [];
   });
+
+  // ─── ETIQUETA DEL PANEL SEGÚN ROL ─────────────────────────────────────────
+
+  etiquetaPanel = computed(() => {
+    if (this.authService.tieneRol('Administrador')) return 'Panel Admin';
+    if (this.authService.tieneRol('Docente')) return 'Panel Docente';
+    if (this.authService.tieneRol('Estudiante')) return 'Panel Estudiante';
+    return 'Panel';
+  });
+
+  // ─── INICIALES DEL USUARIO ────────────────────────────────────────────────
 
   iniciales = computed(() => {
     const nombre = this.authService.usuarioActual()?.nombres ?? '';
@@ -78,6 +164,8 @@ export class Layout {
     }
     return nombre.slice(0, 2).toUpperCase();
   });
+
+  // ─── ACCIONES ─────────────────────────────────────────────────────────────
 
   toggleMenuColapsado(): void {
     this.menuColapsado.set(!this.menuColapsado());
@@ -98,7 +186,9 @@ export class Layout {
     if (this.menuColapsado()) {
       this.menuColapsado.set(false);
     }
-    this.categoriaAbierta.set(this.categoriaAbierta() === etiqueta ? null : etiqueta);
+    this.categoriaAbierta.set(
+      this.categoriaAbierta() === etiqueta ? null : etiqueta,
+    );
   }
 
   toggleMenuPerfil(): void {

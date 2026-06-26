@@ -1,0 +1,41 @@
+<div>
+  <div class="mb-6">
+    <h1 class="text-xl font-bold text-gray-900">Mi Asistencia</h1>
+    <p class="text-sm text-gray-500 mt-1">Historial de asistencias por curso</p>
+  </div>
+ 
+  @if (cargando()) {
+    <div class="bg-white rounded-xl shadow-sm p-5 h-40 animate-pulse"></div>
+  } @else if (!registros().length) {
+    <div class="bg-white rounded-xl shadow-sm p-10 text-center">
+      <p class="text-sm text-gray-400">No hay registros de asistencia</p>
+    </div>
+  } @else {
+    <div class="bg-white rounded-xl shadow-sm p-5">
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="border-b border-gray-100">
+              <th class="text-left text-xs text-gray-500 font-medium pb-3">Fecha</th>
+              <th class="text-left text-xs text-gray-500 font-medium pb-3">Curso</th>
+              <th class="text-center text-xs text-gray-500 font-medium pb-3">Estado</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-50">
+            @for (r of registros(); track r.id_asistencia) {
+              <tr class="hover:bg-gray-50 transition-colors">
+                <td class="py-3 text-gray-600">{{ r.fecha | date:'dd/MM/yyyy' }}</td>
+                <td class="py-3 text-gray-800 font-medium">{{ r.curso.nombre }}</td>
+                <td class="py-3 text-center">
+                  <span class="inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium" [ngClass]="colorEstado(r.estado)">
+                    {{ r.estado | titlecase }}
+                  </span>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  }
+</div>

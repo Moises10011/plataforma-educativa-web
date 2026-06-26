@@ -1,0 +1,116 @@
+<div>
+
+  <div class="mb-6">
+    <h1 class="text-xl font-bold text-gray-900">Mi Dashboard</h1>
+    <p class="text-sm text-gray-500 mt-1">Resumen de tu progreso académico</p>
+  </div>
+
+  @if (cargando()) {
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+      @for (i of [1,2,3,4]; track i) {
+        <div class="bg-white rounded-xl shadow-sm p-5 h-24 animate-pulse"></div>
+      }
+    </div>
+  } @else {
+
+    <!-- Tarjetas de resumen -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+
+      <div class="bg-white rounded-xl shadow-sm p-5 border-t-[3px] border-institucional-600 hover:shadow-md transition-shadow">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-xs text-gray-500 font-medium mb-1">Promedio General</p>
+            <p class="text-3xl font-bold text-gray-900">{{ estadisticas()?.promedioGeneral ?? 0 }}</p>
+          </div>
+          <div class="w-12 h-12 rounded-xl bg-institucional-50 flex items-center justify-center">
+            <svg class="w-6 h-6 text-institucional-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-xl shadow-sm p-5 border-t-[3px] border-green-500 hover:shadow-md transition-shadow">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-xs text-gray-500 font-medium mb-1">Asistencias</p>
+            <p class="text-3xl font-bold text-gray-900">{{ estadisticas()?.asistencias ?? 0 }}</p>
+          </div>
+          <div class="w-12 h-12 rounded-xl bg-green-50 flex items-center justify-center">
+            <svg class="w-6 h-6 text-green-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-xl shadow-sm p-5 border-t-[3px] border-red-400 hover:shadow-md transition-shadow">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-xs text-gray-500 font-medium mb-1">Inasistencias</p>
+            <p class="text-3xl font-bold text-gray-900">{{ estadisticas()?.inasistencias ?? 0 }}</p>
+          </div>
+          <div class="w-12 h-12 rounded-xl bg-red-50 flex items-center justify-center">
+            <svg class="w-6 h-6 text-red-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-xl shadow-sm p-5 border-t-[3px] border-amber-400 hover:shadow-md transition-shadow">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-xs text-gray-500 font-medium mb-1">Tareas Pendientes</p>
+            <p class="text-3xl font-bold text-gray-900">{{ estadisticas()?.tareasPendientes ?? 0 }}</p>
+          </div>
+          <div class="w-12 h-12 rounded-xl bg-amber-50 flex items-center justify-center">
+            <svg class="w-6 h-6 text-amber-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+            </svg>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Tabla de cursos -->
+    @if (estadisticas()?.cursos?.length) {
+      <div class="bg-white rounded-xl shadow-sm p-5">
+        <h2 class="text-sm font-semibold text-gray-800 mb-4">Mis Cursos</h2>
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead>
+              <tr class="border-b border-gray-100">
+                <th class="text-left text-xs text-gray-500 font-medium pb-3">Curso</th>
+                <th class="text-center text-xs text-gray-500 font-medium pb-3">Nota</th>
+                <th class="text-center text-xs text-gray-500 font-medium pb-3">Asistencia</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-50">
+              @for (curso of estadisticas()?.cursos; track curso.nombre) {
+                <tr class="hover:bg-gray-50 transition-colors">
+                  <td class="py-3 text-gray-800 font-medium">{{ curso.nombre }}</td>
+                  <td class="py-3 text-center">
+                    <span class="inline-flex items-center justify-center w-10 h-6 rounded-full text-xs font-semibold"
+                      [class.bg-green-100]="curso.nota >= 14"
+                      [class.text-green-700]="curso.nota >= 14"
+                      [class.bg-amber-100]="curso.nota >= 11 && curso.nota < 14"
+                      [class.text-amber-700]="curso.nota >= 11 && curso.nota < 14"
+                      [class.bg-red-100]="curso.nota < 11"
+                      [class.text-red-700]="curso.nota < 11">
+                      {{ curso.nota }}
+                    </span>
+                  </td>
+                  <td class="py-3 text-center text-gray-600">{{ curso.asistencia }}%</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    }
+
+  }
+
+</div>

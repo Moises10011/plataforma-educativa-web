@@ -1,0 +1,84 @@
+<div class="documentos-page">
+  <header class="page-header">
+    <h1>Horarios de Clases</h1>
+    <button class="btn btn-primary" (click)="abrirModal()">+ Subir horario</button>
+  </header>
+
+  <div *ngIf="cargando()" class="loading">Cargando horarios...</div>
+
+  <table *ngIf="!cargando()" class="tabla">
+    <thead>
+      <tr>
+        <th>Grado</th>
+        <th>Sección</th>
+        <th>Periodo</th>
+        <th>Fecha de subida</th>
+        <th>Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let h of horarios()">
+        <td>{{ h.grado.nombre }}</td>
+        <td>{{ h.seccion.nombre }}</td>
+        <td>{{ h.periodo.nombre }}</td>
+        <td>{{ h.fecha_subida | date: 'dd/MM/yyyy' }}</td>
+        <td class="acciones">
+          <button class="btn btn-link" (click)="descargar(h)">Descargar</button>
+          <button class="btn btn-danger" (click)="confirmarEliminar(h.id_horario)">Eliminar</button>
+        </td>
+      </tr>
+      <tr *ngIf="horarios().length === 0">
+        <td colspan="5" class="vacio">No hay horarios registrados.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- Modal Subir -->
+  <div class="modal-overlay" *ngIf="modalSubir()">
+    <div class="modal">
+      <h2>Subir horario</h2>
+
+      <div *ngIf="error()" class="alerta-error">{{ error() }}</div>
+
+      <label>Grado</label>
+      <select [(ngModel)]="nuevo.id_grado">
+        <option [ngValue]="null">Selecciona un grado</option>
+        <option *ngFor="let g of grados()" [ngValue]="g.id_grado">{{ g.nombre }}</option>
+      </select>
+
+      <label>Sección</label>
+      <select [(ngModel)]="nuevo.id_seccion">
+        <option [ngValue]="null">Selecciona una sección</option>
+        <option *ngFor="let s of secciones()" [ngValue]="s.id_seccion">{{ s.nombre }}</option>
+      </select>
+
+      <label>Periodo académico</label>
+      <select [(ngModel)]="nuevo.id_periodo">
+        <option [ngValue]="null">Selecciona un periodo</option>
+        <option *ngFor="let p of periodos()" [ngValue]="p.id_periodo">{{ p.nombre }}</option>
+      </select>
+
+      <label>Archivo</label>
+      <input type="file" (change)="onArchivoChange($event)" accept=".pdf,.jpg,.png" />
+
+      <div class="modal-acciones">
+        <button class="btn btn-secundario" (click)="cerrarModal()">Cancelar</button>
+        <button class="btn btn-primary" [disabled]="guardando()" (click)="guardar()">
+          {{ guardando() ? 'Guardando...' : 'Guardar' }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Eliminar -->
+  <div class="modal-overlay" *ngIf="modalEliminar()">
+    <div class="modal modal-confirmacion">
+      <h2>¿Eliminar horario?</h2>
+      <p>Esta acción no se puede deshacer.</p>
+      <div class="modal-acciones">
+        <button class="btn btn-secundario" (click)="cerrarModal()">Cancelar</button>
+        <button class="btn btn-danger" (click)="eliminar()">Eliminar</button>
+      </div>
+    </div>
+  </div>
+</div>

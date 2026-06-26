@@ -49,6 +49,18 @@ export class MaterialController {
   }
 
   @UseGuards(JwtAuthGuard)
+  @Get('estudiante/mis-materiales')
+  misMaterialesEstudiante(@Req() req: AuthRequest) {
+    return this.materialService.findAll(req.user);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('docente/mis-materiales')
+  misMaterialesDocente(@Req() req: AuthRequest) {
+    return this.materialService.findAll(req.user);
+  }
+
+  @UseGuards(JwtAuthGuard)
   @Get()
   findAll(@Req() req: AuthRequest) {
     return this.materialService.findAll(req.user);
