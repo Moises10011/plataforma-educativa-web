@@ -1,1 +1,27 @@
-<p>horarios works!</p>
+<div class="contenedor-horario">
+  <div class="cabecera-seccion">
+    <h2>📆 Mi Horario Escolar</h2>
+    <p>Periodo Académico Actual - Solo Lectura</p>
+  </div>
+
+  <div class="tabla-responsiva">
+    <table>
+      <thead>
+        <tr>
+          <th>Hora</th>
+          <th *ngFor="let dia of dias">{{ dia }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let bloque of bloquesHorarios()" [ngClass]="{'fila-recreo': bloque.Lunes === 'RECREO'}">
+          <td class="columna-hora"><strong>{{ bloque.label }}</strong></td>
+          <td>{{ bloque.Lunes }}</td>
+          <td>{{ bloque.Martes }}</td>
+          <td>{{ bloque.Miércoles }}</td>
+          <td>{{ bloque.Jueves }}</td>
+          <td>{{ bloque.Viernes }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

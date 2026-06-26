@@ -22,6 +22,7 @@ import { AuthModule } from './auth/auth.module';
 import { InstitucionModule } from './institucion/institucion.module';
 import { GaleriaModule } from './galeria/galeria.module';
 import { CompetenciaModule } from './competencia/competencia.module';
+import { HorarioModule } from './horario/horario.module';
 
 @Module({
   imports: [
@@ -68,6 +69,8 @@ import { CompetenciaModule } from './competencia/competencia.module';
     GaleriaModule,
 
     CompetenciaModule,
+
+    HorarioModule,
   ],
 })
 export class AppModule {}
