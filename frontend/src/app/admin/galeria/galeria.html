@@ -68,6 +68,15 @@
             class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-institucional-500">
         </div>
         <div>
+          <label class="block text-xs font-medium text-gray-600 mb-1">Tipo *</label>
+          <select [(ngModel)]="nuevo.tipo"
+            class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-institucional-500">
+            <option value="GALERIA">Galería</option>
+            <option value="BANNER">Banner</option>
+            <option value="EVENTO">Evento</option>
+          </select>
+        </div>
+        <div>
           <label class="block text-xs font-medium text-gray-600 mb-1">Imágenes *</label>
           <input (change)="onArchivosChange($event)" type="file" accept="image/*" multiple
             class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm file:mr-3 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-medium file:bg-institucional-50 file:text-institucional-700 hover:file:bg-institucional-100">

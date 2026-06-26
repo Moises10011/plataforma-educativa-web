@@ -8,7 +8,7 @@ interface ImagenGaleria {
   id_imagen: number;
   titulo: string;
   descripcion?: string;
-  imagen: string;       
+  imagen: string;
   fecha_subida: string;
 }
 
@@ -28,7 +28,7 @@ export class AdminGaleria implements OnInit {
   guardando = signal(false);
   error = signal('');
 
-  nuevo = { titulo: '', descripcion: '' };
+  nuevo = { titulo: '', descripcion: '', tipo: 'GALERIA' };  // ← tipo agregado
   archivos: File[] = [];
   previews: string[] = [];
 
@@ -47,7 +47,7 @@ export class AdminGaleria implements OnInit {
   }
 
   abrirModal(): void {
-    this.nuevo = { titulo: '', descripcion: '' };
+    this.nuevo = { titulo: '', descripcion: '', tipo: 'GALERIA' };
     this.archivos = [];
     this.previews = [];
     this.error.set('');
@@ -77,7 +77,8 @@ export class AdminGaleria implements OnInit {
       const form = new FormData();
       form.append('titulo', this.nuevo.titulo);
       form.append('descripcion', this.nuevo.descripcion);
-      form.append('imagen', archivo);       
+      form.append('tipo', this.nuevo.tipo);
+      form.append('imagen', archivo);
       return this.http.post(`${environment.apiUrl}/galeria`, form).toPromise();
     });
 
@@ -105,7 +106,7 @@ export class AdminGaleria implements OnInit {
   }
 
   imagenUrl(imagen: string): string {
-    if (!imagen) return '';                                      
-    return `${environment.apiUrl}/uploads/galeria/${imagen}`;      
+    if (!imagen) return '';
+    return `${environment.apiUrl}/uploads/galeria/${imagen}`;
   }
 }

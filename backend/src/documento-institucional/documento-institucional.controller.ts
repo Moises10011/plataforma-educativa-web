@@ -7,11 +7,15 @@ import {
   Param,
   Delete,
   Req,
+  Res,
   UseInterceptors,
   UploadedFile,
+  ParseIntPipe,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { Request } from 'express';
+import type { Request, Response } from 'express';
+import { extname } from 'path';
+
 import { DocumentoInstitucionalService } from './documento-institucional.service';
 import type { AuthUser } from './documento-institucional.service';
 import { CreateDocumentoInstitucionalDto } from './dto/create-documento-institucional.dto';
@@ -30,15 +34,11 @@ export class DocumentoInstitucionalController {
   @Post()
   @UseInterceptors(FileInterceptor('archivo'))
   create(
-    @Body() createDocumentoInstitucionalDto: CreateDocumentoInstitucionalDto,
+    @Body() dto: CreateDocumentoInstitucionalDto,
     @Req() req: RequestWithUser,
     @UploadedFile() archivo: Express.Multer.File,
   ) {
-    return this.documentoInstitucionalService.create(
-      createDocumentoInstitucionalDto,
-      req.user,
-      archivo,
-    );
+    return this.documentoInstitucionalService.create(dto, req.user, archivo);
   }
 
   @Get()
@@ -47,23 +47,34 @@ export class DocumentoInstitucionalController {
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.documentoInstitucionalService.findOne(+id);
+  findOne(@Param('id', ParseIntPipe) id: number) {
+    return this.documentoInstitucionalService.findOne(id);
   }
 
-  @Patch(':id')
-  update(
-    @Param('id') id: string,
-    @Body() updateDocumentoInstitucionalDto: UpdateDocumentoInstitucionalDto,
-  ) {
-    return this.documentoInstitucionalService.update(
-      +id,
-      updateDocumentoInstitucionalDto,
+  @Get(':id/descargar')
+  async descargar(@Param('id', ParseIntPipe) id: number, @Res() res: Response) {
+    const documento = await this.documentoInstitucionalService.findOne(id);
+    const ruta = this.documentoInstitucionalService.getRutaArchivo(
+      documento.archivo,
+    );
+    return res.download(
+      ruta,
+      `${documento.titulo}${extname(documento.archivo)}`,
     );
   }
 
+  @Patch(':id')
+  @UseInterceptors(FileInterceptor('archivo'))
+  update(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: UpdateDocumentoInstitucionalDto,
+    @UploadedFile() archivo?: Express.Multer.File,
+  ) {
+    return this.documentoInstitucionalService.update(id, dto, archivo);
+  }
+
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.documentoInstitucionalService.remove(+id);
+  remove(@Param('id', ParseIntPipe) id: number) {
+    return this.documentoInstitucionalService.remove(id);
   }
 }
