@@ -1,0 +1,87 @@
+@if (cargando()) {
+  <div class="flex justify-center items-center h-64">
+    <p>Cargando información...</p>
+  </div>
+} @else {
+
+  @if (estadisticas(); as est) {
+
+    <div class="p-6">
+
+      <h1 class="text-3xl font-bold mb-2">
+        Bienvenido, {{ est.nombre }}
+      </h1>
+
+      <p class="text-gray-600 mb-6">
+        Panel principal del docente.
+      </p>
+
+      <!-- Tarjetas -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+
+        <div class="bg-white rounded-xl shadow p-5">
+          <h2 class="text-gray-500 text-sm">Cursos</h2>
+          <p class="text-3xl font-bold">
+            {{ est.cursos.length }}
+          </p>
+        </div>
+
+        <div class="bg-white rounded-xl shadow p-5">
+          <h2 class="text-gray-500 text-sm">Estudiantes</h2>
+          <p class="text-3xl font-bold">
+            {{ est.totalEstudiantes }}
+          </p>
+        </div>
+
+        <div class="bg-white rounded-xl shadow p-5">
+          <h2 class="text-gray-500 text-sm">Asistencias Hoy</h2>
+          <p class="text-3xl font-bold">
+            {{ est.asistenciasHoy }}
+          </p>
+        </div>
+
+        <div class="bg-white rounded-xl shadow p-5">
+          <h2 class="text-gray-500 text-sm">Tareas Pendientes</h2>
+          <p class="text-3xl font-bold">
+            {{ est.tareasPendientes }}
+          </p>
+        </div>
+
+      </div>
+
+      <!-- Cursos -->
+      <div class="mt-8 bg-white rounded-xl shadow p-6">
+
+        <h2 class="text-xl font-semibold mb-4">
+          Mis cursos
+        </h2>
+
+        <table class="w-full">
+
+          <thead>
+            <tr class="border-b">
+              <th class="text-left py-2">Curso</th>
+              <th class="text-left py-2">Grado</th>
+              <th class="text-left py-2">Sección</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            @for (curso of est.cursos; track curso.id) {
+              <tr class="border-b">
+                <td class="py-3">{{ curso.nombre }}</td>
+                <td>{{ curso.grado }}</td>
+                <td>{{ curso.seccion }}</td>
+              </tr>
+            }
+          </tbody>
+
+        </table>
+
+      </div>
+
+    </div>
+
+  }
+
+}

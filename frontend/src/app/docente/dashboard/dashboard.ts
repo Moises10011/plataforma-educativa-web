@@ -24,7 +24,7 @@ interface EstadisticasDocente {
   standalone: true,
   imports: [CommonModule],
   templateUrl: './dashboard.html',
-  styleUrl: './dashboard.css',
+  styleUrls: ['./dashboard.css'],
 })
 export class DocenteDashboard implements OnInit {
   estadisticas = signal<EstadisticasDocente | null>(null);

@@ -43,8 +43,8 @@ export const routes: Routes = [
   {
     path: 'docente',
     component: Layout,
-    canActivate: [roleGuard],
-    data: { roles: ['Docente'] },
+    //canActivate: [roleGuard],
+    //data: { roles: ['Docente'] },
     children: [
       { 
         path: '', 

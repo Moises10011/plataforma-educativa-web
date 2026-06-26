@@ -13,6 +13,7 @@ import { environment } from '../../../../environments/environment';
 export class Header implements OnInit {
   institucion: Institucion | null = null;
   menuAbierto = false;
+  rol: string | null = null;
 
   constructor(
     private institucionService: InstitucionService,
@@ -20,11 +21,24 @@ export class Header implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    // Obtener institución
     this.institucionService.obtener().subscribe({
       next: (data) => {
         this.institucion = data;
       },
     });
+
+    // Obtener usuario desde localStorage
+    const usuario = localStorage.getItem('plataforma_usuario');
+
+    if (usuario) {
+      try {
+        const user = JSON.parse(usuario);
+        this.rol = user.roles?.[0] ?? null;
+      } catch (e) {
+        this.rol = null;
+      }
+    }
   }
 
   toggleMenu(): void {
@@ -36,6 +50,13 @@ export class Header implements OnInit {
   }
 
   irALogin(): void {
+    this.router.navigate(['/login']);
+    this.menuAbierto = false;
+  }
+
+  logout(): void {
+    localStorage.removeItem('plataforma_token');
+    localStorage.removeItem('plataforma_usuario');
     this.router.navigate(['/login']);
     this.menuAbierto = false;
   }
