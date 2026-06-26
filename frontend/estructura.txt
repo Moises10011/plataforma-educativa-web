@@ -1,1 +1,2 @@
 Estructura base del frontend creada 
+Ajuste de estilos 
