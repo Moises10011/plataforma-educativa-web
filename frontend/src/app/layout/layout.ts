@@ -3,7 +3,6 @@ import { RouterOutlet, RouterLink, RouterLinkActive, Router } from '@angular/rou
 import { HttpClient } from '@angular/common/http';
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../core/services/auth';
-import { environment } from '../../environments/environment';
 
 interface SubMenuItem {
   etiqueta: string;
@@ -31,8 +30,7 @@ interface Institucion {
 export class Layout implements OnInit {
   menuColapsado = signal(false);
   menuMovilAbierto = signal(false);
-  menuPerfilAbierto = signal(false);
-  categoriaAbierta = signal<string | null>('Gestion Academica');
+  categoriaAbierta = signal<string | null>(null);
   institucion = signal<Institucion | null>(null);
 
   constructor(
@@ -42,7 +40,7 @@ export class Layout implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.http.get<Institucion>(`${environment.apiUrl}/institucion`).subscribe({
+    this.http.get<Institucion>('/api/institucion').subscribe({
       next: (data) => this.institucion.set(data),
     });
   }
@@ -50,16 +48,14 @@ export class Layout implements OnInit {
   logoUrl = computed(() => {
     const logo = this.institucion()?.logo;
     if (!logo) return null;
-    return `${environment.apiUrl}/uploads/institucion/${logo}`;
+    return `/api/uploads/institucion/${logo}`;
   });
-
-  // ─── MENÚS POR ROL ────────────────────────────────────────────────────────
 
   categoriasMenu = computed<CategoriaMenu[]>(() => {
     if (this.authService.tieneRol('Administrador')) {
       return [
         {
-          etiqueta: 'Gestion Academica',
+          etiqueta: 'Gestión Académica',
           icono: 'academic',
           items: [
             { etiqueta: 'Estudiantes', ruta: '/admin/estudiantes' },
@@ -67,7 +63,7 @@ export class Layout implements OnInit {
           ],
         },
         {
-          etiqueta: 'Gestion Documental',
+          etiqueta: 'Gestión Documental',
           icono: 'document',
           items: [
             { etiqueta: 'Documentos institucionales', ruta: '/admin/documentos/institucionales' },
@@ -83,11 +79,11 @@ export class Layout implements OnInit {
           ],
         },
         {
-          etiqueta: 'Gestion Institucional',
+          etiqueta: 'Gestión Institucional',
           icono: 'building',
           items: [
-            { etiqueta: 'Informacion del colegio', ruta: '/admin/institucion' },
-            { etiqueta: 'Galeria', ruta: '/admin/galeria' },
+            { etiqueta: 'Información del colegio', ruta: '/admin/institucion' },
+            { etiqueta: 'Galería', ruta: '/admin/galeria' },
           ],
         },
       ];
@@ -112,7 +108,7 @@ export class Layout implements OnInit {
           ],
         },
         {
-          etiqueta: 'Evaluacion',
+          etiqueta: 'Evaluación',
           icono: 'chart',
           items: [
             { etiqueta: 'Notas', ruta: '/docente/notas' },
@@ -168,6 +164,13 @@ export class Layout implements OnInit {
     return [];
   });
 
+  rutaDashboard = computed(() => {
+    if (this.authService.tieneRol('Administrador')) return '/admin';
+    if (this.authService.tieneRol('Docente')) return '/docente';
+    if (this.authService.tieneRol('Estudiante')) return '/estudiante';
+    return '/';
+  });
+
   etiquetaPanel = computed(() => {
     if (this.authService.tieneRol('Administrador')) return 'Panel Admin';
     if (this.authService.tieneRol('Docente')) return 'Panel Docente';
@@ -200,10 +203,6 @@ export class Layout implements OnInit {
     this.categoriaAbierta.set(
       this.categoriaAbierta() === etiqueta ? null : etiqueta,
     );
-  }
-
-  toggleMenuPerfil(): void {
-    this.menuPerfilAbierto.set(!this.menuPerfilAbierto());
   }
 
   cerrarSesion(): void {
