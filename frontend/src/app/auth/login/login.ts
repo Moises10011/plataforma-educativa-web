@@ -1,4 +1,4 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, signal, ChangeDetectorRef } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../core/services/auth';
@@ -22,19 +22,21 @@ export class Login implements OnInit {
 
   institucion: Institucion | null = null;
   urlFondo: string | null = null;
-  fondoCargado = signal(false);
+  fondoCargado =false;
 
   constructor(
     private authService: AuthService,
     private institucionService: InstitucionService,
     private galeriaService: GaleriaService,
     private router: Router,
+    private cdr: ChangeDetectorRef,
   ) {}
 
   ngOnInit(): void {
     this.institucionService.obtener().subscribe({
       next: (data) => {
         this.institucion = data;
+        this.cdr.detectChanges();
       },
     });
 
@@ -42,13 +44,14 @@ export class Login implements OnInit {
       next: (data) => {
         if (data.length > 0) {
           this.urlFondo = this.galeriaService.obtenerUrlImagen(data[0].id_galeria);
+          this.cdr.detectChanges();
         }
       },
     });
   }
 
   onFondoCargado(): void {
-    this.fondoCargado.set(true);
+    this.fondoCargado = true;
   }
 
   obtenerUrlLogo(): string {
@@ -72,7 +75,6 @@ export class Login implements OnInit {
       next: () => {
         this.cargando.set(false);
 
-        // --- INICIO DE CAMBIO: Redirección según el rol del usuario ---
         if (this.authService.tieneRol('Administrador')) {
           this.router.navigate(['/admin']);
         } else if (this.authService.tieneRol('Docente')) {
@@ -82,8 +84,6 @@ export class Login implements OnInit {
         } else {
           this.error.set('Rol no autorizado o no reconocido');
         }
-        // --- FIN DE CAMBIO ---
-
       },
       error: () => {
         this.cargando.set(false);

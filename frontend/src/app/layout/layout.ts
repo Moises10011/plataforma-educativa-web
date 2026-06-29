@@ -3,6 +3,7 @@ import { RouterOutlet, RouterLink, RouterLinkActive, Router } from '@angular/rou
 import { HttpClient } from '@angular/common/http';
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../core/services/auth';
+import { environment } from '../../environments/environment';
 
 interface SubMenuItem {
   etiqueta: string;
@@ -40,7 +41,7 @@ export class Layout implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.http.get<Institucion>('/api/institucion').subscribe({
+      this.http.get<Institucion>(`${environment.apiUrl}/institucion`).subscribe({
       next: (data) => this.institucion.set(data),
     });
   }
@@ -48,7 +49,7 @@ export class Layout implements OnInit {
   logoUrl = computed(() => {
     const logo = this.institucion()?.logo;
     if (!logo) return null;
-    return `/api/uploads/institucion/${logo}`;
+    return `${environment.apiUrl}/uploads/institucion/${logo}`;
   });
 
   categoriasMenu = computed<CategoriaMenu[]>(() => {

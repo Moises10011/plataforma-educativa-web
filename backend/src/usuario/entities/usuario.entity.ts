@@ -19,6 +19,18 @@ export class Usuario {
   @Column({ type: 'varchar', length: 100 })
   apellidos!: string;
 
+  @Column({ type: 'varchar', length: 20, unique: true, nullable: true })
+  dni!: string;
+
+  @Column({ type: 'varchar', length: 20, nullable: true })
+  telefono!: string;
+
+  @Column({ type: 'varchar', length: 255, nullable: true })
+  direccion!: string;
+
+  @Column({ type: 'date', nullable: true })
+  fecha_nacimiento!: Date;
+
   @Column({ type: 'varchar', length: 150, unique: true })
   correo!: string;
 
