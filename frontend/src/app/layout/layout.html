@@ -3,7 +3,7 @@
   @if (menuMovilAbierto()) {
     <div
       (click)="cerrarMenuMovil()"
-      class="fixed inset-0 bg-black/50 z-40 md:hidden backdrop-blur-sm animate-fade-in">
+      class="fixed inset-0 bg-black/50 z-40 md:hidden backdrop-blur-sm">
     </div>
   }
 
@@ -18,7 +18,7 @@
 
     <div class="flex items-center justify-between gap-2 px-4 py-4 border-b border-gray-100 flex-shrink-0 min-h-[65px]">
       @if (!menuColapsado()) {
-        <div class="min-w-0 animate-fade-in">
+        <div class="min-w-0">
           <p class="text-base font-bold text-gray-800 truncate leading-tight">
             {{ etiquetaPanel() }}
           </p>
@@ -45,6 +45,22 @@
     </div>
 
     <nav class="flex-1 overflow-y-auto px-2 py-3 space-y-0.5">
+      <a
+        [routerLink]="rutaDashboard()"
+        routerLinkActive="bg-institucional-100 text-institucional-700 font-semibold"
+        [routerLinkActiveOptions]="{ exact: true }"
+        (click)="cerrarMenuMovil()"
+        class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-gray-600 hover:bg-institucional-50 hover:text-institucional-700 transition-all duration-200 mb-1"
+        [class.justify-center]="menuColapsado()"
+      >
+        <svg class="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+        </svg>
+        @if (!menuColapsado()) {
+          <span class="text-sm font-semibold">Dashboard</span>
+        }
+      </a>
+
       @for (categoria of categoriasMenu(); track categoria.etiqueta) {
         <div>
           <button
@@ -121,8 +137,8 @@
     </nav>
 
     <div class="p-3 border-t border-gray-100 flex-shrink-0">
-      <button 
-        (click)="cerrarSesion()" 
+      <button
+        (click)="cerrarSesion()"
         class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-gray-500 hover:bg-red-50 hover:text-red-600 transition-all duration-200 group"
         [class.justify-center]="menuColapsado()"
       >
@@ -162,7 +178,6 @@
       </div>
 
       <div class="flex items-center gap-4">
-
         <button class="relative w-9 h-9 rounded-xl bg-gray-50 flex items-center justify-center text-gray-500 hover:bg-gray-100 transition-colors border border-gray-100">
           <svg class="w-[18px] h-[18px]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
@@ -179,7 +194,6 @@
             <p class="text-xs text-gray-400 leading-tight mt-0.5">{{ authService.usuarioActual()?.roles?.[0] }}</p>
           </div>
         </div>
-
       </div>
     </header>
 

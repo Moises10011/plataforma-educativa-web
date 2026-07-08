@@ -1,4 +1,5 @@
 <div>
+  <!-- Encabezado -->
   <div class="mb-6 flex items-center justify-between">
     <div>
       <h1 class="text-xl font-bold text-gray-900">Estudiantes</h1>
@@ -10,7 +11,7 @@
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
         {{ exportando() ? 'Exportando...' : 'Exportar Excel' }}
       </button>
-      <button (click)="abrirModalMatricular()"
+      <button (click)="abrirModalNuevo()"
         class="flex items-center gap-2 bg-institucional-600 text-white text-sm font-medium px-4 py-2 rounded-lg hover:bg-institucional-700 transition-colors">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
         Matricular
@@ -21,8 +22,8 @@
   <!-- Filtros -->
   <div class="flex flex-wrap gap-3 mb-4">
     <input [ngModel]="filtroBusqueda()" (ngModelChange)="filtroBusqueda.set($event)"
-      type="text" placeholder="Buscar por nombre o correo..."
-      class="border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-institucional-500 w-56">
+      type="text" placeholder="Buscar por nombre, DNI o correo..."
+      class="border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-institucional-500 w-64">
 
     <select [ngModel]="filtroGrado()" (ngModelChange)="filtroGrado.set($event)"
       class="border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-institucional-500">
@@ -58,6 +59,7 @@
   <!-- Contador -->
   <p class="text-xs text-gray-400 mb-3">{{ matriculasFiltradas.length }} matrícula(s) encontrada(s)</p>
 
+  <!-- Tabla -->
   @if (cargando()) {
     <div class="bg-white rounded-xl shadow-sm p-5 h-40 animate-pulse"></div>
   } @else if (!matriculasFiltradas.length) {
@@ -71,6 +73,7 @@
           <thead>
             <tr class="border-b border-gray-100">
               <th class="text-left text-xs text-gray-500 font-medium px-5 py-3">Estudiante</th>
+              <th class="text-left text-xs text-gray-500 font-medium px-5 py-3">DNI</th>
               <th class="text-left text-xs text-gray-500 font-medium px-5 py-3">Grado</th>
               <th class="text-left text-xs text-gray-500 font-medium px-5 py-3">Sección</th>
               <th class="text-left text-xs text-gray-500 font-medium px-5 py-3">Periodo</th>
@@ -92,6 +95,7 @@
                     </div>
                   </div>
                 </td>
+                <td class="px-5 py-3 text-gray-600 text-xs">{{ m.usuario.dni ?? '—' }}</td>
                 <td class="px-5 py-3 text-gray-600">{{ m.grado.nombre }}</td>
                 <td class="px-5 py-3 text-gray-600">{{ m.seccion.nombre }}</td>
                 <td class="px-5 py-3 text-gray-600">{{ m.periodo.nombre }}</td>
@@ -123,78 +127,259 @@
   }
 </div>
 
-<!-- Modal Matricular -->
-@if (modalMatricular()) {
+<!-- Modal Nuevo (Individual + Masiva) -->
+@if (modalNuevo()) {
   <div class="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
-    <div class="bg-white rounded-xl shadow-xl w-full max-w-md">
-      <div class="flex items-center justify-between p-5 border-b border-gray-100">
-        <h2 class="font-bold text-gray-900">Nueva Matrícula</h2>
+    <div class="bg-white rounded-xl shadow-xl w-full max-w-lg max-h-[90vh] flex flex-col">
+
+      <!-- Header -->
+      <div class="flex items-center justify-between p-5 border-b border-gray-100 shrink-0">
+        <h2 class="font-bold text-gray-900">Matricular Estudiante</h2>
         <button (click)="cerrarModal()" class="text-gray-400 hover:text-gray-600">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
         </button>
       </div>
-      <div class="p-5 space-y-4">
-        @if (error()) {
-          <p class="text-xs text-red-600 bg-red-50 rounded-lg px-3 py-2">{{ error() }}</p>
-        }
-        <div>
-          <label class="block text-xs font-medium text-gray-600 mb-1">Estudiante</label>
-          <select [(ngModel)]="nuevaMatricula.id_usuario"
-            class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-institucional-500">
-            <option [ngValue]="null">Seleccionar estudiante</option>
-            @for (e of estudiantes(); track e.id_usuario) {
-              <option [ngValue]="e.id_usuario">{{ e.nombres }} {{ e.apellidos }}</option>
-            }
-          </select>
-        </div>
-        <div class="grid grid-cols-2 gap-3">
-          <div>
-            <label class="block text-xs font-medium text-gray-600 mb-1">Grado</label>
-            <select [(ngModel)]="nuevaMatricula.id_grado"
-              class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-institucional-500">
-              <option [ngValue]="null">Seleccionar</option>
-              @for (g of grados(); track g.id_grado) {
-                <option [ngValue]="g.id_grado">{{ g.nombre }}</option>
-              }
-            </select>
-          </div>
-          <div>
-            <label class="block text-xs font-medium text-gray-600 mb-1">Sección</label>
-            <select [(ngModel)]="nuevaMatricula.id_seccion"
-              class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-institucional-500">
-              <option [ngValue]="null">Seleccionar</option>
-              @for (s of secciones(); track s.id_seccion) {
-                <option [ngValue]="s.id_seccion">{{ s.nombre }}</option>
-              }
-            </select>
-          </div>
-        </div>
-        <div>
-          <label class="block text-xs font-medium text-gray-600 mb-1">Periodo Académico</label>
-          <select [(ngModel)]="nuevaMatricula.id_periodo"
-            class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-institucional-500">
-            <option [ngValue]="null">Seleccionar periodo</option>
-            @for (p of periodos(); track p.id_periodo) {
-              <option [ngValue]="p.id_periodo">{{ p.nombre }}{{ p.estado ? ' (activo)' : '' }}</option>
-            }
-          </select>
-        </div>
-      </div>
-      <div class="flex gap-3 p-5 border-t border-gray-100">
-        <button (click)="cerrarModal()" class="flex-1 text-sm font-medium text-gray-600 border border-gray-200 rounded-lg py-2 hover:bg-gray-50 transition-colors">Cancelar</button>
-        <button (click)="matricular()" [disabled]="guardando()"
-          class="flex-1 text-sm font-medium text-white bg-institucional-600 rounded-lg py-2 hover:bg-institucional-700 transition-colors disabled:opacity-50">
-          {{ guardando() ? 'Guardando...' : 'Matricular' }}
+
+      <!-- Tabs -->
+      <div class="flex border-b border-gray-100 shrink-0">
+        <button (click)="tabActivo.set('individual')"
+          class="flex-1 py-3 text-sm font-medium transition-colors"
+          [class.text-institucional-600]="tabActivo() === 'individual'"
+          [class.border-b-2]="tabActivo() === 'individual'"
+          [class.border-institucional-600]="tabActivo() === 'individual'"
+          [class.text-gray-400]="tabActivo() !== 'individual'">
+          Individual
         </button>
+        <button (click)="tabActivo.set('masiva')"
+          class="flex-1 py-3 text-sm font-medium transition-colors"
+          [class.text-institucional-600]="tabActivo() === 'masiva'"
+          [class.border-b-2]="tabActivo() === 'masiva'"
+          [class.border-institucional-600]="tabActivo() === 'masiva'"
+          [class.text-gray-400]="tabActivo() !== 'masiva'">
+          Carga Masiva
+        </button>
+      </div>
+
+      <!-- Error -->
+      @if (error()) {
+        <div class="mx-5 mt-4 shrink-0">
+          <p class="text-xs text-red-600 bg-red-50 rounded-lg px-3 py-2">{{ error() }}</p>
+        </div>
+      }
+
+      <!-- Contenido scrollable -->
+      <div class="overflow-y-auto flex-1 p-5">
+
+        <!-- TAB INDIVIDUAL -->
+        @if (tabActivo() === 'individual') {
+          <div class="space-y-4">
+
+            <!-- Preview correo y contraseña -->
+            @if (correoPreview()) {
+              <div class="bg-institucional-50 rounded-lg px-4 py-3 text-xs space-y-1">
+                <p class="text-institucional-700"><span class="font-medium">Correo:</span> {{ correoPreview() }}</p>
+                <p class="text-institucional-700"><span class="font-medium">Contraseña inicial:</span> {{ passwordPreview() }}</p>
+              </div>
+            }
+
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs font-medium text-gray-600 mb-1">Nombres <span class="text-red-500">*</span></label>
+                <input [(ngModel)]="nuevoEstudiante.nombres" type="text" placeholder="Juan Carlos"
+                  class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-institucional-500">
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-gray-600 mb-1">Apellidos <span class="text-red-500">*</span></label>
+                <input [(ngModel)]="nuevoEstudiante.apellidos" type="text" placeholder="Perez Lopez"
+                  class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-institucional-500">
+              </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs font-medium text-gray-600 mb-1">DNI <span class="text-red-500">*</span></label>
+                <input [(ngModel)]="nuevoEstudiante.dni" type="text" placeholder="12345678" maxlength="8"
+                  class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-institucional-500">
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-gray-600 mb-1">Teléfono</label>
+                <input [(ngModel)]="nuevoEstudiante.telefono" type="text" placeholder="987654321"
+                  class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-institucional-500">
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-xs font-medium text-gray-600 mb-1">Dirección</label>
+              <input [(ngModel)]="nuevoEstudiante.direccion" type="text" placeholder="Av. Principal 123"
+                class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-institucional-500">
+            </div>
+
+            <div>
+              <label class="block text-xs font-medium text-gray-600 mb-1">Fecha de Nacimiento</label>
+              <input [(ngModel)]="nuevoEstudiante.fecha_nacimiento" type="date"
+                class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-institucional-500">
+            </div>
+
+            <div class="border-t border-gray-100 pt-4">
+              <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Asignación</p>
+              <div class="grid grid-cols-2 gap-3">
+                <div>
+                  <label class="block text-xs font-medium text-gray-600 mb-1">Grado <span class="text-red-500">*</span></label>
+                  <select [(ngModel)]="nuevoEstudiante.id_grado" (ngModelChange)="onGradoChange()"
+                    class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-institucional-500">
+                    <option [ngValue]="null">Seleccionar</option>
+                    @for (g of grados(); track g.id_grado) {
+                      <option [ngValue]="g.id_grado">{{ g.nombre }}</option>
+                    }
+                  </select>
+                </div>
+                <div>
+                  <label class="block text-xs font-medium text-gray-600 mb-1">Sección <span class="text-red-500">*</span></label>
+                  <select [(ngModel)]="nuevoEstudiante.id_seccion"
+                    class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-institucional-500">
+                    <option [ngValue]="null">Seleccionar</option>
+                    @for (s of seccionesFiltradas(); track s.id_seccion) {
+                      <option [ngValue]="s.id_seccion">{{ s.nombre }}</option>
+                    }
+                  </select>
+                </div>
+              </div>
+              <div class="mt-3">
+                <label class="block text-xs font-medium text-gray-600 mb-1">Periodo Académico <span class="text-red-500">*</span></label>
+                <select [(ngModel)]="nuevoEstudiante.id_periodo"
+                  class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-institucional-500">
+                  <option [ngValue]="null">Seleccionar periodo</option>
+                  @for (p of periodos(); track p.id_periodo) {
+                    <option [ngValue]="p.id_periodo">{{ p.nombre }}{{ p.estado ? ' (activo)' : '' }}</option>
+                  }
+                </select>
+              </div>
+            </div>
+          </div>
+        }
+
+        <!-- TAB MASIVA -->
+        @if (tabActivo() === 'masiva') {
+          <div class="space-y-4">
+
+            <!-- Descargar plantilla -->
+            <div class="bg-gray-50 rounded-lg p-4 flex items-center justify-between">
+              <div>
+                <p class="text-sm font-medium text-gray-700">Plantilla Excel</p>
+                <p class="text-xs text-gray-400 mt-0.5">Descarga y completa con los datos de los estudiantes</p>
+              </div>
+              <button (click)="descargarPlantilla()"
+                class="flex items-center gap-2 text-xs font-medium text-institucional-600 border border-institucional-200 rounded-lg px-3 py-2 hover:bg-institucional-50 transition-colors">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                Descargar
+              </button>
+            </div>
+
+            <!-- Subir archivo -->
+            <div>
+              <label class="block text-xs font-medium text-gray-600 mb-2">Archivo Excel</label>
+              <label class="flex flex-col items-center justify-center w-full h-28 border-2 border-dashed border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
+                <svg class="w-8 h-8 text-gray-300 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
+                @if (archivoMasivo) {
+                  <p class="text-xs text-institucional-600 font-medium">{{ archivoMasivo.name }}</p>
+                  <p class="text-xs text-gray-400 mt-0.5">{{ filasMasivo.length }} estudiante(s) detectado(s)</p>
+                } @else {
+                  <p class="text-xs text-gray-400">Haz clic para seleccionar el archivo</p>
+                  <p class="text-xs text-gray-300 mt-0.5">.xlsx o .xls</p>
+                }
+                <input type="file" accept=".xlsx,.xls" class="hidden" (change)="onArchivoSeleccionado($event)">
+              </label>
+            </div>
+
+            <!-- Preview filas -->
+            @if (filasMasivo.length) {
+              <div class="border border-gray-100 rounded-lg overflow-hidden">
+                <div class="bg-gray-50 px-3 py-2 text-xs font-medium text-gray-500">Vista previa (primeras 3 filas)</div>
+                <div class="overflow-x-auto">
+                  <table class="w-full text-xs">
+                    <thead>
+                      <tr class="border-b border-gray-100">
+                        <th class="px-3 py-2 text-left text-gray-500">Nombres</th>
+                        <th class="px-3 py-2 text-left text-gray-500">Apellidos</th>
+                        <th class="px-3 py-2 text-left text-gray-500">DNI</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      @for (fila of filasMasivo.slice(0, 3); track $index) {
+                        <tr class="border-b border-gray-50">
+                          <td class="px-3 py-2 text-gray-700">{{ fila.nombres }}</td>
+                          <td class="px-3 py-2 text-gray-700">{{ fila.apellidos }}</td>
+                          <td class="px-3 py-2 text-gray-700">{{ fila.dni }}</td>
+                        </tr>
+                      }
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            }
+
+            <!-- Asignación masiva -->
+            <div class="border-t border-gray-100 pt-4">
+              <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Asignar a todos</p>
+              <div class="grid grid-cols-2 gap-3">
+                <div>
+                  <label class="block text-xs font-medium text-gray-600 mb-1">Grado <span class="text-red-500">*</span></label>
+                  <select [ngModel]="gradoMasivo()" (ngModelChange)="gradoMasivo.set($event); onGradoMasivoChange()"
+                    class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-institucional-500">
+                    <option [ngValue]="null">Seleccionar</option>
+                    @for (g of grados(); track g.id_grado) {
+                      <option [ngValue]="g.id_grado">{{ g.nombre }}</option>
+                    }
+                  </select>
+                </div>
+                <div>
+                  <label class="block text-xs font-medium text-gray-600 mb-1">Sección <span class="text-red-500">*</span></label>
+                  <select [ngModel]="seccionMasivo()" (ngModelChange)="seccionMasivo.set($event)"
+                    class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-institucional-500">
+                    <option [ngValue]="null">Seleccionar</option>
+                    @for (s of seccionesFiltradasMasivo(); track s.id_seccion) {
+                      <option [ngValue]="s.id_seccion">{{ s.nombre }}</option>
+                    }
+                  </select>
+                </div>
+              </div>
+              <div class="mt-3">
+                <label class="block text-xs font-medium text-gray-600 mb-1">Periodo <span class="text-red-500">*</span></label>
+                <select [ngModel]="periodoMasivo()" (ngModelChange)="periodoMasivo.set($event)"
+                  class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-institucional-500">
+                  <option [ngValue]="null">Seleccionar periodo</option>
+                  @for (p of periodos(); track p.id_periodo) {
+                    <option [ngValue]="p.id_periodo">{{ p.nombre }}{{ p.estado ? ' (activo)' : '' }}</option>
+                  }
+                </select>
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+
+      <!-- Footer -->
+      <div class="flex gap-3 p-5 border-t border-gray-100 shrink-0">
+        <button (click)="cerrarModal()" class="flex-1 text-sm font-medium text-gray-600 border border-gray-200 rounded-lg py-2 hover:bg-gray-50 transition-colors">Cancelar</button>
+        @if (tabActivo() === 'individual') {
+          <button (click)="matricular()" [disabled]="guardando()"
+            class="flex-1 text-sm font-medium text-white bg-institucional-600 rounded-lg py-2 hover:bg-institucional-700 transition-colors disabled:opacity-50">
+            {{ guardando() ? 'Guardando...' : 'Matricular' }}
+          </button>
+        } @else {
+          <button (click)="procesarMasivo()" [disabled]="procesandoMasivo() || !filasMasivo.length"
+            class="flex-1 text-sm font-medium text-white bg-institucional-600 rounded-lg py-2 hover:bg-institucional-700 transition-colors disabled:opacity-50">
+            {{ procesandoMasivo() ? 'Procesando...' : 'Procesar ' + filasMasivo.length + ' estudiante(s)' }}
+          </button>
+        }
       </div>
     </div>
   </div>
 }
-
-<!-- Modal Editar Matrícula -->
+<!-- Modal Editar -->
 @if (modalEditar()) {
   <div class="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
-    <div class="bg-white rounded-xl shadow-xl w-full max-w-md">
+    <div class="bg-white rounded-xl shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto">
       <div class="flex items-center justify-between p-5 border-b border-gray-100">
         <div>
           <h2 class="font-bold text-gray-900">Editar Matrícula</h2>
@@ -204,14 +389,54 @@
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
         </button>
       </div>
+
       <div class="p-5 space-y-4">
         @if (error()) {
           <p class="text-xs text-red-600 bg-red-50 rounded-lg px-3 py-2">{{ error() }}</p>
         }
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-medium text-gray-600 mb-1">Nombres</label>
+            <input type="text" [(ngModel)]="editarForm.nombres"
+              class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-institucional-500" />
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-600 mb-1">Apellidos</label>
+            <input type="text" [(ngModel)]="editarForm.apellidos"
+              class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-institucional-500" />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-medium text-gray-600 mb-1">DNI</label>
+            <input type="text" [(ngModel)]="editarForm.dni" maxlength="8" pattern="[0-9]{8}" inputmode="numeric"
+              class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-institucional-500" />
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-600 mb-1">Teléfono</label>
+            <input type="text" [(ngModel)]="editarForm.telefono" maxlength="9" pattern="[0-9]{9}" inputmode="numeric"
+              class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-institucional-500" />
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-medium text-gray-600 mb-1">Dirección</label>
+          <input type="text" [(ngModel)]="editarForm.direccion"
+            class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-institucional-500" />
+        </div>
+
+        <div>
+          <label class="block text-xs font-medium text-gray-600 mb-1">Fecha de nacimiento</label>
+          <input type="date" [(ngModel)]="editarForm.fecha_nacimiento"
+            class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-institucional-500" />
+        </div>
+
         <div class="grid grid-cols-2 gap-3">
           <div>
             <label class="block text-xs font-medium text-gray-600 mb-1">Grado</label>
-            <select [(ngModel)]="editarForm.id_grado"
+            <select [(ngModel)]="editarForm.id_grado" (ngModelChange)="onGradoEditarChange()"
               class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-institucional-500">
               @for (g of grados(); track g.id_grado) {
                 <option [ngValue]="g.id_grado">{{ g.nombre }}</option>
@@ -222,21 +447,23 @@
             <label class="block text-xs font-medium text-gray-600 mb-1">Sección</label>
             <select [(ngModel)]="editarForm.id_seccion"
               class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-institucional-500">
-              @for (s of secciones(); track s.id_seccion) {
+              @for (s of seccionesFiltradasEditar(); track s.id_seccion) {
                 <option [ngValue]="s.id_seccion">{{ s.nombre }}</option>
               }
             </select>
           </div>
         </div>
+
         <div>
           <label class="block text-xs font-medium text-gray-600 mb-1">Periodo</label>
           <select [(ngModel)]="editarForm.id_periodo"
             class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-institucional-500">
             @for (p of periodos(); track p.id_periodo) {
-              <option [ngValue]="p.id_periodo">{{ p.nombre }}</option>
+              <option [ngValue]="p.id_periodo">{{ p.nombre }}{{ p.estado ? ' (activo)' : '' }}</option>
             }
           </select>
         </div>
+
         <div>
           <label class="block text-xs font-medium text-gray-600 mb-1">Estado</label>
           <select [(ngModel)]="editarForm.estado"
@@ -246,6 +473,7 @@
           </select>
         </div>
       </div>
+
       <div class="flex gap-3 p-5 border-t border-gray-100">
         <button (click)="cerrarModal()" class="flex-1 text-sm font-medium text-gray-600 border border-gray-200 rounded-lg py-2 hover:bg-gray-50 transition-colors">Cancelar</button>
         <button (click)="guardarEdicion()" [disabled]="guardando()"
@@ -269,6 +497,72 @@
       <div class="flex gap-3">
         <button (click)="cerrarModal()" class="flex-1 text-sm font-medium text-gray-600 border border-gray-200 rounded-lg py-2 hover:bg-gray-50 transition-colors">Cancelar</button>
         <button (click)="eliminar()" class="flex-1 text-sm font-medium text-white bg-red-600 rounded-lg py-2 hover:bg-red-700 transition-colors">Eliminar</button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Modal Resultado Masivo -->
+@if (modalResultado()) {
+  <div class="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-xl shadow-xl w-full max-w-md max-h-[80vh] flex flex-col">
+      <div class="flex items-center justify-between p-5 border-b border-gray-100 shrink-0">
+        <h2 class="font-bold text-gray-900">Resultado de Carga Masiva</h2>
+        <button (click)="cerrarModal()" class="text-gray-400 hover:text-gray-600">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div class="p-5 overflow-y-auto flex-1 space-y-4">
+
+        <!-- Resumen -->
+        <div class="grid grid-cols-2 gap-3">
+          <div class="bg-green-50 rounded-lg p-3 text-center">
+            <p class="text-2xl font-bold text-green-600">{{ resultadoMasivo()?.exitosos?.length ?? 0 }}</p>
+            <p class="text-xs text-green-600 mt-0.5">Matriculados</p>
+          </div>
+          <div class="bg-red-50 rounded-lg p-3 text-center">
+            <p class="text-2xl font-bold text-red-600">{{ resultadoMasivo()?.errores?.length ?? 0 }}</p>
+            <p class="text-xs text-red-600 mt-0.5">Con error</p>
+          </div>
+        </div>
+
+        <!-- Exitosos -->
+        @if (resultadoMasivo()?.exitosos?.length) {
+          <div>
+            <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Matriculados correctamente</p>
+            <div class="space-y-1">
+              @for (e of resultadoMasivo()!.exitosos; track e.dni) {
+                <div class="flex items-center justify-between bg-green-50 rounded-lg px-3 py-2">
+                  <div>
+                    <p class="text-xs font-medium text-gray-700">{{ e.nombre }}</p>
+                    <p class="text-xs text-gray-400">{{ e.correo }}</p>
+                  </div>
+                  <svg class="w-4 h-4 text-green-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                </div>
+              }
+            </div>
+          </div>
+        }
+
+        <!-- Errores -->
+        @if (resultadoMasivo()?.errores?.length) {
+          <div>
+            <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Con errores</p>
+            <div class="space-y-1">
+              @for (e of resultadoMasivo()!.errores; track e.dni) {
+                <div class="bg-red-50 rounded-lg px-3 py-2">
+                  <p class="text-xs font-medium text-gray-700">{{ e.nombre }}</p>
+                  <p class="text-xs text-red-500 mt-0.5">{{ e.error }}</p>
+                </div>
+              }
+            </div>
+          </div>
+        }
+      </div>
+      <div class="p-5 border-t border-gray-100 shrink-0">
+        <button (click)="cerrarModal()" class="w-full text-sm font-medium text-white bg-institucional-600 rounded-lg py-2 hover:bg-institucional-700 transition-colors">
+          Cerrar
+        </button>
       </div>
     </div>
   </div>

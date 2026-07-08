@@ -11,29 +11,88 @@
     </button>
   </div>
 
+  <div class="bg-white rounded-xl shadow-sm p-4 mb-4 space-y-3">
+    <div class="flex flex-wrap items-center gap-2">
+      <button (click)="cambiarFiltroTipo('TODOS_TIPOS')"
+        class="filtro-tab" [class.filtro-tab-activo]="filtroTipo() === 'TODOS_TIPOS'">
+        Todos
+      </button>
+      <button (click)="cambiarFiltroTipo('docentes')"
+        class="filtro-tab" [class.filtro-tab-activo]="filtroTipo() === 'docentes'">
+        Docentes
+      </button>
+      <button (click)="cambiarFiltroTipo('estudiantes')"
+        class="filtro-tab" [class.filtro-tab-activo]="filtroTipo() === 'estudiantes'">
+        Estudiantes
+      </button>
+
+      <div class="flex-1"></div>
+
+      <div class="relative">
+        <svg class="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35M17 11a6 6 0 11-12 0 6 6 0 0112 0z"/></svg>
+        <input [ngModel]="busqueda()" (ngModelChange)="busqueda.set($event)"
+          type="text" placeholder="Buscar por título o contenido..."
+          class="w-64 border border-gray-200 rounded-lg pl-9 pr-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-institucional-500">
+      </div>
+    </div>
+  </div>
+
   @if (cargando()) {
     <div class="space-y-3">
       @for (i of [1,2,3]; track i) {
         <div class="bg-white rounded-xl shadow-sm p-5 h-24 animate-pulse"></div>
       }
     </div>
-  } @else if (!comunicados().length) {
+  } @else if (!comunicadosFiltrados().length) {
     <div class="bg-white rounded-xl shadow-sm p-10 text-center">
-      <p class="text-sm text-gray-400">No hay comunicados publicados</p>
+      <p class="text-sm text-gray-400">No hay comunicados que coincidan con estos filtros</p>
     </div>
   } @else {
     <div class="space-y-3">
-      @for (c of comunicados(); track c.id_comunicado) {
+      @for (c of comunicadosFiltrados(); track c.id_comunicado) {
         <div class="bg-white rounded-xl shadow-sm p-5 hover:shadow-md transition-shadow">
           <div class="flex items-start justify-between gap-4">
             <div class="flex-1 min-w-0">
-              <div class="flex items-center gap-2 mb-1">
+              <div class="flex items-center gap-2 mb-1 flex-wrap">
                 <h3 class="font-semibold text-gray-900 text-sm">{{ c.titulo }}</h3>
-                @if (c.archivo) {
-                  <span class="bg-institucional-50 text-institucional-700 text-xs px-2 py-0.5 rounded-full">Con adjunto</span>
-                }
+                <span class="badge-audiencia" [ngClass]="claseBadgeAudiencia(c)">
+                  {{ etiquetaAudiencia(c) }}
+                </span>
               </div>
               <p class="text-sm text-gray-500 line-clamp-2">{{ c.contenido }}</p>
+
+              @if (c.adjuntos?.length) {
+                <div class="flex flex-wrap gap-2 mt-2">
+                  @for (a of c.adjuntos; track a.id) {
+                    <div class="flex items-center gap-1 group">
+                      <button (click)="verAdjunto(a)"
+                        class="flex items-center gap-1.5">
+                        <span class="icono-archivo" [ngClass]="'icono-archivo-' + categoriaArchivo(a.nombre_original)">
+                          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V7.5L14.5 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+                        </span>
+                        <span class="text-xs text-gray-500 group-hover:text-institucional-600 group-hover:underline truncate max-w-[220px]">
+                          {{ a.nombre_original }}
+                        </span>
+                      </button>
+                      <button (click)="eliminarAdjunto(c, a)"
+                        class="text-gray-300 hover:text-red-500 transition-colors" title="Eliminar archivo">
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                      </button>
+                    </div>
+                  }
+                </div>
+              } @else if (c.archivo) {
+                <button (click)="verAdjuntoLegado(c)"
+                  class="flex items-center gap-1.5 mt-2 group">
+                  <span class="icono-archivo" [ngClass]="'icono-archivo-' + categoriaArchivo(c.archivo)">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V7.5L14.5 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+                  </span>
+                  <span class="text-xs text-gray-500 group-hover:text-institucional-600 group-hover:underline truncate max-w-[220px]">
+                    {{ nombreArchivo(c.archivo) }}
+                  </span>
+                </button>
+              }
+
               <div class="flex items-center gap-3 mt-2">
                 <p class="text-xs text-gray-300">{{ c.fecha_publicacion | date:'dd/MM/yyyy HH:mm' }}</p>
                 @if (c.autor) {
@@ -42,12 +101,10 @@
               </div>
             </div>
             <div class="flex gap-1 shrink-0">
-              @if (c.archivo) {
-                <button (click)="descargar(c)"
-                  class="w-8 h-8 rounded-lg bg-institucional-50 flex items-center justify-center text-institucional-600 hover:bg-institucional-100 transition-colors" title="Descargar">
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
-                </button>
-              }
+              <button (click)="abrirModalEditar(c)"
+                class="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center text-institucional-600 hover:bg-blue-100 transition-colors" title="Editar">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+              </button>
               <button (click)="confirmarEliminar(c.id_comunicado)"
                 class="w-8 h-8 rounded-lg bg-red-50 flex items-center justify-center text-red-500 hover:bg-red-100 transition-colors" title="Eliminar">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
@@ -60,10 +117,10 @@
   }
 </div>
 
-<!-- Modal Nuevo Comunicado -->
+<!-- ===== Modal Nuevo Comunicado ===== -->
 @if (modalNuevo()) {
   <div class="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
-    <div class="bg-white rounded-xl shadow-xl w-full max-w-lg">
+    <div class="bg-white rounded-xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
       <div class="flex items-center justify-between p-5 border-b border-gray-100">
         <h2 class="font-bold text-gray-900">Nuevo Comunicado</h2>
         <button (click)="cerrarModal()" class="text-gray-400 hover:text-gray-600">
@@ -74,20 +131,164 @@
         @if (error()) {
           <p class="text-xs text-red-600 bg-red-50 rounded-lg px-3 py-2">{{ error() }}</p>
         }
+
         <div>
           <label class="block text-xs font-medium text-gray-600 mb-1">Título *</label>
           <input [(ngModel)]="nuevo.titulo" type="text" placeholder="Título del comunicado"
             class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-institucional-500">
         </div>
+
         <div>
           <label class="block text-xs font-medium text-gray-600 mb-1">Contenido *</label>
           <textarea [(ngModel)]="nuevo.contenido" rows="4" placeholder="Redacta el comunicado..."
             class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-institucional-500 resize-none"></textarea>
         </div>
+
         <div>
-          <label class="block text-xs font-medium text-gray-600 mb-1">Archivo adjunto (opcional)</label>
-          <input (change)="onArchivoChange($event)" type="file"
+          <label class="block text-xs font-medium text-gray-600 mb-2">Dirigido a *</label>
+          <div class="grid grid-cols-3 gap-2">
+            <button type="button" (click)="onCambiarAudiencia('todos')"
+              class="audiencia-btn" [class.audiencia-btn-activo]="nuevo.tipo === 'todos'">
+              Todos
+            </button>
+            <button type="button" (click)="onCambiarAudiencia('docentes')"
+              class="audiencia-btn" [class.audiencia-btn-activo]="nuevo.tipo === 'docentes'">
+              Docentes
+            </button>
+            <button type="button" (click)="onCambiarAudiencia('estudiantes')"
+              class="audiencia-btn" [class.audiencia-btn-activo]="nuevo.tipo === 'estudiantes'">
+              Estudiantes
+            </button>
+          </div>
+        </div>
+
+        @if (nuevo.tipo === 'docentes') {
+          <div class="bg-gray-50 rounded-lg p-3">
+            <label class="block text-xs font-medium text-gray-600 mb-2">Docentes específicos (opcional)</label>
+            <div class="max-h-40 overflow-y-auto space-y-1 bg-white border border-gray-200 rounded-lg p-2">
+              @for (d of docentes(); track d.id_usuario) {
+                <label class="flex items-center gap-2 px-1 py-1 rounded hover:bg-gray-50 cursor-pointer text-sm">
+                  <input type="checkbox"
+                    [checked]="docenteSeleccionado(d.id_usuario)"
+                    (change)="toggleDocente(d.id_usuario)"
+                    class="rounded border-gray-300 text-institucional-600 focus:ring-institucional-500">
+                  <span class="text-gray-700">{{ d.nombres }} {{ d.apellidos }}</span>
+                </label>
+              } @empty {
+                <p class="text-xs text-gray-400 px-1 py-1">No hay docentes registrados</p>
+              }
+            </div>
+            <p class="text-xs text-gray-400 mt-1">
+              Si no marcas ninguno, el comunicado llegará a todos los docentes.
+            </p>
+          </div>
+        }
+
+        @if (nuevo.tipo === 'estudiantes') {
+          <div class="bg-gray-50 rounded-lg p-3 space-y-4">
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs font-medium text-gray-600 mb-1">Grados (opcional)</label>
+                <div class="max-h-32 overflow-y-auto space-y-1 bg-white border border-gray-200 rounded-lg p-2">
+                  @for (g of grados(); track g.id_grado) {
+                    <label class="flex items-center gap-2 px-1 py-1 rounded hover:bg-gray-50 cursor-pointer text-sm">
+                      <input type="checkbox"
+                        [checked]="gradoSeleccionado(g.id_grado)"
+                        (change)="toggleGrado(g.id_grado)"
+                        class="rounded border-gray-300 text-institucional-600 focus:ring-institucional-500">
+                      <span class="text-gray-700">{{ g.nombre }}</span>
+                    </label>
+                  } @empty {
+                    <p class="text-xs text-gray-400 px-1 py-1">No hay grados registrados</p>
+                  }
+                </div>
+              </div>
+
+              <div>
+                <label class="block text-xs font-medium text-gray-600 mb-1">Secciones (opcional)</label>
+                <div class="max-h-32 overflow-y-auto space-y-1 bg-white border border-gray-200 rounded-lg p-2">
+                  @for (s of secciones(); track s.id_seccion) {
+                    <label class="flex items-center gap-2 px-1 py-1 rounded hover:bg-gray-50 cursor-pointer text-sm">
+                      <input type="checkbox"
+                        [checked]="seccionSeleccionada(s.id_seccion)"
+                        (change)="toggleSeccion(s.id_seccion)"
+                        class="rounded border-gray-300 text-institucional-600 focus:ring-institucional-500">
+                      <span class="text-gray-700">{{ s.nombre }}</span>
+                    </label>
+                  } @empty {
+                    <p class="text-xs text-gray-400 px-1 py-1">No hay secciones registradas</p>
+                  }
+                </div>
+              </div>
+            </div>
+
+            @if (nuevo.id_grados.length || nuevo.id_secciones.length) {
+              <div class="flex flex-wrap gap-1.5">
+                @for (id of nuevo.id_grados; track id) {
+                  <span class="chip-combinacion">
+                    {{ nombreGrado(id) }}
+                    <button type="button" (click)="quitarGrado(id)" class="chip-combinacion-cerrar">
+                      <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                    </button>
+                  </span>
+                }
+                @for (id of nuevo.id_secciones; track id) {
+                  <span class="chip-combinacion chip-combinacion-seccion">
+                    Sección {{ nombreSeccion(id) }}
+                    <button type="button" (click)="quitarSeccion(id)" class="chip-combinacion-cerrar">
+                      <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                    </button>
+                  </span>
+                }
+              </div>
+            }
+
+            <p class="text-xs text-gray-400">
+              @if (nuevo.id_grados.length && nuevo.id_secciones.length) {
+                Se enviará a la combinación de los grados y secciones marcados.
+              } @else if (nuevo.id_grados.length) {
+                Se enviará a todos los estudiantes de los grados marcados (todas sus secciones).
+              } @else if (nuevo.id_secciones.length) {
+                Se enviará a los estudiantes de esas secciones, en todos los grados.
+              } @else {
+                Si no marcas nada, el comunicado llegará a todos los estudiantes.
+              }
+            </p>
+          </div>
+        }
+
+        <div>
+          <div class="flex items-center justify-between mb-1">
+            <label class="block text-xs font-medium text-gray-600">Archivos adjuntos (opcional)</label>
+            <span class="text-xs text-gray-400">{{ archivosSeleccionados.length }}/10</span>
+          </div>
+
+          <input (change)="onArchivosChange($event)" type="file" multiple
             class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm file:mr-3 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-medium file:bg-institucional-50 file:text-institucional-700 hover:file:bg-institucional-100">
+
+          @if (archivosSeleccionados.length) {
+            <div class="space-y-2 mt-2">
+              @for (item of archivosSeleccionados; track item.file.name; let i = $index) {
+                <div class="flex items-center gap-3 border border-gray-200 rounded-lg p-2.5">
+                  @if (item.previewUrl) {
+                    <img [src]="item.previewUrl" alt="Preview" class="w-10 h-10 rounded-md object-cover shrink-0">
+                  } @else {
+                    <span class="icono-archivo icono-archivo-lg" [ngClass]="'icono-archivo-' + categoriaArchivo(item.file.name)">
+                      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V7.5L14.5 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+                    </span>
+                  }
+                  <div class="flex-1 min-w-0">
+                    <p class="text-sm text-gray-700 truncate">{{ item.file.name }}</p>
+                    <p class="text-xs text-gray-400">{{ formatearTamano(item.file.size) }}</p>
+                  </div>
+                  <button type="button" (click)="quitarArchivo(i)"
+                    class="w-7 h-7 rounded-lg bg-red-50 flex items-center justify-center text-red-500 hover:bg-red-100 transition-colors shrink-0" title="Quitar archivo">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                  </button>
+                </div>
+              }
+            </div>
+          }
         </div>
       </div>
       <div class="flex gap-3 p-5 border-t border-gray-100">
@@ -101,7 +302,215 @@
   </div>
 }
 
-<!-- Modal Eliminar -->
+<!-- ===== Modal Editar Comunicado ===== -->
+@if (modalEditar()) {
+  <div class="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between p-5 border-b border-gray-100">
+        <h2 class="font-bold text-gray-900">Editar Comunicado</h2>
+        <button (click)="cerrarModal()" class="text-gray-400 hover:text-gray-600">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div class="p-5 space-y-4">
+        @if (error()) {
+          <p class="text-xs text-red-600 bg-red-50 rounded-lg px-3 py-2">{{ error() }}</p>
+        }
+
+        <div>
+          <label class="block text-xs font-medium text-gray-600 mb-1">Título *</label>
+          <input [(ngModel)]="editar.titulo" type="text" placeholder="Título del comunicado"
+            class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-institucional-500">
+        </div>
+
+        <div>
+          <label class="block text-xs font-medium text-gray-600 mb-1">Contenido *</label>
+          <textarea [(ngModel)]="editar.contenido" rows="4" placeholder="Redacta el comunicado..."
+            class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-institucional-500 resize-none"></textarea>
+        </div>
+
+        <div>
+          <label class="block text-xs font-medium text-gray-600 mb-2">Dirigido a *</label>
+          <div class="grid grid-cols-3 gap-2">
+            <button type="button" (click)="onCambiarAudienciaEditar('todos')"
+              class="audiencia-btn" [class.audiencia-btn-activo]="editar.tipo === 'todos'">
+              Todos
+            </button>
+            <button type="button" (click)="onCambiarAudienciaEditar('docentes')"
+              class="audiencia-btn" [class.audiencia-btn-activo]="editar.tipo === 'docentes'">
+              Docentes
+            </button>
+            <button type="button" (click)="onCambiarAudienciaEditar('estudiantes')"
+              class="audiencia-btn" [class.audiencia-btn-activo]="editar.tipo === 'estudiantes'">
+              Estudiantes
+            </button>
+          </div>
+        </div>
+
+        @if (editar.tipo === 'docentes') {
+          <div class="bg-gray-50 rounded-lg p-3">
+            <label class="block text-xs font-medium text-gray-600 mb-2">Docentes específicos (opcional)</label>
+            <div class="max-h-40 overflow-y-auto space-y-1 bg-white border border-gray-200 rounded-lg p-2">
+              @for (d of docentes(); track d.id_usuario) {
+                <label class="flex items-center gap-2 px-1 py-1 rounded hover:bg-gray-50 cursor-pointer text-sm">
+                  <input type="checkbox"
+                    [checked]="docenteSeleccionadoEditar(d.id_usuario)"
+                    (change)="toggleDocenteEditar(d.id_usuario)"
+                    class="rounded border-gray-300 text-institucional-600 focus:ring-institucional-500">
+                  <span class="text-gray-700">{{ d.nombres }} {{ d.apellidos }}</span>
+                </label>
+              } @empty {
+                <p class="text-xs text-gray-400 px-1 py-1">No hay docentes registrados</p>
+              }
+            </div>
+            <p class="text-xs text-gray-400 mt-1">
+              Si no marcas ninguno, el comunicado llegará a todos los docentes.
+            </p>
+          </div>
+        }
+
+        @if (editar.tipo === 'estudiantes') {
+          <div class="bg-gray-50 rounded-lg p-3 space-y-4">
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs font-medium text-gray-600 mb-1">Grados (opcional)</label>
+                <div class="max-h-32 overflow-y-auto space-y-1 bg-white border border-gray-200 rounded-lg p-2">
+                  @for (g of grados(); track g.id_grado) {
+                    <label class="flex items-center gap-2 px-1 py-1 rounded hover:bg-gray-50 cursor-pointer text-sm">
+                      <input type="checkbox"
+                        [checked]="gradoSeleccionadoEditar(g.id_grado)"
+                        (change)="toggleGradoEditar(g.id_grado)"
+                        class="rounded border-gray-300 text-institucional-600 focus:ring-institucional-500">
+                      <span class="text-gray-700">{{ g.nombre }}</span>
+                    </label>
+                  } @empty {
+                    <p class="text-xs text-gray-400 px-1 py-1">No hay grados registrados</p>
+                  }
+                </div>
+              </div>
+
+              <div>
+                <label class="block text-xs font-medium text-gray-600 mb-1">Secciones (opcional)</label>
+                <div class="max-h-32 overflow-y-auto space-y-1 bg-white border border-gray-200 rounded-lg p-2">
+                  @for (s of secciones(); track s.id_seccion) {
+                    <label class="flex items-center gap-2 px-1 py-1 rounded hover:bg-gray-50 cursor-pointer text-sm">
+                      <input type="checkbox"
+                        [checked]="seccionSeleccionadaEditar(s.id_seccion)"
+                        (change)="toggleSeccionEditar(s.id_seccion)"
+                        class="rounded border-gray-300 text-institucional-600 focus:ring-institucional-500">
+                      <span class="text-gray-700">{{ s.nombre }}</span>
+                    </label>
+                  } @empty {
+                    <p class="text-xs text-gray-400 px-1 py-1">No hay secciones registradas</p>
+                  }
+                </div>
+              </div>
+            </div>
+
+            @if (editar.id_grados.length || editar.id_secciones.length) {
+              <div class="flex flex-wrap gap-1.5">
+                @for (id of editar.id_grados; track id) {
+                  <span class="chip-combinacion">
+                    {{ nombreGrado(id) }}
+                    <button type="button" (click)="quitarGradoEditar(id)" class="chip-combinacion-cerrar">
+                      <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                    </button>
+                  </span>
+                }
+                @for (id of editar.id_secciones; track id) {
+                  <span class="chip-combinacion chip-combinacion-seccion">
+                    Sección {{ nombreSeccion(id) }}
+                    <button type="button" (click)="quitarSeccionEditar(id)" class="chip-combinacion-cerrar">
+                      <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                    </button>
+                  </span>
+                }
+              </div>
+            }
+
+            <p class="text-xs text-gray-400">
+              @if (editar.id_grados.length && editar.id_secciones.length) {
+                Se enviará a la combinación de los grados y secciones marcados.
+              } @else if (editar.id_grados.length) {
+                Se enviará a todos los estudiantes de los grados marcados (todas sus secciones).
+              } @else if (editar.id_secciones.length) {
+                Se enviará a los estudiantes de esas secciones, en todos los grados.
+              } @else {
+                Si no marcas nada, el comunicado llegará a todos los estudiantes.
+              }
+            </p>
+          </div>
+        }
+
+        @if (adjuntosEditando().length) {
+          <div>
+            <label class="block text-xs font-medium text-gray-600 mb-1">Archivos ya publicados</label>
+            <div class="space-y-2">
+              @for (a of adjuntosEditando(); track a.id) {
+                <div class="flex items-center gap-3 border border-gray-200 rounded-lg p-2.5">
+                  <span class="icono-archivo" [ngClass]="'icono-archivo-' + categoriaArchivo(a.nombre_original)">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V7.5L14.5 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+                  </span>
+                  <button type="button" (click)="descargarAdjunto(a)" class="flex-1 min-w-0 text-left">
+                    <p class="text-sm text-gray-700 truncate hover:text-institucional-600 hover:underline">{{ a.nombre_original }}</p>
+                    <p class="text-xs text-gray-400">{{ formatearTamano(a.tamano) }}</p>
+                  </button>
+                  <button type="button" (click)="eliminarAdjuntoEnEdicion(a)"
+                    class="w-7 h-7 rounded-lg bg-red-50 flex items-center justify-center text-red-500 hover:bg-red-100 transition-colors shrink-0" title="Quitar archivo">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                  </button>
+                </div>
+              }
+            </div>
+          </div>
+        }
+
+        <div>
+          <div class="flex items-center justify-between mb-1">
+            <label class="block text-xs font-medium text-gray-600">Agregar más archivos (opcional)</label>
+            <span class="text-xs text-gray-400">{{ archivosSeleccionados.length }}/10</span>
+          </div>
+
+          <input (change)="onArchivosChange($event)" type="file" multiple
+            class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm file:mr-3 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-medium file:bg-institucional-50 file:text-institucional-700 hover:file:bg-institucional-100">
+
+          @if (archivosSeleccionados.length) {
+            <div class="space-y-2 mt-2">
+              @for (item of archivosSeleccionados; track item.file.name; let i = $index) {
+                <div class="flex items-center gap-3 border border-gray-200 rounded-lg p-2.5">
+                  @if (item.previewUrl) {
+                    <img [src]="item.previewUrl" alt="Preview" class="w-10 h-10 rounded-md object-cover shrink-0">
+                  } @else {
+                    <span class="icono-archivo icono-archivo-lg" [ngClass]="'icono-archivo-' + categoriaArchivo(item.file.name)">
+                      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V7.5L14.5 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+                    </span>
+                  }
+                  <div class="flex-1 min-w-0">
+                    <p class="text-sm text-gray-700 truncate">{{ item.file.name }}</p>
+                    <p class="text-xs text-gray-400">{{ formatearTamano(item.file.size) }}</p>
+                  </div>
+                  <button type="button" (click)="quitarArchivo(i)"
+                    class="w-7 h-7 rounded-lg bg-red-50 flex items-center justify-center text-red-500 hover:bg-red-100 transition-colors shrink-0" title="Quitar archivo">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                  </button>
+                </div>
+              }
+            </div>
+          }
+        </div>
+      </div>
+      <div class="flex gap-3 p-5 border-t border-gray-100">
+        <button (click)="cerrarModal()" class="flex-1 text-sm font-medium text-gray-600 border border-gray-200 rounded-lg py-2 hover:bg-gray-50 transition-colors">Cancelar</button>
+        <button (click)="guardarEdicion()" [disabled]="guardando()"
+          class="flex-1 text-sm font-medium text-white bg-institucional-600 rounded-lg py-2 hover:bg-institucional-700 transition-colors disabled:opacity-50">
+          {{ guardando() ? 'Guardando...' : 'Guardar cambios' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- ===== Modal Eliminar ===== -->
 @if (modalEliminar()) {
   <div class="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
     <div class="bg-white rounded-xl shadow-xl w-full max-w-sm p-6 text-center">

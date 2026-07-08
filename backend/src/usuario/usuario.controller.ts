@@ -16,6 +16,7 @@ import { Request } from 'express';
 import { UsuarioService } from './usuario.service';
 import { CreateUsuarioDto } from './dto/create-usuario.dto';
 import { UpdateUsuarioDto } from './dto/update-usuario.dto';
+import { CrearConRolDto } from './dto/crear-con-rol.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
@@ -32,31 +33,17 @@ interface AuthRequest extends Request {
 export class UsuarioController {
   constructor(private readonly usuarioService: UsuarioService) {}
 
-  // ─── RUTAS ESTÁTICAS PRIMERO (antes de :id) ───────────────────────────────
-
-  /**
-   * GET /usuario/perfil/mi-perfil
-   * Cualquier usuario autenticado puede ver su propio perfil
-   */
   @UseGuards(JwtAuthGuard)
   @Get('perfil/mi-perfil')
   getMyProfile(@Req() req: AuthRequest) {
     return this.usuarioService.findMyProfile(req.user);
   }
 
-  /**
-   * GET /usuario/estadisticas/conteo
-   * Pública: devuelve total de estudiantes y docentes
-   */
   @Get('estadisticas/conteo')
   contarPorRol() {
     return this.usuarioService.contarPorRol();
   }
 
-  /**
-   * GET /usuario/estudiante/dashboard
-   * Solo estudiantes autenticados
-   */
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('Estudiante')
   @Get('estudiante/dashboard')
@@ -64,10 +51,6 @@ export class UsuarioController {
     return this.usuarioService.getEstudianteDashboard(req.user);
   }
 
-  /**
-   * GET /usuario/docente/dashboard
-   * Solo docentes autenticados
-   */
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('Docente')
   @Get('docente/dashboard')
@@ -75,10 +58,6 @@ export class UsuarioController {
     return this.usuarioService.getDocenteDashboard(req.user);
   }
 
-  /**
-   * GET /usuario/admin/dashboard
-   * Solo administradores autenticados
-   */
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('Administrador')
   @Get('admin/dashboard')
@@ -86,12 +65,36 @@ export class UsuarioController {
     return this.usuarioService.getAdminDashboard(req.user);
   }
 
-  // ─── CRUD GENERAL ─────────────────────────────────────────────────────────
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('Administrador')
+  @Get('estudiantes')
+  findEstudiantes() {
+    return this.usuarioService.findByRol('Estudiante');
+  }
 
-  /**
-   * POST /usuario
-   * Solo administradores pueden crear usuarios
-   */
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('Administrador')
+  @Get('docentes')
+  findDocentes() {
+    return this.usuarioService.findByRol('Docente');
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('Administrador')
+  @Post('crear-con-rol')
+  @HttpCode(HttpStatus.CREATED)
+  crearConRol(@Body() dto: CrearConRolDto) {
+    return this.usuarioService.crearConRol(dto);
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('Administrador')
+  @Post('crear-masivo')
+  @HttpCode(HttpStatus.CREATED)
+  crearMasivo(@Body() body: { usuarios: CrearConRolDto[] }) {
+    return this.usuarioService.crearMasivo(body.usuarios);
+  }
+
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('Administrador')
   @Post()
@@ -100,10 +103,6 @@ export class UsuarioController {
     return this.usuarioService.create(createUsuarioDto);
   }
 
-  /**
-   * GET /usuario
-   * Admin ve todos; Docente ve solo estudiantes de sus secciones
-   */
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('Administrador', 'Docente')
   @Get()
@@ -111,12 +110,6 @@ export class UsuarioController {
     return this.usuarioService.findAll(req.user);
   }
 
-  // ─── RUTAS CON PARÁMETRO :id AL FINAL ────────────────────────────────────
-
-  /**
-   * GET /usuario/:id
-   * Admin y Docente pueden ver cualquier usuario por ID
-   */
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('Administrador', 'Docente')
   @Get(':id')
@@ -124,10 +117,6 @@ export class UsuarioController {
     return this.usuarioService.findOne(id);
   }
 
-  /**
-   * PUT /usuario/:id
-   * Admin puede modificar cualquiera; usuario puede modificar solo el suyo
-   */
   @UseGuards(JwtAuthGuard)
   @Put(':id')
   update(
@@ -138,12 +127,30 @@ export class UsuarioController {
     return this.usuarioService.update(id, updateUsuarioDto, req.user);
   }
 
-  /**
-   * DELETE /usuario/:id
-   * Solo administradores
-   */
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('Administrador')
+  @Put('estudiante/:id_matricula')
+  actualizarEstudiante(
+    @Param('id_matricula', ParseIntPipe) id_matricula: number,
+    @Body()
+    body: {
+      usuario: UpdateUsuarioDto;
+      matricula: {
+        id_grado: number;
+        id_seccion: number;
+        id_periodo: number;
+        estado: boolean;
+      };
+    },
+    @Req() req: AuthRequest,
+  ) {
+    return this.usuarioService.actualizarEstudiante(
+      id_matricula,
+      body.usuario,
+      body.matricula,
+      req.user,
+    );
+  }
   @Delete(':id')
   @HttpCode(HttpStatus.OK)
   remove(@Param('id', ParseIntPipe) id: number) {

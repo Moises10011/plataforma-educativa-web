@@ -2,14 +2,18 @@ import {
   Injectable,
   NotFoundException,
   ForbiddenException,
+  ConflictException,
+  BadRequestException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 
 import { Usuario } from './entities/usuario.entity';
+import { Rol } from '../rol/entities/rol.entity';
 import { CreateUsuarioDto } from './dto/create-usuario.dto';
 import { UpdateUsuarioDto } from './dto/update-usuario.dto';
+import { CrearConRolDto } from './dto/crear-con-rol.dto';
 import { AsignacionCurso } from '../asignacion-curso/entities/asignacion-curso.entity';
 import { Matricula } from '../matricula/entities/matricula.entity';
 
@@ -24,18 +28,26 @@ export class UsuarioService {
   constructor(
     @InjectRepository(Usuario)
     private readonly usuarioRepository: Repository<Usuario>,
+    @InjectRepository(Rol)
+    private readonly rolRepository: Repository<Rol>,
     @InjectRepository(AsignacionCurso)
     private readonly asignacionRepository: Repository<AsignacionCurso>,
     @InjectRepository(Matricula)
     private readonly matriculaRepository: Repository<Matricula>,
   ) {}
 
-  // ─── CRUD BASE ─────────────────────────────────────────────────────────────
-
   async create(createUsuarioDto: CreateUsuarioDto) {
     const passwordEncriptado = await bcrypt.hash(createUsuarioDto.password, 10);
     const usuario = this.usuarioRepository.create({
-      ...createUsuarioDto,
+      nombres: createUsuarioDto.nombres,
+      apellidos: createUsuarioDto.apellidos,
+      dni: createUsuarioDto.dni,
+      telefono: createUsuarioDto.telefono,
+      direccion: createUsuarioDto.direccion,
+      fecha_nacimiento: createUsuarioDto.fecha_nacimiento
+        ? new Date(createUsuarioDto.fecha_nacimiento)
+        : undefined,
+      correo: createUsuarioDto.correo,
       password: passwordEncriptado,
     });
     return await this.usuarioRepository.save(usuario);
@@ -48,7 +60,6 @@ export class UsuarioService {
       return this.usuarioRepository.find({ relations: { roles: true } });
     }
 
-    // Docente: solo ve estudiantes de sus secciones asignadas
     const asignaciones = await this.asignacionRepository.find({
       where: { id_usuario_docente: authUser.id_usuario },
     });
@@ -97,6 +108,15 @@ export class UsuarioService {
     return this.findOne(authUser.id_usuario);
   }
 
+  async findByRol(nombreRol: string) {
+    const usuarios = await this.usuarioRepository.find({
+      relations: { roles: true },
+    });
+    return usuarios.filter((u) =>
+      u.roles.some((r) => r.nombre_rol === nombreRol),
+    );
+  }
+
   async contarPorRol() {
     const usuarios = await this.usuarioRepository.find({
       relations: { roles: true },
@@ -140,23 +160,135 @@ export class UsuarioService {
       );
     }
 
-    Object.assign(usuario, updateUsuarioDto);
+    if (updateUsuarioDto.nombres) usuario.nombres = updateUsuarioDto.nombres;
+    if (updateUsuarioDto.apellidos)
+      usuario.apellidos = updateUsuarioDto.apellidos;
+    if (updateUsuarioDto.dni) usuario.dni = updateUsuarioDto.dni;
+    if (updateUsuarioDto.telefono !== undefined)
+      usuario.telefono = updateUsuarioDto.telefono;
+    if (updateUsuarioDto.direccion !== undefined)
+      usuario.direccion = updateUsuarioDto.direccion;
+    if (updateUsuarioDto.fecha_nacimiento) {
+      usuario.fecha_nacimiento = new Date(updateUsuarioDto.fecha_nacimiento);
+    }
+    if (updateUsuarioDto.estado !== undefined)
+      usuario.estado = updateUsuarioDto.estado;
+
     return await this.usuarioRepository.save(usuario);
   }
+  async actualizarEstudiante(
+    id_matricula: number,
+    datosUsuario: UpdateUsuarioDto,
+    datosMatricula: {
+      id_grado: number;
+      id_seccion: number;
+      id_periodo: number;
+      estado: boolean;
+    },
+    authUser: AuthUser,
+  ) {
+    const matricula = await this.matriculaRepository.findOne({
+      where: { id_matricula },
+      relations: { usuario: true },
+    });
+    if (!matricula)
+      throw new NotFoundException(`Matrícula #${id_matricula} no encontrada`);
 
+    await this.update(matricula.id_usuario, datosUsuario, authUser);
+
+    Object.assign(matricula, datosMatricula);
+    await this.matriculaRepository.save(matricula);
+
+    return { message: 'Estudiante actualizado correctamente' };
+  }
   async remove(id: number) {
     const usuario = await this.findOne(id);
     await this.usuarioRepository.remove(usuario);
     return { message: `Usuario #${id} eliminado correctamente` };
   }
 
-  // ─── DASHBOARDS ────────────────────────────────────────────────────────────
+  async crearConRol(dto: CrearConRolDto) {
+    const existe = await this.usuarioRepository.findOne({
+      where: { dni: dto.dni },
+    });
+    if (existe) {
+      throw new ConflictException(`Ya existe un usuario con DNI ${dto.dni}`);
+    }
 
-  /**
-   * Dashboard del Estudiante
-   * Devuelve: perfil, matrícula activa (grado, sección, periodo),
-   * cursos asignados a su sección y conteo de tareas pendientes.
-   */
+    const correo = `${dto.dni}@micaela.edu.pe`;
+    const passwordPlano = `${dto.nombres.split(' ')[0]}${dto.dni}`;
+    const password = await bcrypt.hash(passwordPlano, 10);
+
+    const rol = await this.rolRepository.findOne({
+      where: { nombre_rol: dto.rol },
+    });
+    if (!rol) throw new BadRequestException(`Rol '${dto.rol}' no encontrado`);
+
+    const usuario = this.usuarioRepository.create({
+      nombres: dto.nombres,
+      apellidos: dto.apellidos,
+      dni: dto.dni,
+      telefono: dto.telefono,
+      direccion: dto.direccion,
+      fecha_nacimiento: dto.fecha_nacimiento
+        ? new Date(dto.fecha_nacimiento)
+        : undefined,
+      correo,
+      password,
+      roles: [rol],
+    });
+    const usuarioGuardado = await this.usuarioRepository.save(usuario);
+
+    if (
+      dto.rol === 'Estudiante' &&
+      dto.id_grado &&
+      dto.id_seccion &&
+      dto.id_periodo
+    ) {
+      const matricula = this.matriculaRepository.create({
+        id_usuario: usuarioGuardado.id_usuario,
+        id_grado: dto.id_grado,
+        id_seccion: dto.id_seccion,
+        id_periodo: dto.id_periodo,
+      });
+      await this.matriculaRepository.save(matricula);
+    }
+
+    return {
+      ...usuarioGuardado,
+      correo_generado: correo,
+      password_generado: passwordPlano,
+    };
+  }
+
+  async crearMasivo(usuarios: CrearConRolDto[]) {
+    const resultados = {
+      exitosos: [] as any[],
+      errores: [] as any[],
+    };
+
+    for (const dto of usuarios) {
+      try {
+        const usuario = await this.crearConRol(dto);
+        resultados.exitosos.push({
+          dni: dto.dni,
+          nombre: `${dto.nombres} ${dto.apellidos}`,
+          correo: usuario.correo_generado,
+        });
+      } catch (error: unknown) {
+        const mensaje =
+          error instanceof Error ? error.message : 'Error desconocido';
+        resultados.errores.push({
+          dni: dto.dni,
+          nombre: `${dto.nombres} ${dto.apellidos}`,
+          error: mensaje,
+        });
+      }
+    }
+
+    return resultados;
+  }
+
   async getEstudianteDashboard(authUser: AuthUser) {
     const perfil = await this.usuarioRepository.findOne({
       where: { id_usuario: authUser.id_usuario },
@@ -173,14 +305,12 @@ export class UsuarioService {
 
     if (!perfil) throw new NotFoundException('Usuario no encontrado');
 
-    // Matrícula activa del estudiante
     const matricula = await this.matriculaRepository.findOne({
       where: { id_usuario: authUser.id_usuario, estado: true },
       relations: { grado: true, seccion: true, periodo: true },
       order: { fecha_matricula: 'DESC' },
     });
 
-    // Cursos de su sección (si tiene matrícula activa)
     let cursos: AsignacionCurso[] = [];
     if (matricula) {
       cursos = await this.asignacionRepository.find({
@@ -227,11 +357,6 @@ export class UsuarioService {
     };
   }
 
-  /**
-   * Dashboard del Docente
-   * Devuelve: perfil, cursos asignados con sus secciones/grados/periodos,
-   * y conteo de estudiantes por sección.
-   */
   async getDocenteDashboard(authUser: AuthUser) {
     const perfil = await this.usuarioRepository.findOne({
       where: { id_usuario: authUser.id_usuario },
@@ -240,13 +365,11 @@ export class UsuarioService {
 
     if (!perfil) throw new NotFoundException('Usuario no encontrado');
 
-    // Todas las asignaciones del docente
     const asignaciones = await this.asignacionRepository.find({
       where: { id_usuario_docente: authUser.id_usuario },
       relations: { curso: true, grado: true, seccion: true, periodo: true },
     });
 
-    // Para cada asignación, contar estudiantes matriculados en esa sección
     const asignacionesConEstudiantes = await Promise.all(
       asignaciones.map(async (asignacion) => {
         const totalEstudiantes = await this.matriculaRepository.count({
@@ -269,7 +392,6 @@ export class UsuarioService {
       }),
     );
 
-    // Secciones únicas a cargo del docente
     const seccionesUnicas = new Map<string, object>();
     for (const a of asignaciones) {
       const key = `${a.id_grado}-${a.id_seccion}-${a.id_periodo}`;
@@ -298,10 +420,6 @@ export class UsuarioService {
     };
   }
 
-  /**
-   * Dashboard del Administrador
-   * Devuelve: conteo global de usuarios, docentes, estudiantes y matrículas activas.
-   */
   async getAdminDashboard(authUser: AuthUser) {
     const perfil = await this.findOne(authUser.id_usuario);
 

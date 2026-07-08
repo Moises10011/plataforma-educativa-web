@@ -41,6 +41,63 @@ export class AsignacionCursoController {
     return this.asignacionCursoService.findOne(id);
   }
 
+  @UseGuards(JwtAuthGuard)
+  @Get(':id/estudiantes')
+  findEstudiantes(@Param('id', ParseIntPipe) id: number) {
+    return this.asignacionCursoService.findEstudiantes(id);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get(':id/tareas')
+  findTareas(@Param('id', ParseIntPipe) id: number) {
+    return this.asignacionCursoService.findTareas(id);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get(':id/tareas/:id_tarea/entregas')
+  findEntregasPorTarea(
+    @Param('id', ParseIntPipe) _id: number,
+    @Param('id_tarea', ParseIntPipe) id_tarea: number,
+  ) {
+    return this.asignacionCursoService.findEntregasPorTarea(id_tarea);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get(':id/asistencia')
+  findAsistencia(@Param('id', ParseIntPipe) id: number) {
+    return this.asignacionCursoService.findAsistencia(id);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get(':id/asistencia/resumen')
+  findResumenAsistencia(@Param('id', ParseIntPipe) id: number) {
+    return this.asignacionCursoService.findResumenAsistencia(id);
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('Docente')
+  @Post(':id/asistencia/lote')
+  registrarAsistenciaLote(
+    @Param('id', ParseIntPipe) id: number,
+    @Body()
+    body: {
+      fecha: string;
+      registros: { id_usuario: number; estado: string }[];
+    },
+  ) {
+    return this.asignacionCursoService.registrarAsistenciaLote(
+      id,
+      body.fecha,
+      body.registros,
+    );
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get(':id/materiales')
+  findMateriales(@Param('id', ParseIntPipe) id: number) {
+    return this.asignacionCursoService.findMateriales(id);
+  }
+
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('Administrador')
   @Put(':id')

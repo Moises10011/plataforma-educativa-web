@@ -31,4 +31,9 @@ export class Comunicado {
   @ManyToOne(() => Usuario)
   @JoinColumn({ name: 'id_usuario_admin' })
   admin!: Usuario;
+
+  // Nota: los destinatarios NO son una relación TypeORM real, porque
+  // `Destinatario` es una tabla polimórfica compartida (entidad + entidad_id)
+  // usada también por `documento_institucional`. Se consultan manualmente
+  // en ComunicadoService vía query builder (entidad = 'comunicado').
 }

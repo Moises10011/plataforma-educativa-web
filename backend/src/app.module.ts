@@ -26,6 +26,7 @@ import { DocumentoInstitucionalModule } from './documento-institucional/document
 import { HorarioModule } from './horario/horario.module';
 import { LibretaModule } from './libreta/libreta.module';
 import { DestinatarioModule } from './destinatario/destinatario.module';
+import { AdjuntoModule } from './adjunto/adjunto.module';
 
 @Module({
   imports: [
@@ -80,6 +81,8 @@ import { DestinatarioModule } from './destinatario/destinatario.module';
     LibretaModule,
 
     DestinatarioModule,
+
+    AdjuntoModule,
   ],
 })
 export class AppModule {}
