@@ -7,12 +7,15 @@ import {
   Body,
   Param,
   ParseIntPipe,
+  Query,
   UseGuards,
   Res,
+  Req,
   UseInterceptors,
-  UploadedFile,
+  UploadedFiles,
+  ForbiddenException,
 } from '@nestjs/common';
-import { FileInterceptor } from '@nestjs/platform-express';
+import { FilesInterceptor } from '@nestjs/platform-express';
 import type { Response } from 'express';
 import { join } from 'path';
 import { HorarioService } from './horario.service';
@@ -22,32 +25,80 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
 import { crearMulterConfig } from '../common/config/multer.config';
+import { UsuarioService } from '../usuario/usuario.service';
+
+interface RequestConUsuario {
+  user: {
+    id_usuario: number;
+    correo: string;
+    roles?: string[];
+  };
+}
 
 @Controller('horario')
 export class HorarioController {
-  constructor(private readonly horarioService: HorarioService) {}
+  constructor(
+    private readonly horarioService: HorarioService,
+    private readonly usuarioService: UsuarioService,
+  ) {}
 
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('Administrador')
+  @Roles('Administrador', 'Docente')
   @Post()
-  @UseInterceptors(FileInterceptor('archivo', crearMulterConfig('horarios')))
+  @UseInterceptors(
+    FilesInterceptor('archivos', 50, crearMulterConfig('horarios')),
+  )
   create(
     @Body() dto: CreateHorarioDto,
-    @UploadedFile() archivo?: Express.Multer.File,
+    @Req() req: RequestConUsuario,
+    @UploadedFiles() archivos?: Express.Multer.File[],
   ) {
-    return this.horarioService.create(dto, archivo);
+    this.validarAlcanceDocente(dto, req.user);
+    return this.horarioService.create(dto, archivos);
   }
 
   @UseGuards(JwtAuthGuard)
   @Get()
-  findAll() {
-    return this.horarioService.findAll();
+  findAll(
+    @Query('tipo') tipo?: string,
+    @Query('id_grado') id_grado?: string,
+    @Query('id_seccion') id_seccion?: string,
+    @Query('id_periodo') id_periodo?: string,
+    @Query('id_usuario') id_usuario?: string,
+  ) {
+    return this.horarioService.findAll({
+      tipo: tipo as 'estudiante' | 'docente' | undefined,
+      id_grado: id_grado ? +id_grado : undefined,
+      id_seccion: id_seccion ? +id_seccion : undefined,
+      id_periodo: id_periodo ? +id_periodo : undefined,
+      id_usuario_docente: id_usuario ? +id_usuario : undefined,
+    });
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('docentes')
+  async listarDocentes() {
+    const docentes = await this.usuarioService.findByRol('Docente');
+    return docentes.map((d) => ({
+      id_usuario: d.id_usuario,
+      nombres: d.nombres,
+      apellidos: d.apellidos,
+      nombre_completo: `${d.nombres} ${d.apellidos}`,
+    }));
   }
 
   @UseGuards(JwtAuthGuard)
   @Get(':id')
   findOne(@Param('id', ParseIntPipe) id: number) {
     return this.horarioService.findOne(id);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get(':id/ver')
+  async ver(@Param('id', ParseIntPipe) id: number, @Res() res: Response) {
+    const horario = await this.horarioService.findOne(id);
+    const ruta = join(process.cwd(), 'uploads', 'horarios', horario.archivo);
+    res.sendFile(ruta);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -59,15 +110,33 @@ export class HorarioController {
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('Administrador')
+  @Roles('Administrador', 'Docente')
   @Put(':id')
-  @UseInterceptors(FileInterceptor('archivo', crearMulterConfig('horarios')))
-  update(
+  @UseInterceptors(
+    FilesInterceptor('archivos', 1, crearMulterConfig('horarios')),
+  )
+  async update(
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: UpdateHorarioDto,
-    @UploadedFile() archivo?: Express.Multer.File,
+    @Req() req: RequestConUsuario,
+    @UploadedFiles() archivos?: Express.Multer.File[],
   ) {
-    return this.horarioService.update(id, dto, archivo);
+    const esAdmin = req.user.roles?.includes('Administrador');
+
+    if (!esAdmin && req.user.roles?.includes('Docente')) {
+      const horarioExistente = await this.horarioService.findOne(id);
+      if (
+        horarioExistente.tipo !== 'docente' ||
+        horarioExistente.id_usuario_docente !== req.user.id_usuario
+      ) {
+        throw new ForbiddenException(
+          'No puede modificar horarios de otros usuarios',
+        );
+      }
+      this.validarAlcanceDocente(dto, req.user);
+    }
+
+    return this.horarioService.update(id, dto, archivos?.[0]);
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
@@ -75,5 +144,24 @@ export class HorarioController {
   @Delete(':id')
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.horarioService.remove(id);
+  }
+
+  private validarAlcanceDocente(
+    dto: CreateHorarioDto | UpdateHorarioDto,
+    user: RequestConUsuario['user'],
+  ): void {
+    const esAdmin = user.roles?.includes('Administrador');
+    if (esAdmin) return;
+
+    const esDocente = user.roles?.includes('Docente');
+    if (!esDocente) return;
+
+    if (dto.tipo && dto.tipo !== 'docente') {
+      throw new ForbiddenException('Solo puede subir horarios de tipo docente');
+    }
+
+    // Forzamos que el docente solo pueda asignarse horarios a sí mismo,
+    // sin importar qué id_usuario_docente haya mandado el frontend.
+    dto.id_usuario_docente = user.id_usuario;
   }
 }

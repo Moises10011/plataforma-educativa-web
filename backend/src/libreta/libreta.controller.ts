@@ -7,17 +7,22 @@ import {
   Body,
   Param,
   ParseIntPipe,
+  Query,
   UseGuards,
   Res,
   UseInterceptors,
   UploadedFile,
+  UploadedFiles,
+  HttpCode,
+  HttpStatus,
 } from '@nestjs/common';
-import { FileInterceptor } from '@nestjs/platform-express';
+import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
 import type { Response } from 'express';
 import { join } from 'path';
 import { LibretaService } from './libreta.service';
 import { CreateLibretaDto } from './dto/create-libreta.dto';
 import { UpdateLibretaDto } from './dto/update-libreta.dto';
+import { SubidaMasivaDto } from './dto/subida-masiva.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
@@ -38,10 +43,53 @@ export class LibretaController {
     return this.libretaService.create(dto, archivo);
   }
 
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('Administrador')
+  @Post('masiva')
+  @HttpCode(HttpStatus.OK)
+  @UseInterceptors(
+    FilesInterceptor('archivos', 100, crearMulterConfig('libretas')),
+  )
+  async subirMasiva(
+    @Body() dto: SubidaMasivaDto,
+    @UploadedFiles() archivos?: Express.Multer.File[],
+  ) {
+    return this.libretaService.subirMasiva(
+      dto.id_grado,
+      dto.id_seccion,
+      dto.id_periodo,
+      archivos || [],
+    );
+  }
+
   @UseGuards(JwtAuthGuard)
   @Get()
-  findAll() {
-    return this.libretaService.findAll();
+  findAll(
+    @Query('id_grado') id_grado?: string,
+    @Query('id_seccion') id_seccion?: string,
+    @Query('id_periodo') id_periodo?: string,
+    @Query('id_estudiante') id_estudiante?: string,
+  ) {
+    return this.libretaService.findAll({
+      id_grado: id_grado ? +id_grado : undefined,
+      id_seccion: id_seccion ? +id_seccion : undefined,
+      id_periodo: id_periodo ? +id_periodo : undefined,
+      id_estudiante: id_estudiante ? +id_estudiante : undefined,
+    });
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('estudiantes/:id_grado/:id_seccion/:id_periodo')
+  findEstudiantesConLibreta(
+    @Param('id_grado', ParseIntPipe) id_grado: number,
+    @Param('id_seccion', ParseIntPipe) id_seccion: number,
+    @Param('id_periodo', ParseIntPipe) id_periodo: number,
+  ) {
+    return this.libretaService.findEstudiantesConLibreta(
+      id_grado,
+      id_seccion,
+      id_periodo,
+    );
   }
 
   @UseGuards(JwtAuthGuard)
@@ -56,6 +104,14 @@ export class LibretaController {
     const libreta = await this.libretaService.findOne(id);
     const ruta = join(process.cwd(), 'uploads', 'libretas', libreta.archivo);
     res.download(ruta);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get(':id/ver')
+  async ver(@Param('id', ParseIntPipe) id: number, @Res() res: Response) {
+    const libreta = await this.libretaService.findOne(id);
+    const ruta = join(process.cwd(), 'uploads', 'libretas', libreta.archivo);
+    res.sendFile(ruta);
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)

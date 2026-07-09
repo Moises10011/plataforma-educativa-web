@@ -1,7 +1,8 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { environment } from '../../../../environments/environment';
 
 interface DocumentoInstitucional {
   id_documento: number;
@@ -27,16 +28,23 @@ interface Docente {
   apellidos: string;
 }
 
-type TipoDestinatario = 'todos' | 'estudiantes' | 'docentes';
-
-interface NuevoDocumento {
+interface DocumentoForm {
   titulo: string;
   descripcion: string;
-  tipo: TipoDestinatario;
+  tipo: 'todos' | 'estudiantes' | 'docentes';
   id_grado: number | null;
   id_seccion: number | null;
   id_usuario: number | null;
 }
+
+const FORM_INICIAL: DocumentoForm = {
+  titulo: '',
+  descripcion: '',
+  tipo: 'todos',
+  id_grado: null,
+  id_seccion: null,
+  id_usuario: null,
+};
 
 @Component({
   selector: 'app-documentos-institucionales',
@@ -48,163 +56,255 @@ interface NuevoDocumento {
 export class AdminInstitucionales implements OnInit {
   private readonly http = inject(HttpClient);
 
-  documentos = signal<DocumentoInstitucional[]>([]);
-  cargando = signal(true);
-
-  modalSubir = signal(false);
-  modalEliminar = signal(false);
-  private idAEliminar = signal<number | null>(null);
-
-  guardando = signal(false);
-  error = signal<string | null>(null);
-  private archivo: File | null = null;
-  archivoNombre = '';
-
-  nuevo: NuevoDocumento = this.formularioVacio();
-
+  // Catálogos
   grados = signal<Grado[]>([]);
   secciones = signal<Seccion[]>([]);
   docentes = signal<Docente[]>([]);
 
-  puedeGuardar = computed(() => {
-    if (!this.nuevo.titulo.trim() || !this.archivo) return false;
-    if (this.nuevo.tipo === 'estudiantes' && !this.nuevo.id_grado) return false;
-    return true;
+  // Pestaña activa
+  pestanaActiva = signal<'todos' | 'estudiantes'>('todos');
+
+  // Búsqueda
+  busqueda = signal('');
+
+  // Datos
+  documentos = signal<DocumentoInstitucional[]>([]);
+  cargando = signal(false);
+  error = signal('');
+  exito = signal('');
+
+  // Modal nuevo/editar
+  modalForm = signal(false);
+  modalEliminar = signal(false);
+  modalVer = signal(false);
+  editando = signal(false);
+  idEditando = signal<number | null>(null);
+  form: DocumentoForm = { ...FORM_INICIAL };
+  archivo: File | null = null;
+  archivoNombre = '';
+  guardando = signal(false);
+
+  // Eliminar
+  idAEliminar = signal<number | null>(null);
+
+  // Vista de documento
+  documentoSeleccionado = signal<DocumentoInstitucional | null>(null);
+
+  // Documentos filtrados
+  documentosFiltrados = computed(() => {
+    const tipo = this.pestanaActiva();
+    const texto = this.busqueda().trim().toLowerCase();
+
+    let filtrados = this.documentos();
+
+    // Filtrar por tipo
+    if (tipo === 'estudiantes') {
+      filtrados = filtrados.filter((d) =>
+        (d.descripcion ?? '').toLowerCase().includes('estudiante'),
+      );
+    }
+
+    // Filtrar por búsqueda
+    if (texto) {
+      filtrados = filtrados.filter((d) =>
+        d.titulo.toLowerCase().includes(texto) ||
+        d.descripcion?.toLowerCase().includes(texto)
+      );
+    }
+
+    return filtrados;
   });
 
   ngOnInit(): void {
+    this.cargarCatalogos();
     this.cargarDocumentos();
-    this.cargarGrados();
-    this.cargarSecciones();
-    this.cargarDocentes();
   }
 
-  private cargarDocumentos(): void {
-    this.cargando.set(true);
-    this.http.get<DocumentoInstitucional[]>('/api/documento-institucional').subscribe({
-      next: (data) => {
-        this.documentos.set(data);
-        this.cargando.set(false);
-      },
-      error: () => {
-        this.error.set('No se pudieron cargar los documentos.');
-        this.cargando.set(false);
-      },
-    });
-  }
-
-  private cargarGrados(): void {
-    this.http.get<Grado[]>('/api/grado').subscribe({
+  cargarCatalogos(): void {
+    this.http.get<Grado[]>(`${environment.apiUrl}/grado`).subscribe({
       next: (data) => this.grados.set(data),
+      error: () => this.grados.set([]),
     });
-  }
 
-  private cargarSecciones(): void {
-    this.http.get<Seccion[]>('/api/seccion').subscribe({
+    this.http.get<Seccion[]>(`${environment.apiUrl}/seccion`).subscribe({
       next: (data) => this.secciones.set(data),
+      error: () => this.secciones.set([]),
     });
-  }
 
-  private cargarDocentes(): void {
-    this.http.get<Docente[]>('/api/usuario?rol=docente').subscribe({
+    this.http.get<Docente[]>(`${environment.apiUrl}/usuario?rol=docente`).subscribe({
       next: (data) => this.docentes.set(data),
+      error: () => this.docentes.set([]),
     });
   }
 
-  esPdf(archivo: string): boolean {
-    return archivo.toLowerCase().endsWith('.pdf');
+  cargarDocumentos(): void {
+    this.cargando.set(true);
+    this.error.set('');
+
+    this.http
+      .get<DocumentoInstitucional[]>(`${environment.apiUrl}/documento-institucional`)
+      .subscribe({
+        next: (data) => {
+          this.documentos.set(data);
+          this.cargando.set(false);
+        },
+        error: (err: HttpErrorResponse) => {
+          this.cargando.set(false);
+          this.error.set('Error al cargar documentos');
+        },
+      });
   }
 
-  trackByDocumento(_: number, d: DocumentoInstitucional): number {
-    return d.id_documento;
+  cambiarPestana(tipo: 'todos' | 'estudiantes'): void {
+    this.pestanaActiva.set(tipo);
+    this.busqueda.set('');
   }
 
-  trackByGrado(_: number, g: Grado): number {
-    return g.id_grado;
-  }
+  // ===== Modal Nuevo/Editar =====
 
-  trackBySeccion(_: number, s: Seccion): number {
-    return s.id_seccion;
-  }
-
-  trackByDocente(_: number, doc: Docente): number {
-    return doc.id_usuario;
-  }
-
-  abrirModal(): void {
-    this.nuevo = this.formularioVacio();
+  abrirModalNuevo(): void {
+    this.editando.set(false);
+    this.idEditando.set(null);
+    this.form = { ...FORM_INICIAL };
     this.archivo = null;
     this.archivoNombre = '';
-    this.error.set(null);
-    this.modalSubir.set(true);
+    this.error.set('');
+    this.modalForm.set(true);
   }
 
-  cerrarModal(): void {
-    this.modalSubir.set(false);
-    this.modalEliminar.set(false);
-    this.idAEliminar.set(null);
+  abrirModalEditar(documento: DocumentoInstitucional): void {
+    this.editando.set(true);
+    this.idEditando.set(documento.id_documento);
+    this.form = {
+      titulo: documento.titulo,
+      descripcion: documento.descripcion || '',
+      tipo: 'todos',
+      id_grado: null,
+      id_seccion: null,
+      id_usuario: null,
+    };
+    this.archivo = null;
+    this.archivoNombre = '';
+    this.error.set('');
+    this.modalForm.set(true);
   }
 
   onArchivoChange(event: Event): void {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0] ?? null;
+    input.value = '';
 
-    if (file && !this.esExtensionPermitida(file)) {
-      this.error.set('Solo se permiten archivos .pdf, .doc o .docx.');
-      input.value = '';
-      this.archivo = null;
-      this.archivoNombre = '';
-      return;
+    if (file) {
+      const extension = file.name.toLowerCase();
+      if (!extension.endsWith('.pdf') && !extension.endsWith('.doc') && !extension.endsWith('.docx')) {
+        this.error.set('Solo se permiten archivos PDF, DOC o DOCX');
+        return;
+      }
     }
 
     this.archivo = file;
     this.archivoNombre = file?.name ?? '';
   }
 
-  private esExtensionPermitida(file: File): boolean {
-    return /\.(pdf|docx?|PDF|DOCX?)$/.test(file.name);
-  }
-
-  onTipoChange(): void {
-    this.nuevo.id_grado = null;
-    this.nuevo.id_seccion = null;
-    this.nuevo.id_usuario = null;
+  quitarArchivo(): void {
+    this.archivo = null;
+    this.archivoNombre = '';
   }
 
   guardar(): void {
-    if (!this.puedeGuardar() || !this.archivo) return;
+    if (!this.form.titulo.trim()) {
+      this.error.set('El título es obligatorio');
+      return;
+    }
+
+    if (this.form.tipo === 'estudiantes' && !this.form.id_grado) {
+      this.error.set('Debe seleccionar un grado');
+      return;
+    }
+
+    if (!this.editando() && this.form.tipo === 'docentes' && !this.form.id_usuario) {
+      this.error.set('Debe seleccionar un docente');
+      return;
+    }
+
+    if (!this.editando() && !this.archivo) {
+      this.error.set('Debe seleccionar un archivo');
+      return;
+    }
 
     this.guardando.set(true);
-    this.error.set(null);
+    this.error.set('');
 
     const formData = new FormData();
-    formData.append('titulo', this.nuevo.titulo.trim());
-    formData.append('descripcion', this.nuevo.descripcion.trim());
-    formData.append('tipo', this.nuevo.tipo);
-    formData.append('archivo', this.archivo);
+    formData.append('titulo', this.form.titulo.trim());
+    formData.append('descripcion', this.form.descripcion.trim());
+    if (!this.editando()) {
+      formData.append('tipo', this.form.tipo);
 
-    if (this.nuevo.tipo === 'estudiantes' && this.nuevo.id_grado) {
-      formData.append('id_grado', String(this.nuevo.id_grado));
-    }
-    if (this.nuevo.tipo === 'estudiantes' && this.nuevo.id_seccion) {
-      formData.append('id_seccion', String(this.nuevo.id_seccion));
-    }
-    if (this.nuevo.tipo === 'docentes' && this.nuevo.id_usuario) {
-      formData.append('id_usuario', String(this.nuevo.id_usuario));
+      if (this.form.tipo === 'estudiantes' && this.form.id_grado) {
+        formData.append('id_grado', String(this.form.id_grado));
+      }
+
+      if (this.form.tipo === 'estudiantes' && this.form.id_seccion) {
+        formData.append('id_seccion', String(this.form.id_seccion));
+      }
+
+      if (this.form.tipo === 'docentes' && this.form.id_usuario) {
+        formData.append('id_usuario', String(this.form.id_usuario));
+      }
     }
 
-    this.http.post<DocumentoInstitucional>('/api/documento-institucional', formData).subscribe({
-      next: (documentoCreado) => {
-        this.documentos.update((lista) => [documentoCreado, ...lista]);
-        this.guardando.set(false);
-        this.cerrarModal();
-      },
-      error: () => {
-        this.error.set('Ocurrió un error al subir el documento.');
-        this.guardando.set(false);
-      },
-    });
+    if (this.archivo) {
+      formData.append('archivo', this.archivo);
+    }
+
+    if (this.editando() && this.idEditando()) {
+      // Actualizar
+      this.http
+        .patch(`${environment.apiUrl}/documento-institucional/${this.idEditando()}`, formData)
+        .subscribe({
+          next: () => {
+            this.guardando.set(false);
+            this.cerrarModal();
+            this.exito.set('Documento actualizado correctamente');
+            this.cargarDocumentos();
+            setTimeout(() => this.exito.set(''), 3000);
+          },
+          error: (err: HttpErrorResponse) => {
+            this.guardando.set(false);
+            this.error.set(err.error?.message || 'Error al actualizar el documento');
+          },
+        });
+    } else {
+      // Crear
+      this.http
+        .post<DocumentoInstitucional>(`${environment.apiUrl}/documento-institucional`, formData)
+        .subscribe({
+          next: (documentoCreado) => {
+            this.guardando.set(false);
+            this.cerrarModal();
+            this.exito.set('Documento subido correctamente');
+            this.cargarDocumentos();
+            setTimeout(() => this.exito.set(''), 3000);
+          },
+          error: (err: HttpErrorResponse) => {
+            this.guardando.set(false);
+            this.error.set(err.error?.message || 'Error al subir el documento');
+          },
+        });
+    }
   }
+
+  cerrarModal(): void {
+    this.modalForm.set(false);
+    this.modalEliminar.set(false);
+    this.modalVer.set(false);
+    this.idEditando.set(null);
+    this.archivo = null;
+    this.archivoNombre = '';
+  }
+
+  // ===== Eliminar =====
 
   confirmarEliminar(id: number): void {
     this.idAEliminar.set(id);
@@ -213,32 +313,67 @@ export class AdminInstitucionales implements OnInit {
 
   eliminar(): void {
     const id = this.idAEliminar();
-    if (id === null) return;
+    if (!id) return;
 
-    this.http.delete(`/api/documento-institucional/${id}`).subscribe({
+    this.http.delete(`${environment.apiUrl}/documento-institucional/${id}`).subscribe({
       next: () => {
-        this.documentos.update((lista) => lista.filter((d) => d.id_documento !== id));
-        this.cerrarModal();
+        this.modalEliminar.set(false);
+        this.idAEliminar.set(null);
+        this.exito.set('Documento eliminado correctamente');
+        this.cargarDocumentos();
+        setTimeout(() => this.exito.set(''), 3000);
       },
       error: () => {
-        this.error.set('No se pudo eliminar el documento.');
-        this.cerrarModal();
+        this.error.set('Error al eliminar el documento');
+        this.modalEliminar.set(false);
       },
     });
   }
 
-  descargar(documento: DocumentoInstitucional): void {
-    window.open(`/api/documento-institucional/${documento.id_documento}/descargar`, '_blank');
+  cerrarModalEliminar(): void {
+    this.modalEliminar.set(false);
+    this.idAEliminar.set(null);
   }
 
-  private formularioVacio(): NuevoDocumento {
-    return {
-      titulo: '',
-      descripcion: '',
-      tipo: 'todos',
-      id_grado: null,
-      id_seccion: null,
-      id_usuario: null,
-    };
+  // ===== Acciones =====
+
+  verDocumento(documento: DocumentoInstitucional): void {
+    this.documentoSeleccionado.set(documento);
+    this.modalVer.set(true);
+  }
+
+  descargarDocumento(documento: DocumentoInstitucional): void {
+    window.open(`${environment.apiUrl}/documento-institucional/${documento.id_documento}/descargar`, '_blank');
+  }
+
+  seleccionarDocumento(documento: DocumentoInstitucional): void {
+    if (this.documentoSeleccionado()?.id_documento === documento.id_documento) {
+      this.documentoSeleccionado.set(null);
+    } else {
+      this.documentoSeleccionado.set(documento);
+    }
+  }
+
+  // ===== Utilidades =====
+
+  formatearFecha(fecha: string): string {
+    const d = new Date(fecha);
+    return d.toLocaleDateString('es-PE', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    });
+  }
+
+  esPdf(archivo: string): boolean {
+    return archivo.toLowerCase().endsWith('.pdf');
+  }
+
+  limpiarError(): void {
+    this.error.set('');
+  }
+
+  limpiarExito(): void {
+    this.exito.set('');
   }
 }

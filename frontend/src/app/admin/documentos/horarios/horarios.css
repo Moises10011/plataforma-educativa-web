@@ -1,0 +1,630 @@
+/* ===== Layout general ===== */
+.horarios-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1.5rem;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.horarios-header-left {
+  flex: 1;
+}
+
+.horarios-titulo {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #111827;
+  margin: 0;
+}
+
+.horarios-subtitulo {
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin: 0.25rem 0 0 0;
+}
+
+.horarios-header-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+/* ===== Botones ===== */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn-primary {
+  background-color: #1d4ed8;
+  color: white;
+  border-color: #1d4ed8;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background-color: #1e40af;
+}
+
+.btn-outline {
+  background-color: white;
+  color: #374151;
+  border-color: #d1d5db;
+}
+
+.btn-outline:hover:not(:disabled) {
+  background-color: #f9fafb;
+  border-color: #9ca3af;
+}
+
+.btn-text {
+  background: none;
+  border: none;
+  color: #1d4ed8;
+  padding: 0.5rem;
+}
+
+.btn-text:hover {
+  text-decoration: underline;
+}
+
+.btn-sm {
+  padding: 0.3rem 0.6rem;
+  font-size: 0.75rem;
+}
+
+.btn-danger {
+  background-color: #dc2626;
+  color: white;
+  border-color: #dc2626;
+}
+
+.btn-danger:hover:not(:disabled) {
+  background-color: #b91c1c;
+}
+
+/* ===== Alertas ===== */
+.alert {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  border-radius: 0.5rem;
+  margin-bottom: 1rem;
+  font-size: 0.875rem;
+}
+
+.alert-error {
+  background-color: #fef2f2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+}
+
+.alert-exito {
+  background-color: #f0fdf4;
+  color: #15803d;
+  border: 1px solid #bbf7d0;
+}
+
+.alert-cerrar {
+  background: none;
+  border: none;
+  font-size: 1.25rem;
+  cursor: pointer;
+  color: inherit;
+  padding: 0 0.25rem;
+}
+
+/* ===== Filtros ===== */
+.filtros-card {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.75rem;
+  padding: 1.25rem;
+  margin-bottom: 1.25rem;
+}
+
+.filtros-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 1rem;
+  align-items: end;
+}
+
+.filtro-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.filtro-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.filtro-select,
+.filtro-input {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  color: #374151;
+  background-color: white;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.filtro-select:focus,
+.filtro-input:focus {
+  outline: none;
+  border-color: #1d4ed8;
+  box-shadow: 0 0 0 3px rgba(29, 78, 216, 0.1);
+}
+
+.filtro-actions {
+  display: flex;
+  align-items: flex-end;
+}
+
+/* ===== Grid de horarios ===== */
+.horarios-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+  gap: 1rem;
+}
+
+.horario-card {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.75rem;
+  padding: 1.15rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.horario-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  border-color: #93c5fd;
+}
+
+.horario-card-expandido {
+  border-color: #1d4ed8;
+  box-shadow: 0 4px 16px rgba(29, 78, 216, 0.12);
+}
+
+.horario-card-header {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.horario-card-icon {
+  width: 3rem;
+  height: 3rem;
+  border-radius: 0.75rem;
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.horario-emoji {
+  font-size: 1.5rem;
+}
+
+.horario-card-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.horario-card-grado {
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: #111827;
+}
+
+.horario-card-periodo {
+  font-size: 0.8rem;
+  color: #6b7280;
+}
+
+.horario-card-fecha {
+  font-size: 0.75rem;
+  color: #9ca3af;
+  white-space: nowrap;
+}
+
+.horario-card-descripcion {
+  margin-top: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  background-color: #f9fafb;
+  border-radius: 0.5rem;
+  font-size: 0.8rem;
+  color: #6b7280;
+  border-left: 3px solid #f59e0b;
+}
+
+.horario-card-acciones {
+  display: flex;
+  gap: 0.4rem;
+  margin-top: 0.85rem;
+  padding-top: 0.85rem;
+  border-top: 1px solid #f3f4f6;
+  flex-wrap: wrap;
+}
+
+/* ===== Loading & Empty ===== */
+.loading {
+  text-align: center;
+  padding: 3rem;
+  color: #6b7280;
+  font-size: 0.9rem;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 3rem 1rem;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.75rem;
+}
+
+.empty-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}
+
+.empty-state h3 {
+  font-size: 1.1rem;
+  color: #374151;
+  margin: 0 0 0.5rem;
+}
+
+.empty-state p {
+  color: #6b7280;
+  font-size: 0.875rem;
+  margin: 0;
+}
+
+/* ===== Modal ===== */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal {
+  background: white;
+  border-radius: 0.75rem;
+  width: 90%;
+  max-width: 520px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+  animation: modalIn 0.2s ease;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.modal-sm {
+  max-width: 400px;
+}
+
+@keyframes modalIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.modal-header h3 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #111827;
+}
+
+.modal-cerrar {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: #6b7280;
+  padding: 0;
+  line-height: 1;
+}
+
+.modal-cerrar:hover {
+  color: #111827;
+}
+
+.modal-body {
+  padding: 1.25rem;
+}
+
+.modal-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.modal-campo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.modal-hint {
+  font-size: 0.8rem;
+  color: #9ca3af;
+  margin: 0.5rem 0 0;
+  font-style: italic;
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  padding: 1rem 1.25rem;
+  border-top: 1px solid #e5e7eb;
+}
+
+/* ===== Archivos preview en modal ===== */
+.archivos-preview {
+  background-color: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  padding: 0.75rem;
+}
+
+.archivo-preview-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.3rem 0.5rem;
+  border-radius: 0.375rem;
+  font-size: 0.8rem;
+  color: #374151;
+}
+
+.archivo-preview-item:hover {
+  background-color: #f3f4f6;
+}
+
+.archivo-quitar-btn {
+  background: none;
+  border: none;
+  font-size: 1.1rem;
+  cursor: pointer;
+  color: #9ca3af;
+  padding: 0 0.25rem;
+  line-height: 1;
+}
+
+.archivo-quitar-btn:hover {
+  color: #dc2626;
+}
+
+/* ===== Pestañas ===== */
+.pestanas-container {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1.25rem;
+  border-bottom: 2px solid #e5e7eb;
+}
+
+.pestana {
+  padding: 0.75rem 1.25rem;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #6b7280;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.pestana:hover {
+  color: #374151;
+}
+
+.pestana-activa {
+  color: #1d4ed8;
+  border-bottom-color: #1d4ed8;
+  font-weight: 600;
+}
+
+/* ===== Radio buttons ===== */
+.radio-group {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.radio-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-size: 0.875rem;
+}
+
+.radio-label:hover {
+  background-color: #f9fafb;
+  border-color: #9ca3af;
+}
+
+.radio-label input[type="radio"] {
+  cursor: pointer;
+  accent-color: #1d4ed8;
+}
+
+.radio-label:has(input:checked) {
+  background-color: #eff6ff;
+  border-color: #1d4ed8;
+  color: #1d4ed8;
+  font-weight: 500;
+}
+
+/* ===== Lista de docentes en modal ===== */
+.docentes-lista {
+  margin-top: 0.5rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  max-height: 200px;
+  overflow-y: auto;
+  background: white;
+}
+
+.docente-item {
+  padding: 0.6rem 0.75rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  border-bottom: 1px solid #f3f4f6;
+  font-size: 0.875rem;
+}
+
+.docente-item:last-child {
+  border-bottom: none;
+}
+
+.docente-item:hover {
+  background-color: #f3f4f6;
+}
+
+.docente-seleccionado {
+  background-color: #eff6ff;
+  color: #1d4ed8;
+  font-weight: 500;
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 640px) {
+  .modal-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .horarios-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .pestanas-container {
+    flex-direction: column;
+  }
+
+  .pestana {
+    border-bottom: 1px solid #e5e7eb;
+    border-left: 3px solid transparent;
+  }
+
+  .pestana-activa {
+    border-left-color: #1d4ed8;
+    border-bottom-color: #e5e7eb;
+  }
+
+  .radio-group {
+    flex-direction: column;
+  }
+}
+.docente-combobox {
+  position: relative;
+}
+
+.docentes-lista-flotante {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  z-index: 20;
+  max-height: 260px;
+  overflow-y: auto;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.docente-item {
+  padding: 0.55rem 0.85rem;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: background-color 0.1s ease;
+}
+
+.docente-item:hover {
+  background-color: #f3f4f6;
+}
+
+.docente-item-vacio {
+  color: #9ca3af;
+  cursor: default;
+}
+
+.docente-item-vacio:hover {
+  background-color: transparent;
+}
+
+.docente-seleccionado-box {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.6rem 0.85rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  background-color: #f9fafb;
+  font-size: 0.875rem;
+}
+
+.docente-cambiar-btn {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #1d4ed8;
+  padding: 0.25rem 0.6rem;
+  border-radius: 0.375rem;
+  transition: background-color 0.15s ease;
+}
+
+.docente-cambiar-btn:hover {
+  background-color: #eff6ff;
+}
