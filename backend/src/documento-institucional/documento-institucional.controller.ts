@@ -63,6 +63,15 @@ export class DocumentoInstitucionalController {
     );
   }
 
+  @Get(':id/ver')
+  async ver(@Param('id', ParseIntPipe) id: number, @Res() res: Response) {
+    const documento = await this.documentoInstitucionalService.findOne(id);
+    const ruta = this.documentoInstitucionalService.getRutaArchivo(
+      documento.archivo,
+    );
+    res.sendFile(ruta);
+  }
+
   @Patch(':id')
   @UseInterceptors(FileInterceptor('archivo'))
   update(

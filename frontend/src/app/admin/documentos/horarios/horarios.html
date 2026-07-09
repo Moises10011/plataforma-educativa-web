@@ -1,146 +1,405 @@
-<div>
-  <!-- Header -->
-  <div class="mb-6 flex items-center justify-between">
-    <div>
-      <h1 class="text-xl font-bold text-gray-900">Horarios de Clases</h1>
-      <p class="text-sm text-gray-500 mt-1">Gestiona los horarios por grado y sección</p>
-    </div>
-    <button (click)="abrirModal()"
-      class="flex items-center gap-2 bg-institucional-600 text-white text-sm font-medium px-4 py-2 rounded-lg hover:bg-institucional-700 transition-colors">
-      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-      Subir Horario
+<!-- ===== ENCABEZADO ===== -->
+<div class="horarios-header">
+  <div class="horarios-header-left">
+    <h1 class="horarios-titulo">Horarios de Clases</h1>
+    <p class="horarios-subtitulo">Gestión de horarios por grado, sección y docente</p>
+  </div>
+  <div class="horarios-header-actions">
+    <button class="btn btn-primary" (click)="abrirModalNuevo()">
+      + Subir Horario
     </button>
   </div>
-
-  <!-- Loading -->
-  @if (cargando()) {
-    <div class="bg-white rounded-xl shadow-sm p-10 text-center">
-      <p class="text-sm text-gray-400 animate-pulse">Cargando horarios...</p>
-    </div>
-  } @else if (horarios().length === 0) {
-    <div class="bg-white rounded-xl shadow-sm p-10 text-center">
-      <svg class="w-10 h-10 text-gray-300 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-      <p class="text-sm text-gray-400">No hay horarios registrados</p>
-    </div>
-  } @else {
-    <!-- Tabla -->
-    <div class="bg-white rounded-xl shadow-sm overflow-hidden">
-      <table class="w-full text-sm">
-        <thead>
-          <tr class="bg-gray-50 border-b border-gray-100">
-            <th class="text-left text-xs font-semibold text-gray-500 uppercase tracking-wide px-5 py-3">Grado</th>
-            <th class="text-left text-xs font-semibold text-gray-500 uppercase tracking-wide px-5 py-3">Sección</th>
-            <th class="text-left text-xs font-semibold text-gray-500 uppercase tracking-wide px-5 py-3">Periodo</th>
-            <th class="text-left text-xs font-semibold text-gray-500 uppercase tracking-wide px-5 py-3">Fecha subida</th>
-            <th class="text-right text-xs font-semibold text-gray-500 uppercase tracking-wide px-5 py-3">Acciones</th>
-          </tr>
-        </thead>
-        <tbody class="divide-y divide-gray-50">
-          @for (h of horarios(); track h.id_horario) {
-            <tr class="hover:bg-gray-50 transition-colors">
-              <td class="px-5 py-3 font-medium text-gray-900">{{ h.grado.nombre }}</td>
-              <td class="px-5 py-3 text-gray-600">{{ h.seccion.nombre }}</td>
-              <td class="px-5 py-3">
-                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700">
-                  {{ h.periodo.nombre }}
-                </span>
-              </td>
-              <td class="px-5 py-3 text-gray-500">{{ h.fecha_subida | date: 'dd/MM/yyyy' }}</td>
-              <td class="px-5 py-3">
-                <div class="flex items-center justify-end gap-2">
-                  <button (click)="descargar(h)"
-                    class="flex items-center gap-1.5 text-xs font-medium text-institucional-600 hover:text-institucional-700 px-3 py-1.5 rounded-lg hover:bg-institucional-50 transition-colors">
-                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
-                    Descargar
-                  </button>
-                  <button (click)="confirmarEliminar(h.id_horario)"
-                    class="flex items-center gap-1.5 text-xs font-medium text-red-500 hover:text-red-700 px-3 py-1.5 rounded-lg hover:bg-red-50 transition-colors">
-                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-                    Eliminar
-                  </button>
-                </div>
-              </td>
-            </tr>
-          }
-        </tbody>
-      </table>
-    </div>
-  }
 </div>
 
-<!-- Modal Subir -->
-@if (modalSubir()) {
-  <div class="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
-    <div class="bg-white rounded-xl shadow-xl w-full max-w-md">
-      <div class="flex items-center justify-between p-5 border-b border-gray-100">
-        <h2 class="font-bold text-gray-900">Subir Horario</h2>
-        <button (click)="cerrarModal()" class="text-gray-400 hover:text-gray-600">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+<!-- ===== MENSAJES ===== -->
+@if (error()) {
+  <div class="alert alert-error">
+    <span>{{ error() }}</span>
+    <button class="alert-cerrar" (click)="limpiarError()">&times;</button>
+  </div>
+}
+
+@if (exito()) {
+  <div class="alert alert-exito">
+    <span>{{ exito() }}</span>
+    <button class="alert-cerrar" (click)="limpiarExito()">&times;</button>
+  </div>
+}
+
+<!-- ===== PESTAÑAS ===== -->
+<div class="pestanas-container">
+  <button
+    class="pestana"
+    [class.pestana-activa]="pestanaActiva() === 'estudiante'"
+    (click)="cambiarPestana('estudiante')"
+  >
+    Horarios Estudiantes
+  </button>
+  <button
+    class="pestana"
+    [class.pestana-activa]="pestanaActiva() === 'docente'"
+    (click)="cambiarPestana('docente')"
+  >
+    Horarios Docentes
+  </button>
+</div>
+
+<!-- ===== FILTROS ===== -->
+<div class="filtros-card">
+  <div class="filtros-grid">
+    @if (pestanaActiva() === 'estudiante') {
+      <!-- Filtros para estudiantes -->
+      <div class="filtro-group">
+        <label class="filtro-label">Grado</label>
+        <select
+          class="filtro-select"
+          [value]="filtroGrado() ?? ''"
+          (change)="onFiltroGradoChange($any($event.target).value)"
+        >
+          <option value="">Todos los grados</option>
+          @for (g of grados(); track g.id_grado) {
+            <option [value]="g.id_grado">{{ g.nombre }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="filtro-group">
+        <label class="filtro-label">Sección</label>
+        <select
+          class="filtro-select"
+          [value]="filtroSeccion() ?? ''"
+          (change)="onFiltroSeccionChange($any($event.target).value)"
+        >
+          <option value="">Todas las secciones</option>
+          @for (s of secciones(); track s.id_seccion) {
+            <option [value]="s.id_seccion">{{ s.nombre }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="filtro-group">
+        <label class="filtro-label">Periodo</label>
+        <select
+          class="filtro-select"
+          [value]="filtroPeriodoEstudiante() ?? ''"
+          (change)="onFiltroPeriodoEstudianteChange($any($event.target).value)"
+        >
+          <option value="">Todos los periodos</option>
+          @for (p of periodos(); track p.id_periodo) {
+            <option [value]="p.id_periodo">{{ p.nombre }}</option>
+          }
+        </select>
+      </div>
+    } @else {
+      <!-- Filtros para docentes -->
+      <div class="filtro-group">
+        <label class="filtro-label">Docente</label>
+        <select
+          class="filtro-select"
+          [value]="filtroDocente() ?? ''"
+          (change)="onFiltroDocenteChange($any($event.target).value)"
+        >
+          <option value="">Todos los docentes</option>
+          @for (d of docentes(); track d.id_usuario) {
+            <option [value]="d.id_usuario">{{ d.nombre_completo }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="filtro-group">
+        <label class="filtro-label">Periodo</label>
+        <select
+          class="filtro-select"
+          [value]="filtroPeriodoDocente() ?? ''"
+          (change)="onFiltroPeriodoDocenteChange($any($event.target).value)"
+        >
+          <option value="">Todos los periodos</option>
+          @for (p of periodos(); track p.id_periodo) {
+            <option [value]="p.id_periodo">{{ p.nombre }}</option>
+          }
+        </select>
+      </div>
+    }
+
+    <div class="filtro-group">
+      <label class="filtro-label">Buscar</label>
+      <input
+        class="filtro-input"
+        type="text"
+        placeholder="Buscar horario..."
+        [value]="busqueda()"
+        (input)="busqueda.set($any($event.target).value)"
+      />
+    </div>
+
+    @if (hayFiltrosActivos()) {
+      <div class="filtro-group filtro-actions">
+        <label class="filtro-label">&nbsp;</label>
+        <button class="btn btn-text" (click)="limpiarFiltros()">
+          Limpiar filtros
         </button>
       </div>
-      <div class="p-5 space-y-4">
-        @if (error()) {
-          <p class="text-xs text-red-600 bg-red-50 rounded-lg px-3 py-2">{{ error() }}</p>
+    }
+  </div>
+</div>
+
+<!-- ===== LISTADO ===== -->
+@if (cargando()) {
+  <div class="loading">Cargando horarios...</div>
+} @else if (horariosFiltrados().length === 0) {
+  <div class="empty-state">
+    <h3>No hay horarios registrados</h3>
+    <p>Use el botón "Subir Horario" para agregar horarios.</p>
+  </div>
+} @else {
+  <div class="horarios-grid">
+    @for (h of horariosFiltrados(); track h.id_horario) {
+      <div
+        class="horario-card"
+        [class.horario-card-expandido]="horarioSeleccionado()?.id_horario === h.id_horario"
+        (click)="seleccionarHorario(h)"
+      >
+        <div class="horario-card-header">
+          <div class="horario-card-info">
+            @if (h.tipo === 'estudiante') {
+              <span class="horario-card-grado">
+                {{ h.grado?.nombre || 'Sin grado' }} "{{ h.seccion?.nombre || 'Sin sección' }}"
+              </span>
+            } @else {
+              <span class="horario-card-grado">
+                {{ h.docente ? (h.docente.nombres + ' ' + h.docente.apellidos) : 'Sin docente' }}
+              </span>
+            }
+            <span class="horario-card-periodo">{{ h.periodo.nombre }}</span>
+          </div>
+          <div class="horario-card-fecha">
+            {{ formatearFecha(h.fecha_subida) }}
+          </div>
+        </div>
+
+        @if (h.descripcion) {
+          <div class="horario-card-descripcion">
+            {{ h.descripcion }}
+          </div>
         }
-        <div>
-          <label class="block text-xs font-medium text-gray-600 mb-1">Grado *</label>
-          <select [(ngModel)]="nuevo.id_grado"
-            class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-institucional-500">
-            <option [ngValue]="null">Selecciona un grado</option>
-            @for (g of grados(); track g.id_grado) {
-              <option [ngValue]="g.id_grado">{{ g.nombre }}</option>
-            }
-          </select>
-        </div>
-        <div>
-          <label class="block text-xs font-medium text-gray-600 mb-1">Sección *</label>
-          <select [(ngModel)]="nuevo.id_seccion"
-            class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-institucional-500">
-            <option [ngValue]="null">Selecciona una sección</option>
-            @for (s of secciones(); track s.id_seccion) {
-              <option [ngValue]="s.id_seccion">{{ s.nombre }}</option>
-            }
-          </select>
-        </div>
-        <div>
-          <label class="block text-xs font-medium text-gray-600 mb-1">Periodo Académico *</label>
-          <select [(ngModel)]="nuevo.id_periodo"
-            class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-institucional-500">
-            <option [ngValue]="null">Selecciona un periodo</option>
-            @for (p of periodos(); track p.id_periodo) {
-              <option [ngValue]="p.id_periodo">{{ p.nombre }}</option>
-            }
-          </select>
-        </div>
-        <div>
-          <label class="block text-xs font-medium text-gray-600 mb-1">Archivo (PDF, JPG, PNG) *</label>
-          <input (change)="onArchivoChange($event)" type="file" accept=".pdf,.jpg,.png"
-            class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm file:mr-3 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-medium file:bg-institucional-50 file:text-institucional-700 hover:file:bg-institucional-100">
-        </div>
+
+        @if (horarioSeleccionado()?.id_horario === h.id_horario) {
+          <div class="horario-card-acciones">
+            <button class="btn btn-outline btn-sm" (click)="verHorario(h.id_horario); $event.stopPropagation()">
+              Ver horario
+            </button>
+            <button class="btn btn-outline btn-sm" (click)="descargarHorario(h.id_horario); $event.stopPropagation()">
+              Descargar
+            </button>
+            <button class="btn btn-outline btn-sm" (click)="abrirModalEditar(h); $event.stopPropagation()">
+              Editar
+            </button>
+            <button class="btn btn-danger btn-sm" (click)="confirmarEliminar(h.id_horario); $event.stopPropagation()">
+              Eliminar
+            </button>
+          </div>
+        }
       </div>
-      <div class="flex gap-3 p-5 border-t border-gray-100">
-        <button (click)="cerrarModal()" class="flex-1 text-sm font-medium text-gray-600 border border-gray-200 rounded-lg py-2 hover:bg-gray-50 transition-colors">Cancelar</button>
-        <button (click)="guardar()" [disabled]="guardando()"
-          class="flex-1 text-sm font-medium text-white bg-institucional-600 rounded-lg py-2 hover:bg-institucional-700 transition-colors disabled:opacity-50">
-          {{ guardando() ? 'Guardando...' : 'Guardar' }}
+    }
+  </div>
+}
+
+<!-- ===== MODAL: Nuevo/Editar Horario ===== -->
+@if (modalForm()) {
+  <div class="modal-overlay" (click)="cerrarModal()">
+    <div class="modal modal-lg" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>{{ editando() ? 'Editar Horario' : 'Subir Horario' }}</h3>
+        <button class="modal-cerrar" (click)="cerrarModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <!-- Selector de tipo -->
+        <div class="modal-campo">
+          <label class="filtro-label">Tipo de horario *</label>
+          <div class="radio-group">
+            <label class="radio-label">
+              <input
+                type="radio"
+                name="tipoHorario"
+                [value]="'estudiante'"
+                [(ngModel)]="form.tipo"
+              />
+              <span>Para Estudiantes</span>
+            </label>
+            <label class="radio-label">
+              <input
+                type="radio"
+                name="tipoHorario"
+                [value]="'docente'"
+                [(ngModel)]="form.tipo"
+              />
+              <span>Para Docentes</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Campos condicionales según el tipo -->
+        @if (form.tipo === 'estudiante') {
+          <div class="modal-grid">
+            <div class="modal-campo">
+              <label class="filtro-label">Grado *</label>
+              <select
+                class="filtro-select"
+                [(ngModel)]="form.id_grado"
+              >
+                <option [value]="null">Seleccionar grado</option>
+                @for (g of grados(); track g.id_grado) {
+                  <option [value]="g.id_grado">{{ g.nombre }}</option>
+                }
+              </select>
+            </div>
+
+            <div class="modal-campo">
+              <label class="filtro-label">Sección *</label>
+              <select
+                class="filtro-select"
+                [(ngModel)]="form.id_seccion"
+              >
+                <option [value]="null">Seleccionar sección</option>
+                @for (s of secciones(); track s.id_seccion) {
+                  <option [value]="s.id_seccion">{{ s.nombre }}</option>
+                }
+              </select>
+            </div>
+
+            <div class="modal-campo">
+              <label class="filtro-label">Periodo *</label>
+              <select
+                class="filtro-select"
+                [(ngModel)]="form.id_periodo"
+              >
+                <option [value]="null">Seleccionar periodo</option>
+                @for (p of periodos(); track p.id_periodo) {
+                  <option [value]="p.id_periodo">{{ p.nombre }}</option>
+                }
+              </select>
+            </div>
+          </div>
+        } @else {
+          <div class="modal-grid">
+            <div class="modal-campo" style="grid-column: 1 / -1;">
+              <label class="filtro-label">Docente *</label>
+
+              @if (form.id_usuario_docente) {
+                <div class="docente-seleccionado-box">
+                  <span>{{ nombreDocenteSeleccionado() }}</span>
+                  <button type="button" class="docente-cambiar-btn" (click)="quitarDocenteSeleccionado()">
+                    Cambiar
+                  </button>
+                </div>
+              } @else {
+                <div class="docente-combobox">
+                  <input
+                    class="filtro-input"
+                    type="text"
+                    placeholder="Buscar o seleccionar docente..."
+                    [value]="busquedaDocente()"
+                    (input)="busquedaDocente.set($any($event.target).value)"
+                    (focus)="abrirDropdownDocente()"
+                    (blur)="cerrarDropdownDocente()"
+                  />
+                  @if (dropdownDocenteAbierto()) {
+                    <div class="docentes-lista docentes-lista-flotante">
+                      @for (docente of docentesFiltrados(); track docente.id_usuario) {
+                        <div
+                          class="docente-item"
+                          (mousedown)="seleccionarDocente(docente)"
+                        >
+                          {{ docente.nombre_completo }}
+                        </div>
+                      } @empty {
+                        <div class="docente-item docente-item-vacio">
+                          No se encontraron docentes
+                        </div>
+                      }
+                    </div>
+                  }
+                </div>
+              }
+            </div>
+
+            <div class="modal-campo">
+              <label class="filtro-label">Periodo *</label>
+              <select
+                class="filtro-select"
+                [(ngModel)]="form.id_periodo"
+              >
+                <option [value]="null">Seleccionar periodo</option>
+                @for (p of periodos(); track p.id_periodo) {
+                  <option [value]="p.id_periodo">{{ p.nombre }}</option>
+                }
+              </select>
+            </div>
+          </div>
+        }
+
+        <div class="modal-campo" style="margin-top: 1rem;">
+          <label class="filtro-label">Descripción (opcional)</label>
+          <input
+            class="filtro-input"
+            type="text"
+            placeholder="Ej: Horario 2025 - Turno mañana"
+            [(ngModel)]="form.descripcion"
+          />
+        </div>
+
+        <div class="modal-campo" style="margin-top: 1rem;">
+          <label class="filtro-label">Archivos (PDF/Imagen) {{ editando() ? '(dejar vacío para mantener el actual)' : '*' }}</label>
+          <p class="modal-hint" style="margin-bottom: 0.5rem;">Puede seleccionar múltiples archivos (máximo 50)</p>
+          <input
+            type="file"
+            multiple
+            accept=".pdf,.jpg,.jpeg,.png,.gif,.webp"
+            class="filtro-input"
+            (change)="onArchivosChange($event)"
+          />
+        </div>
+
+        @if (archivosSeleccionados.length > 0) {
+          <div class="archivos-preview" style="margin-top: 0.75rem;">
+            <p class="modal-hint" style="font-weight: 600; margin-bottom: 0.35rem;">Archivos seleccionados ({{ archivosSeleccionados.length }}):</p>
+            @for (file of archivosSeleccionados; track file.name; let i = $index) {
+              <div class="archivo-preview-item">
+                <span>{{ file.name }}</span>
+                <button class="archivo-quitar-btn" (click)="quitarArchivo(i)">&times;</button>
+              </div>
+            }
+          </div>
+        }
+
+        @if (editando() && archivosSeleccionados.length === 0) {
+          <p class="modal-hint" style="margin-top: 0.5rem;">Si no selecciona archivos nuevos, se mantendrá el horario actual.</p>
+        }
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" (click)="cerrarModal()">Cancelar</button>
+        <button class="btn btn-primary" (click)="guardar()" [disabled]="guardando()">
+          {{ guardando() ? 'Guardando...' : (editando() ? 'Actualizar' : 'Subir Horarios') }}
         </button>
       </div>
     </div>
   </div>
 }
 
-<!-- Modal Eliminar -->
+<!-- ===== MODAL: Confirmar eliminación ===== -->
 @if (modalEliminar()) {
-  <div class="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
-    <div class="bg-white rounded-xl shadow-xl w-full max-w-sm p-6 text-center">
-      <div class="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-4">
-        <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
+  <div class="modal-overlay" (click)="cerrarModalEliminar()">
+    <div class="modal modal-sm" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>Confirmar eliminación</h3>
+        <button class="modal-cerrar" (click)="cerrarModalEliminar()">&times;</button>
       </div>
-      <h3 class="font-bold text-gray-900 mb-1">¿Eliminar horario?</h3>
-      <p class="text-sm text-gray-500 mb-5">Esta acción no se puede deshacer.</p>
-      <div class="flex gap-3">
-        <button (click)="cerrarModal()" class="flex-1 text-sm font-medium text-gray-600 border border-gray-200 rounded-lg py-2 hover:bg-gray-50 transition-colors">Cancelar</button>
-        <button (click)="eliminar()" class="flex-1 text-sm font-medium text-white bg-red-600 rounded-lg py-2 hover:bg-red-700 transition-colors">Eliminar</button>
+      <div class="modal-body">
+        <p>¿Está seguro de eliminar este horario? Esta acción no se puede deshacer.</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" (click)="cerrarModalEliminar()">Cancelar</button>
+        <button class="btn btn-danger" (click)="eliminar()">Eliminar</button>
       </div>
     </div>
   </div>
