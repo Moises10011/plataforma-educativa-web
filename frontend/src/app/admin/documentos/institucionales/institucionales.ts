@@ -99,7 +99,9 @@ export class AdminInstitucionales implements OnInit {
 
     // Filtrar por tipo
     if (tipo === 'estudiantes') {
-      filtrados = filtrados.filter((d) => d.descripcion?.toLowerCase().includes('estudiante') || true);
+      filtrados = filtrados.filter((d) =>
+        (d.descripcion ?? '').toLowerCase().includes('estudiante'),
+      );
     }
 
     // Filtrar por búsqueda
