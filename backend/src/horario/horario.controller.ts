@@ -10,8 +10,10 @@ import {
   Query,
   UseGuards,
   Res,
+  Req,
   UseInterceptors,
   UploadedFiles,
+  ForbiddenException,
 } from '@nestjs/common';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import type { Response } from 'express';
@@ -24,6 +26,14 @@ import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
 import { crearMulterConfig } from '../common/config/multer.config';
 import { UsuarioService } from '../usuario/usuario.service';
+
+interface RequestConUsuario {
+  user: {
+    id_usuario: number;
+    correo: string;
+    roles?: string[];
+  };
+}
 
 @Controller('horario')
 export class HorarioController {
@@ -40,8 +50,10 @@ export class HorarioController {
   )
   create(
     @Body() dto: CreateHorarioDto,
+    @Req() req: RequestConUsuario,
     @UploadedFiles() archivos?: Express.Multer.File[],
   ) {
+    this.validarAlcanceDocente(dto, req.user);
     return this.horarioService.create(dto, archivos);
   }
 
@@ -103,11 +115,27 @@ export class HorarioController {
   @UseInterceptors(
     FilesInterceptor('archivos', 1, crearMulterConfig('horarios')),
   )
-  update(
+  async update(
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: UpdateHorarioDto,
+    @Req() req: RequestConUsuario,
     @UploadedFiles() archivos?: Express.Multer.File[],
   ) {
+    const esAdmin = req.user.roles?.includes('Administrador');
+
+    if (!esAdmin && req.user.roles?.includes('Docente')) {
+      const horarioExistente = await this.horarioService.findOne(id);
+      if (
+        horarioExistente.tipo !== 'docente' ||
+        horarioExistente.id_usuario_docente !== req.user.id_usuario
+      ) {
+        throw new ForbiddenException(
+          'No puede modificar horarios de otros usuarios',
+        );
+      }
+      this.validarAlcanceDocente(dto, req.user);
+    }
+
     return this.horarioService.update(id, dto, archivos?.[0]);
   }
 
@@ -116,5 +144,24 @@ export class HorarioController {
   @Delete(':id')
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.horarioService.remove(id);
+  }
+
+  private validarAlcanceDocente(
+    dto: CreateHorarioDto | UpdateHorarioDto,
+    user: RequestConUsuario['user'],
+  ): void {
+    const esAdmin = user.roles?.includes('Administrador');
+    if (esAdmin) return;
+
+    const esDocente = user.roles?.includes('Docente');
+    if (!esDocente) return;
+
+    if (dto.tipo && dto.tipo !== 'docente') {
+      throw new ForbiddenException('Solo puede subir horarios de tipo docente');
+    }
+
+    // Forzamos que el docente solo pueda asignarse horarios a sí mismo,
+    // sin importar qué id_usuario_docente haya mandado el frontend.
+    dto.id_usuario_docente = user.id_usuario;
   }
 }
