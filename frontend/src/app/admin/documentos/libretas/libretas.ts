@@ -131,6 +131,23 @@ export class AdminLibretas implements OnInit {
     );
   });
 
+  libretasFiltradas = computed(() => {
+    const texto = this.busqueda().trim().toLowerCase();
+    if (!texto) return this.libretas();
+
+    return this.libretas().filter((libreta) => {
+      const nombreCompleto = `${libreta.estudiante.nombres} ${libreta.estudiante.apellidos}`.toLowerCase();
+      const dni = libreta.estudiante.dni.toLowerCase();
+      const periodo = libreta.periodo.nombre.toLowerCase();
+
+      return (
+        nombreCompleto.includes(texto) ||
+        dni.includes(texto) ||
+        periodo.includes(texto)
+      );
+    });
+  });
+
   constructor(private http: HttpClient) {}
 
   ngOnInit(): void {

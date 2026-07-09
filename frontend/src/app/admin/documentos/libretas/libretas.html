@@ -110,6 +110,12 @@
       <h3>No hay libretas registradas</h3>
       <p>Use la opción "Subir Libretas" para agregar boletines de notas.</p>
     </div>
+  } @else if (libretasFiltradas().length === 0) {
+    <div class="empty-state">
+      <div class="empty-icon">🔎</div>
+      <h3>No hay coincidencias</h3>
+      <p>Pruebe con otro término de búsqueda o quite los filtros activos.</p>
+    </div>
   } @else {
     <div class="table-container">
       <table class="table">
@@ -123,7 +129,7 @@
           </tr>
         </thead>
         <tbody>
-          @for (l of libretas(); track l.id_libreta) {
+          @for (l of libretasFiltradas(); track l.id_libreta) {
             <tr>
               <td class="td-estudiante">
                 <div class="estudiante-info">

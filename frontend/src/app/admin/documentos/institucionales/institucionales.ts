@@ -222,6 +222,11 @@ export class AdminInstitucionales implements OnInit {
       return;
     }
 
+    if (!this.editando() && this.form.tipo === 'docentes' && !this.form.id_usuario) {
+      this.error.set('Debe seleccionar un docente');
+      return;
+    }
+
     if (!this.editando() && !this.archivo) {
       this.error.set('Debe seleccionar un archivo');
       return;
@@ -233,8 +238,25 @@ export class AdminInstitucionales implements OnInit {
     const formData = new FormData();
     formData.append('titulo', this.form.titulo.trim());
     formData.append('descripcion', this.form.descripcion.trim());
-    formData.append('tipo', this.form.tipo);
-    formData.append('archivo', this.archivo!);
+    if (!this.editando()) {
+      formData.append('tipo', this.form.tipo);
+
+      if (this.form.tipo === 'estudiantes' && this.form.id_grado) {
+        formData.append('id_grado', String(this.form.id_grado));
+      }
+
+      if (this.form.tipo === 'estudiantes' && this.form.id_seccion) {
+        formData.append('id_seccion', String(this.form.id_seccion));
+      }
+
+      if (this.form.tipo === 'docentes' && this.form.id_usuario) {
+        formData.append('id_usuario', String(this.form.id_usuario));
+      }
+    }
+
+    if (this.archivo) {
+      formData.append('archivo', this.archivo);
+    }
 
     if (this.editando() && this.idEditando()) {
       // Actualizar
