@@ -217,6 +217,11 @@ export class AdminInstitucionales implements OnInit {
       return;
     }
 
+    if (this.form.tipo === 'estudiantes' && !this.form.id_grado) {
+      this.error.set('Debe seleccionar un grado');
+      return;
+    }
+
     if (!this.editando() && !this.archivo) {
       this.error.set('Debe seleccionar un archivo');
       return;
