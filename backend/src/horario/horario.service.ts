@@ -108,9 +108,9 @@ export class HorarioService {
     }
 
     if (dto.descripcion !== undefined) horario.descripcion = dto.descripcion;
-    if (dto.id_grado) horario.id_grado = dto.id_grado;
-    if (dto.id_seccion) horario.id_seccion = dto.id_seccion;
-    if (dto.id_periodo) horario.id_periodo = dto.id_periodo;
+    if (dto.id_grado !== undefined) horario.id_grado = dto.id_grado;
+    if (dto.id_seccion !== undefined) horario.id_seccion = dto.id_seccion;
+    if (dto.id_periodo !== undefined) horario.id_periodo = dto.id_periodo;
     if (dto.id_usuario_docente !== undefined)
       horario.id_usuario_docente = dto.id_usuario_docente;
     if (archivo) horario.archivo = archivo.filename;
