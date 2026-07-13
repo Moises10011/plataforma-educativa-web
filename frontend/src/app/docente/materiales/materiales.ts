@@ -2,13 +2,23 @@ import { Component, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
+import { environment } from '../../../environments/environment';
 
 interface CursoDocente {
   id_asignacion: number;
-  curso: { id_curso: number; nombre: string };
-  grado: { nombre: string };
-  seccion: { nombre: string };
-  periodo: { nombre: string };
+  curso: {
+    id_curso: number;
+    nombre: string;
+  };
+  grado: {
+    nombre: string;
+  };
+  seccion: {
+    nombre: string;
+  };
+  periodo: {
+    nombre: string;
+  };
 }
 
 interface MaterialDocente {
@@ -59,7 +69,7 @@ export class DocenteMateriales implements OnInit {
   constructor(private http: HttpClient) {}
 
   ngOnInit(): void {
-    this.http.get<{ asignaciones: CursoDocente[] }>('/api/usuario/docente/dashboard').subscribe({
+    this.http.get<{ asignaciones: CursoDocente[] }>(`${environment.apiUrl}/usuario/docente/dashboard`).subscribe({
       next: (data) => {
         this.cursos.set(data.asignaciones ?? []);
         this.cargandoCursos.set(false);
@@ -74,7 +84,7 @@ export class DocenteMateriales implements OnInit {
     if (!idAsignacion) return;
 
     this.cargando.set(true);
-    this.http.get<MaterialDocente[]>(`/api/asignacion-curso/${idAsignacion}/materiales`).subscribe({
+    this.http.get<MaterialDocente[]>(`${environment.apiUrl}/asignacion-curso/${idAsignacion}/materiales`).subscribe({
       next: (data) => {
         this.materiales.set(data);
         this.cargando.set(false);
@@ -117,7 +127,7 @@ export class DocenteMateriales implements OnInit {
     formData.append('descripcion', this.nuevo.descripcion.trim());
     formData.append('archivo', this.archivo);
 
-    this.http.post<MaterialDocente>('/api/material', formData).subscribe({
+    this.http.post<MaterialDocente>(`${environment.apiUrl}/material`, formData).subscribe({
       next: () => {
         this.onCursoChange(id);
         this.guardando.set(false);
@@ -139,7 +149,7 @@ export class DocenteMateriales implements OnInit {
     const id = this.idAEliminar();
     if (!id) return;
 
-    this.http.delete(`/api/material/${id}`).subscribe({
+    this.http.delete(`${environment.apiUrl}/material/${id}`).subscribe({
       next: () => {
         this.materiales.update(lista => lista.filter(m => m.id_material !== id));
         this.cerrarModal();

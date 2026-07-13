@@ -12,6 +12,9 @@
   "private": true,
   "packageManager": "npm@10.9.2",
   "dependencies": {
+    "@ag-grid-community/angular": "^32.3.9",
+    "@ag-grid-community/core": "^32.3.9",
+    "@ag-grid-community/csv-export": "^32.3.9",
     "@angular/common": "^21.2.0",
     "@angular/compiler": "^21.2.0",
     "@angular/core": "^21.2.0",

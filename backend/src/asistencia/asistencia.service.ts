@@ -4,16 +4,42 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, Between, In } from 'typeorm';
 
 import { Asistencia } from './entities/asistencia.entity';
 import { CreateAsistenciaDto } from './dto/create-asistencia.dto';
 import { UpdateAsistenciaDto } from './dto/update-asistencia.dto';
 import { generarExcel, leerExcel } from '../common/utils/excel.util';
+import { Matricula } from '../matricula/entities/matricula.entity';
+import { AsignacionCurso } from '../asignacion-curso/entities/asignacion-curso.entity';
+import { Usuario } from '../usuario/entities/usuario.entity';
 
 interface AuthUser {
   id_usuario: number;
   roles?: string[];
+}
+
+export interface DiaDelMes {
+  fecha: string;
+  dia_semana: string;
+  numero: number;
+}
+
+export interface ResumenAsistencia {
+  total_dias: number;
+  presentes: number;
+  ausentes: number;
+  tardanzas: number;
+  justificados: number;
+  porcentaje: number;
+}
+
+export interface EstudianteConAsistencia {
+  id_usuario: number;
+  nombres: string;
+  apellidos: string;
+  asistencia_diaria: Record<string, string | null>;
+  resumen: ResumenAsistencia;
 }
 
 @Injectable()
@@ -135,6 +161,132 @@ export class AsistenciaService {
     return {
       message: `Se importaron ${creados} registros de asistencia correctamente`,
       errores: resultados,
+    };
+  }
+
+  async getAsistenciaMes(
+    id_asignacion: number,
+    mes: number,
+    anio: number,
+    id_docente: number,
+  ) {
+    const matriculaRepo =
+      this.asistenciaRepository.manager.getRepository(Matricula);
+    const asignacionRepo =
+      this.asistenciaRepository.manager.getRepository(AsignacionCurso);
+    const usuarioRepo =
+      this.asistenciaRepository.manager.getRepository(Usuario);
+    const asignacion = await asignacionRepo.findOne({
+      where: { id_asignacion, id_usuario_docente: id_docente },
+      relations: { curso: true, grado: true, seccion: true, periodo: true },
+    });
+
+    if (!asignacion) {
+      throw new NotFoundException('Asignación no encontrada');
+    }
+
+    // Obtener estudiantes matriculados
+    const matriculas = await matriculaRepo.find({
+      where: {
+        id_grado: asignacion.id_grado,
+        id_seccion: asignacion.id_seccion,
+        id_periodo: asignacion.id_periodo,
+        estado: true,
+      },
+      relations: { usuario: true },
+    });
+
+    // Obtener todos los registros de asistencia del mes para esta asignación
+    const inicioMes = new Date(anio, mes - 1, 1);
+    const finMes = new Date(anio, mes, 0);
+    const registrosAsistencia = await this.asistenciaRepository.find({
+      where: {
+        id_asignacion,
+        fecha: Between(inicioMes, finMes),
+      },
+      relations: { estudiante: true },
+    });
+
+    // Obtener todos los usuarios (estudiantes) de las matrículas
+    const idsEstudiantes = matriculas.map((m) => m.id_usuario);
+    const estudiantes = idsEstudiantes.length
+      ? await usuarioRepo.find({
+          where: { id_usuario: In(idsEstudiantes) },
+        })
+      : [];
+
+    // Generar días del mes
+    const diasDelMes: DiaDelMes[] = [];
+    const totalDias = new Date(anio, mes, 0).getDate();
+    for (let dia = 1; dia <= totalDias; dia++) {
+      const fecha = new Date(anio, mes - 1, dia);
+      const diaSemana = fecha.getDay();
+      diasDelMes.push({
+        fecha: `${anio}-${String(mes).padStart(2, '0')}-${String(dia).padStart(2, '0')}`,
+        dia_semana: ['D', 'L', 'M', 'M', 'J', 'V', 'S'][diaSemana],
+        numero: dia,
+      });
+    }
+
+    // Construir respuesta
+    const estudiantesConAsistencia: EstudianteConAsistencia[] = estudiantes.map(
+      (estudiante) => {
+        const asistenciaEstudiante: Record<string, string | null> = {};
+        let presentes = 0;
+        let ausentes = 0;
+        let tardanzas = 0;
+        let justificados = 0;
+
+        // Inicializar todos los días como vacíos
+        diasDelMes.forEach((dia) => {
+          asistenciaEstudiante[dia.fecha] = null;
+        });
+
+        // Llenar con los registros existentes
+        registrosAsistencia
+          .filter((r) => r.id_usuario_estudiante === estudiante.id_usuario)
+          .forEach((registro) => {
+            const fechaStr = registro.fecha.toISOString().split('T')[0];
+            asistenciaEstudiante[fechaStr] = registro.estado;
+            if (registro.estado === 'presente') presentes++;
+            else if (registro.estado === 'ausente') ausentes++;
+            else if (registro.estado === 'tardanza') tardanzas++;
+            else if (registro.estado === 'justificado') justificados++;
+          });
+
+        const totalMarcados = presentes + ausentes + tardanzas + justificados;
+        const porcentaje =
+          totalMarcados > 0 ? Math.round((presentes / totalMarcados) * 100) : 0;
+
+        return {
+          id_usuario: estudiante.id_usuario,
+          nombres: estudiante.nombres,
+          apellidos: estudiante.apellidos,
+          asistencia_diaria: asistenciaEstudiante,
+          resumen: {
+            total_dias: totalDias,
+            presentes,
+            ausentes,
+            tardanzas,
+            justificados,
+            porcentaje,
+          },
+        };
+      },
+    );
+
+    return {
+      encabezado: {
+        institucion: 'Institución Educativa',
+        docente: `${asignacion.docente?.nombres || ''} ${asignacion.docente?.apellidos || ''}`,
+        curso: asignacion.curso?.nombre || '',
+        nivel: '',
+        grado: asignacion.grado?.nombre || '',
+        seccion: asignacion.seccion?.nombre || '',
+        periodo: asignacion.periodo?.nombre || '',
+      },
+      estudiantes: estudiantesConAsistencia,
+      dias_del_mes: diasDelMes,
     };
   }
 }

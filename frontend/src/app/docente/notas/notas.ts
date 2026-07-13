@@ -2,13 +2,23 @@ import { Component, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
+import { environment } from '../../../environments/environment';
 
 interface CursoDocente {
   id_asignacion: number;
-  curso: { id_curso: number; nombre: string };
-  grado: { nombre: string };
-  seccion: { nombre: string };
-  periodo: { nombre: string };
+  curso: {
+    id_curso: number;
+    nombre: string;
+  };
+  grado: {
+    nombre: string;
+  };
+  seccion: {
+    nombre: string;
+  };
+  periodo: {
+    nombre: string;
+  };
 }
 
 interface EntregaDocente {
@@ -62,7 +72,7 @@ export class DocenteNotas implements OnInit {
   constructor(private http: HttpClient) {}
 
   ngOnInit(): void {
-    this.http.get<{ asignaciones: CursoDocente[] }>('/api/usuario/docente/dashboard').subscribe({
+    this.http.get<{ asignaciones: CursoDocente[] }>(`${environment.apiUrl}/usuario/docente/dashboard`).subscribe({
       next: (data) => {
         this.cursos.set(data.asignaciones ?? []);
         this.cargandoCursos.set(false);
@@ -77,7 +87,7 @@ export class DocenteNotas implements OnInit {
     if (!idAsignacion) return;
 
     this.cargando.set(true);
-    this.http.get<TareaConEntregas[]>(`/api/asignacion-curso/${idAsignacion}/tareas`).subscribe({
+    this.http.get<TareaConEntregas[]>(`${environment.apiUrl}/asignacion-curso/${idAsignacion}/tareas`).subscribe({
       next: (data) => {
         this.tareas.set(data.map(t => ({ ...t, expandido: false })));
         this.cargando.set(false);
@@ -100,7 +110,7 @@ export class DocenteNotas implements OnInit {
     const id = this.idAsignacionSeleccionada();
     if (!id) return;
 
-    this.http.get<EntregaDocente[]>(`/api/asignacion-curso/${id}/tareas/${idTarea}/entregas`).subscribe({
+    this.http.get<EntregaDocente[]>(`${environment.apiUrl}/asignacion-curso/${id}/tareas/${idTarea}/entregas`).subscribe({
       next: (entregas) => {
         this.tareas.update(lista =>
           lista.map(t => t.id_tarea === idTarea ? { ...t, entregas, expandido: true } : t)
@@ -132,7 +142,7 @@ export class DocenteNotas implements OnInit {
     this.guardando.set(true);
     this.error.set(null);
 
-    this.http.post('/api/nota', {
+    this.http.post(`${environment.apiUrl}/nota`, {
       id_entrega: entrega.id_entrega,
       id_usuario_estudiante: this.calificacion.id_usuario_estudiante,
       valor: this.calificacion.valor,
@@ -150,7 +160,7 @@ export class DocenteNotas implements OnInit {
   }
 
   descargarEntrega(idEntrega: number): void {
-    window.open(`/api/entrega-tarea/${idEntrega}/descargar`, '_blank');
+    window.open(`${environment.apiUrl}/entrega-tarea/${idEntrega}/descargar`, '_blank');
   }
 
   trackByTarea(_: number, t: TareaConEntregas): number {

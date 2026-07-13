@@ -1,0 +1,351 @@
+.asistencia-container {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* Header institucional */
+.header-spreadsheet {
+  background: white;
+  border: 1px solid #d0d0d0;
+  border-radius: 4px;
+  margin-bottom: 12px;
+  padding: 16px 20px;
+}
+
+.header-titulo {
+  color: #c0392b;
+  font-size: 18px;
+  font-weight: 700;
+  text-align: center;
+  letter-spacing: 1px;
+  margin-bottom: 14px;
+  text-transform: uppercase;
+}
+
+.header-campos {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.campo-fila {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.campo-fila-horizontal {
+  display: flex;
+  gap: 32px;
+}
+
+.campo-etiqueta {
+  font-size: 12px;
+  font-weight: 700;
+  color: #333;
+  min-width: 160px;
+}
+
+.campo-valor {
+  font-size: 12px;
+  color: #555;
+  border-bottom: 1px solid #999;
+  padding: 2px 8px;
+  min-width: 200px;
+  min-height: 20px;
+  background: #fafafa;
+}
+
+/* Toolbar */
+.toolbar {
+  display: flex;
+  margin-bottom: 10px;
+}
+
+.curso-select {
+  padding: 6px 12px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 13px;
+  background: white;
+  min-width: 320px;
+}
+
+/* Estados skeleton y empty */
+.skeleton {
+  height: 200px;
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 4px;
+}
+
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  background: white;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  color: #888;
+  font-size: 14px;
+}
+
+/* Hoja de asistencia */
+.hoja-asistencia {
+  background: white;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  padding: 14px 16px;
+  margin-bottom: 14px;
+}
+
+.hoja-controles {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+
+.fecha-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #333;
+}
+
+.fecha-input {
+  padding: 6px 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 13px;
+}
+
+.btn-guardar {
+  padding: 7px 16px;
+  border: none;
+  border-radius: 4px;
+  background: #2c3e50;
+  color: white;
+  font-size: 13px;
+  cursor: pointer;
+  margin-left: auto;
+}
+
+.btn-guardar:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-guardar:hover:not(:disabled) {
+  background: #34495e;
+}
+
+.aviso {
+  padding: 8px 12px;
+  border-radius: 4px;
+  margin-bottom: 10px;
+}
+
+.aviso p {
+  margin: 0;
+  font-size: 13px;
+}
+
+.aviso-error {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+}
+
+.aviso-error p {
+  color: #dc2626;
+}
+
+.aviso-exito {
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+}
+
+.aviso-exito p {
+  color: #16a34a;
+}
+
+/* Tabla tipo Excel: estudiantes como columnas, fecha como fila fija */
+.hoja-scroll {
+  overflow-x: auto;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.hoja-tabla {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+.hoja-tabla th,
+.hoja-tabla td {
+  border: 1px solid #ddd;
+  padding: 6px;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.hoja-tabla thead th {
+  background: #f8fafc;
+  font-size: 11px;
+  font-weight: 700;
+  color: #333;
+  min-width: 90px;
+}
+
+.celda-fija {
+  position: sticky;
+  left: 0;
+  background: #f1f5f9 !important;
+  font-weight: 700;
+  font-size: 12px;
+  z-index: 1;
+  border-right: 2px solid #ccc !important;
+}
+
+.celda-fecha-valor {
+  color: #555;
+}
+
+.celda-digito {
+  width: 44px;
+  height: 34px;
+  text-align: center;
+  font-weight: 700;
+  font-size: 14px;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  background: #fff;
+  outline: none;
+}
+
+.celda-digito:focus {
+  border-color: #2c3e50;
+  box-shadow: 0 0 0 2px rgba(44, 62, 80, 0.2);
+}
+
+/* Leyenda */
+.leyenda-box {
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid #eee;
+}
+
+.leyenda-horizontal {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px;
+}
+
+.leyenda-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: #555;
+}
+
+.leyenda-codigo {
+  width: 26px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 3px;
+  font-weight: 700;
+  font-size: 12px;
+  flex-shrink: 0;
+  background: var(--codigo-bg, #f9f9f9);
+  color: var(--codigo-color, #333);
+}
+
+.codigo-presente {
+  --codigo-bg: #2ecc71;
+  --codigo-color: #fff;
+}
+
+.codigo-ausente {
+  --codigo-bg: #e74c3c;
+  --codigo-color: #fff;
+}
+
+.codigo-tardanza {
+  --codigo-bg: #f1c40f;
+  --codigo-color: #333;
+}
+
+.codigo-justificado {
+  --codigo-bg: #3498db;
+  --codigo-color: #fff;
+}
+
+/* Historial reciente */
+.historial-box {
+  background: white;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  padding: 14px 16px;
+}
+
+.historial-titulo {
+  font-size: 12px;
+  font-weight: 700;
+  color: #333;
+  margin-bottom: 10px;
+}
+
+.historial-tabla {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.historial-tabla th,
+.historial-tabla td {
+  border-bottom: 1px solid #eee;
+  padding: 6px 8px;
+  text-align: left;
+  font-size: 12px;
+}
+
+.historial-tabla th {
+  color: #888;
+  font-weight: 700;
+  text-transform: uppercase;
+  font-size: 10px;
+}
+
+.badge-estado {
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .campo-fila-horizontal {
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .curso-select {
+    min-width: 100%;
+  }
+
+  .btn-guardar {
+    margin-left: 0;
+    width: 100%;
+  }
+}

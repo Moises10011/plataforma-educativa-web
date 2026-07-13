@@ -1,15 +1,19 @@
-<div>
+<div class="space-y-6">
+  <!-- Encabezado -->
   <div class="mb-6">
-    <h1 class="text-xl font-bold text-gray-900">Notas</h1>
-    <p class="text-sm text-gray-500 mt-1">Califica las entregas de tus estudiantes</p>
+    <h1 class="text-2xl font-bold text-gray-900">Calificaciones</h1>
+    <p class="text-sm text-gray-500 mt-1">Revisa y califica las entregas de tus estudiantes</p>
   </div>
 
-  <div class="mb-4">
+  <!-- Selector de curso -->
+  <div class="bg-white rounded-xl shadow-sm p-4">
+    <label for="curso-select" class="block text-sm font-medium text-gray-700 mb-2">Seleccionar Curso</label>
     <select
-      class="w-full sm:w-72 text-sm border border-gray-200 rounded-lg px-3 py-2 text-gray-700 bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-institucional-500"
+      id="curso-select"
+      class="w-full sm:w-96 text-sm border border-gray-200 rounded-lg px-3 py-2.5 text-gray-700 bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-institucional-500 focus:border-institucional-500 transition-colors"
       [ngModel]="idAsignacionSeleccionada()"
       (ngModelChange)="onCursoChange($event)">
-      <option [ngValue]="null">Selecciona un curso</option>
+      <option [ngValue]="null">Selecciona un curso para ver las tareas</option>
       @for (c of cursos(); track c.id_asignacion) {
         <option [ngValue]="c.id_asignacion">
           {{ c.curso.nombre }} · {{ c.grado.nombre }} {{ c.seccion.nombre }} · {{ c.periodo.nombre }}
@@ -18,40 +22,59 @@
     </select>
   </div>
 
+  <!-- Contenido -->
   @if (cargandoCursos()) {
     <div class="bg-white rounded-xl shadow-sm p-5 h-40 animate-pulse"></div>
   } @else if (!idAsignacionSeleccionada()) {
+    <!-- Estado inicial -->
     <div class="bg-white rounded-xl shadow-sm p-10 text-center">
-      <p class="text-sm text-gray-400">Selecciona un curso para ver las tareas y calificar</p>
+      <svg class="w-16 h-16 text-gray-300 mx-auto mb-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+      </svg>
+      <p class="text-sm text-gray-500">Selecciona un curso para ver las tareas</p>
+      <p class="text-xs text-gray-400 mt-1">Podrás revisar y calificar entregas</p>
     </div>
   } @else if (cargando()) {
     <div class="bg-white rounded-xl shadow-sm p-5 h-40 animate-pulse"></div>
   } @else if (!tareas().length) {
+    <!-- Estado vacío -->
     <div class="bg-white rounded-xl shadow-sm p-10 text-center">
-      <p class="text-sm text-gray-400">No hay tareas en este curso</p>
+      <svg class="w-16 h-16 text-gray-300 mx-auto mb-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+      </svg>
+      <p class="text-sm text-gray-500">No hay tareas en este curso</p>
+      <p class="text-xs text-gray-400 mt-1">Crea una tarea para comenzar a recibir entregas</p>
     </div>
   } @else {
+    <!-- Lista de tareas -->
     <div class="space-y-3">
       @for (t of tareas(); track t.id_tarea) {
-        <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+        <div class="bg-white rounded-xl shadow-sm overflow-hidden hover:shadow-md transition-shadow">
           <button
-            class="w-full p-4 flex items-center justify-between hover:bg-gray-50 transition-colors text-left"
+            class="w-full p-5 flex items-center justify-between hover:bg-gray-50 transition-colors text-left"
             (click)="toggleTarea(t.id_tarea)">
-            <div class="flex items-center gap-3">
-              <div class="w-9 h-9 rounded-lg bg-amber-50 flex items-center justify-center flex-shrink-0">
-                <svg class="w-4 h-4 text-amber-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+            <div class="flex items-center gap-4 flex-1 min-w-0">
+              <div class="w-10 h-10 rounded-lg bg-amber-50 flex items-center justify-center flex-shrink-0">
+                <svg class="w-5 h-5 text-amber-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
                 </svg>
               </div>
-              <div>
-                <p class="text-sm font-medium text-gray-800">{{ t.titulo }}</p>
-                <p class="text-xs text-gray-400">
-                  Entrega: {{ t.fecha_entrega | date:'dd/MM/yyyy' }} ·
-                  <span class="text-institucional-600 font-medium">{{ t.total_entregas }} entregas</span>
-                </p>
+              <div class="flex-1 min-w-0">
+                <h3 class="text-sm font-semibold text-gray-900">{{ t.titulo }}</h3>
+                <div class="flex items-center gap-3 mt-1">
+                  <div class="flex items-center gap-1">
+                    <svg class="w-3.5 h-3.5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                    </svg>
+                    <span class="text-xs text-gray-600">Entrega: {{ t.fecha_entrega | date:'dd/MM/yyyy' }}</span>
+                  </div>
+                  <span class="text-xs font-medium text-institucional-600 bg-institucional-50 px-2 py-0.5 rounded-full">
+                    {{ t.total_entregas }} {{ t.total_entregas === 1 ? 'entrega' : 'entregas' }}
+                  </span>
+                </div>
               </div>
             </div>
-            <svg class="w-4 h-4 text-gray-400 transition-transform"
+            <svg class="w-5 h-5 text-gray-400 transition-transform flex-shrink-0 ml-3"
               [class.rotate-180]="t.expandido"
               xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
@@ -59,50 +82,66 @@
           </button>
 
           @if (t.expandido && t.entregas) {
-            <div class="border-t border-gray-50">
+            <div class="border-t border-gray-100">
               @if (!t.entregas.length) {
-                <p class="text-sm text-gray-400 text-center py-6">No hay entregas aún</p>
+                <div class="py-8 text-center">
+                  <svg class="w-12 h-12 text-gray-300 mx-auto mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                  </svg>
+                  <p class="text-sm text-gray-500">No hay entregas aún</p>
+                  <p class="text-xs text-gray-400 mt-1">Los estudiantes pueden enviar sus entregas</p>
+                </div>
               } @else {
-                <table class="w-full text-sm">
-                  <thead>
-                    <tr class="border-b border-gray-50">
-                      <th class="text-left text-xs text-gray-500 font-medium px-4 py-2">Estudiante</th>
-                      <th class="text-left text-xs text-gray-500 font-medium px-4 py-2">Fecha entrega</th>
-                      <th class="text-center text-xs text-gray-500 font-medium px-4 py-2">Archivo</th>
-                      <th class="text-center text-xs text-gray-500 font-medium px-4 py-2">Acción</th>
-                    </tr>
-                  </thead>
-                  <tbody class="divide-y divide-gray-50">
-                    @for (e of t.entregas; track e.id_entrega) {
-                      <tr class="hover:bg-gray-50">
-                        <td class="px-4 py-3 font-medium text-gray-800">
-                          {{ e.estudiante.nombres }} {{ e.estudiante.apellidos }}
-                        </td>
-                        <td class="px-4 py-3 text-gray-500">
-                          {{ e.fecha_entrega ? (e.fecha_entrega | date:'dd/MM/yyyy HH:mm') : '—' }}
-                        </td>
-                        <td class="px-4 py-3 text-center">
-                          @if (e.archivo) {
-                            <button
-                              class="text-xs text-institucional-600 hover:underline"
-                              (click)="descargarEntrega(e.id_entrega)">
-                              Descargar
-                            </button>
-                          } @else {
-                            <span class="text-xs text-gray-400">Sin archivo</span>
-                          }
-                        </td>
-                        <td class="px-4 py-3 text-center">
-                          <button
-                            class="text-xs bg-institucional-50 text-institucional-700 px-3 py-1 rounded-full hover:bg-institucional-100 transition-colors"
-                            (click)="abrirModalCalificar(e)">
-                            Calificar
-                          </button>
-                        </td>
+                <div class="overflow-x-auto">
+                  <table class="w-full text-sm">
+                    <thead class="bg-gray-50">
+                      <tr>
+                        <th class="text-left text-xs font-semibold text-gray-600 px-5 py-3">Estudiante</th>
+                        <th class="text-left text-xs font-semibold text-gray-600 px-5 py-3">Fecha de Entrega</th>
+                        <th class="text-center text-xs font-semibold text-gray-600 px-5 py-3">Archivo</th>
+                        <th class="text-center text-xs font-semibold text-gray-600 px-5 py-3">Acción</th>
                       </tr>
-                    }
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody class="divide-y divide-gray-50">
+                      @for (e of t.entregas; track e.id_entrega) {
+                        <tr class="hover:bg-gray-50 transition-colors">
+                          <td class="px-5 py-3">
+                            <div class="flex items-center gap-2">
+                              <div class="w-7 h-7 rounded-full bg-institucional-100 flex items-center justify-center text-xs font-bold text-institucional-700 flex-shrink-0">
+                                {{ e.estudiante.nombres[0] }}{{ e.estudiante.apellidos[0] }}
+                              </div>
+                              <span class="font-medium text-gray-900">{{ e.estudiante.nombres }} {{ e.estudiante.apellidos }}</span>
+                            </div>
+                          </td>
+                          <td class="px-5 py-3 text-gray-600">
+                            {{ e.fecha_entrega ? (e.fecha_entrega | date:'dd/MM/yyyy HH:mm') : '—' }}
+                          </td>
+                          <td class="px-5 py-3 text-center">
+                            @if (e.archivo) {
+                              <button
+                                class="text-sm text-institucional-600 hover:text-institucional-700 font-medium hover:underline"
+                                (click)="descargarEntrega(e.id_entrega)">
+                                <svg class="w-4 h-4 inline-block mr-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                                </svg>
+                                Descargar
+                              </button>
+                            } @else {
+                              <span class="text-xs text-gray-400">Sin archivo</span>
+                            }
+                          </td>
+                          <td class="px-5 py-3 text-center">
+                            <button
+                              class="text-sm bg-institucional-600 text-white px-4 py-1.5 rounded-lg hover:bg-institucional-700 transition-colors"
+                              (click)="abrirModalCalificar(e)">
+                              Calificar
+                            </button>
+                          </td>
+                        </tr>
+                      }
+                    </tbody>
+                  </table>
+                </div>
               }
             </div>
           }
@@ -111,49 +150,71 @@
     </div>
   }
 
+  <!-- Modal Calificar -->
   @if (modalCalificar()) {
-    <div class="fixed inset-0 bg-black/40 flex items-center justify-center z-50" (click)="cerrarModal()">
-      <div class="bg-white rounded-xl shadow-xl p-6 w-full max-w-sm" (click)="$event.stopPropagation()">
+    <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" (click)="cerrarModal()">
+      <div class="bg-white rounded-xl shadow-2xl w-full max-w-md" (click)="$event.stopPropagation()">
+        
+        <!-- Header -->
+        <div class="px-6 py-4 border-b border-gray-100">
+          <div class="flex items-center justify-between">
+            <div>
+              <h2 class="text-lg font-bold text-gray-900">Calificar Entrega</h2>
+              @if (entregaSeleccionada()) {
+                <p class="text-xs text-gray-500 mt-0.5">
+                  {{ entregaSeleccionada()!.estudiante.nombres }} {{ entregaSeleccionada()!.estudiante.apellidos }}
+                </p>
+              }
+            </div>
+            <button (click)="cerrarModal()" class="text-gray-400 hover:text-gray-600 transition-colors">
+              <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+              </svg>
+            </button>
+          </div>
+        </div>
 
-        <h2 class="text-base font-bold text-gray-900 mb-1">Calificar entrega</h2>
-        @if (entregaSeleccionada()) {
-          <p class="text-xs text-gray-400 mb-4">
-            {{ entregaSeleccionada()!.estudiante.nombres }} {{ entregaSeleccionada()!.estudiante.apellidos }}
-          </p>
-        }
-
+        <!-- Error -->
         @if (error()) {
-          <p class="text-xs text-red-600 bg-red-50 rounded-lg px-3 py-2 mb-4">{{ error() }}</p>
+          <div class="px-6 py-3 bg-red-50 border-b border-red-100">
+            <p class="text-sm text-red-600">{{ error() }}</p>
+          </div>
         }
 
-        <div class="mb-4">
-          <label class="text-xs text-gray-500 font-medium block mb-1">Nota</label>
-          <input
-            type="text"
-            class="w-full text-sm border border-gray-200 rounded-lg px-3 py-2"
-            [(ngModel)]="calificacion.valor"
-            placeholder="Ej. 15, AD, B"
-          />
+        <!-- Formulario -->
+        <div class="px-6 py-4 space-y-4">
+          <div>
+            <label for="nota" class="block text-sm font-medium text-gray-700 mb-1.5">Nota</label>
+            <input
+              id="nota"
+              type="text"
+              class="w-full text-sm border border-gray-200 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-institucional-500 focus:border-institucional-500"
+              [(ngModel)]="calificacion.valor"
+              placeholder="Ej. 15, AD, B"
+            />
+          </div>
+
+          <div>
+            <label for="observacion" class="block text-sm font-medium text-gray-700 mb-1.5">Observación <span class="text-gray-400 font-normal">(opcional)</span></label>
+            <textarea
+              id="observacion"
+              class="w-full text-sm border border-gray-200 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-institucional-500 focus:border-institucional-500"
+              [(ngModel)]="calificacion.observacion"
+              rows="3"
+              placeholder="Comentario sobre la entrega">
+            </textarea>
+          </div>
         </div>
 
-        <div class="mb-6">
-          <label class="text-xs text-gray-500 font-medium block mb-1">Observación <span class="text-gray-400">(opcional)</span></label>
-          <textarea
-            class="w-full text-sm border border-gray-200 rounded-lg px-3 py-2"
-            [(ngModel)]="calificacion.observacion"
-            rows="2"
-            placeholder="Comentario sobre la entrega">
-          </textarea>
-        </div>
-
-        <div class="flex justify-end gap-2">
+        <!-- Footer -->
+        <div class="px-6 py-4 border-t border-gray-100 flex justify-end gap-2">
           <button
-            class="text-sm px-4 py-2 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50"
+            class="text-sm px-4 py-2 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors"
             (click)="cerrarModal()">
             Cancelar
           </button>
           <button
-            class="text-sm px-4 py-2 rounded-lg bg-institucional-600 text-white hover:bg-institucional-700 disabled:opacity-50"
+            class="text-sm px-4 py-2 rounded-lg bg-institucional-600 text-white hover:bg-institucional-700 disabled:opacity-50 transition-colors"
             [disabled]="guardando() || !calificacion.valor.trim()"
             (click)="calificar()">
             {{ guardando() ? 'Guardando...' : 'Guardar nota' }}

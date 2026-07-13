@@ -2,13 +2,23 @@ import { Component, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
+import { environment } from '../../../environments/environment';
 
 interface CursoDocente {
   id_asignacion: number;
-  curso: { id_curso: number; nombre: string };
-  grado: { nombre: string };
-  seccion: { nombre: string };
-  periodo: { nombre: string };
+  curso: {
+    id_curso: number;
+    nombre: string;
+  };
+  grado: {
+    nombre: string;
+  };
+  seccion: {
+    nombre: string;
+  };
+  periodo: {
+    nombre: string;
+  };
 }
 
 interface TareaDocente {
@@ -57,7 +67,7 @@ export class DocenteTareas implements OnInit {
   constructor(private http: HttpClient) {}
 
   ngOnInit(): void {
-    this.http.get<{ asignaciones: CursoDocente[] }>('/api/usuario/docente/dashboard').subscribe({
+    this.http.get<{ asignaciones: CursoDocente[] }>(`${environment.apiUrl}/usuario/docente/dashboard`).subscribe({
       next: (data) => {
         this.cursos.set(data.asignaciones ?? []);
         this.cargandoCursos.set(false);
@@ -72,7 +82,7 @@ export class DocenteTareas implements OnInit {
     if (!idAsignacion) return;
 
     this.cargando.set(true);
-    this.http.get<TareaDocente[]>(`/api/asignacion-curso/${idAsignacion}/tareas`).subscribe({
+    this.http.get<TareaDocente[]>(`${environment.apiUrl}/asignacion-curso/${idAsignacion}/tareas`).subscribe({
       next: (data) => {
         this.tareas.set(data);
         this.cargando.set(false);
@@ -100,7 +110,7 @@ export class DocenteTareas implements OnInit {
     this.guardando.set(true);
     this.error.set(null);
 
-    this.http.post<TareaDocente>('/api/tarea', {
+    this.http.post<TareaDocente>(`${environment.apiUrl}/tarea`, {
       id_asignacion: id,
       titulo: this.nueva.titulo.trim(),
       descripcion: this.nueva.descripcion.trim(),
@@ -127,7 +137,7 @@ export class DocenteTareas implements OnInit {
     const id = this.idAEliminar();
     if (!id) return;
 
-    this.http.delete(`/api/tarea/${id}`).subscribe({
+    this.http.delete(`${environment.apiUrl}/tarea/${id}`).subscribe({
       next: () => {
         this.tareas.update(lista => lista.filter(t => t.id_tarea !== id));
         this.cerrarModal();

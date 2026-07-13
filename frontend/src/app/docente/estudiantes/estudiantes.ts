@@ -2,13 +2,23 @@ import { Component, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
+import { environment } from '../../../environments/environment';
 
 interface CursoDocente {
   id_asignacion: number;
-  curso: { id_curso: number; nombre: string };
-  grado: { nombre: string };
-  seccion: { nombre: string };
-  periodo: { nombre: string };
+  curso: {
+    id_curso: number;
+    nombre: string;
+  };
+  grado: {
+    nombre: string;
+  };
+  seccion: {
+    nombre: string;
+  };
+  periodo: {
+    nombre: string;
+  };
 }
 
 interface EstudianteDocente {
@@ -40,7 +50,7 @@ export class DocenteEstudiantes implements OnInit {
   constructor(private http: HttpClient) {}
 
   ngOnInit(): void {
-    this.http.get<{ asignaciones: CursoDocente[] }>('/api/usuario/docente/dashboard').subscribe({
+    this.http.get<{ asignaciones: CursoDocente[] }>(`${environment.apiUrl}/usuario/docente/dashboard`).subscribe({
       next: (data) => {
         this.cursos.set(data.asignaciones ?? []);
         this.cargandoCursos.set(false);
@@ -55,7 +65,7 @@ export class DocenteEstudiantes implements OnInit {
     if (!idAsignacion) return;
 
     this.cargando.set(true);
-    this.http.get<EstudianteDocente[]>(`/api/asignacion-curso/${idAsignacion}/estudiantes`).subscribe({
+    this.http.get<EstudianteDocente[]>(`${environment.apiUrl}/asignacion-curso/${idAsignacion}/estudiantes`).subscribe({
       next: (data) => {
         this.estudiantes.set(data);
         this.cargando.set(false);
