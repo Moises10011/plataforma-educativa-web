@@ -1,6 +1,6 @@
 @if (cargando()) {
   <div class="flex justify-center items-center h-64">
-    <p>Cargando información...</p>
+    <p class="text-gray-500">Cargando cursos...</p>
   </div>
 } @else {
 
@@ -8,75 +8,73 @@
 
     <div class="p-6">
 
-      <h1 class="text-3xl font-bold mb-2">
+    <!-- HEADER -->
+    <h1 class="text-2xl font-bold text-gray-800">
         Bienvenido, {{ est.nombre }}
       </h1>
 
-      <p class="text-gray-600 mb-6">
-        Panel principal del docente.
+      <p class="text-gray-500 mb-6">
+        Aquí están tus cursos asignados
       </p>
 
-      <!-- Tarjetas -->
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <!-- CARDS GRID -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
 
-        <div class="bg-white rounded-xl shadow p-5">
-          <h2 class="text-gray-500 text-sm">Cursos</h2>
-          <p class="text-3xl font-bold">
-            {{ est.cursos.length }}
-          </p>
-        </div>
+        @for (curso of est.cursos; track curso.id) {
 
-        <div class="bg-white rounded-xl shadow p-5">
-          <h2 class="text-gray-500 text-sm">Estudiantes</h2>
-          <p class="text-3xl font-bold">
-            {{ est.totalEstudiantes }}
-          </p>
-        </div>
+          <div class="bg-white rounded-xl shadow hover:shadow-lg transition cursor-pointer overflow-hidden">
 
-        <div class="bg-white rounded-xl shadow p-5">
-          <h2 class="text-gray-500 text-sm">Asistencias Hoy</h2>
-          <p class="text-3xl font-bold">
-            {{ est.asistenciasHoy }}
-          </p>
-        </div>
+            <!-- HEADER COLOR (tipo classroom) -->
+            <div class="h-20 bg-gradient-to-r from-blue-500 to-indigo-600"></div>
 
-        <div class="bg-white rounded-xl shadow p-5">
-          <h2 class="text-gray-500 text-sm">Tareas Pendientes</h2>
-          <p class="text-3xl font-bold">
-            {{ est.tareasPendientes }}
-          </p>
-        </div>
+            <div class="p-4">
+
+              <h2 class="text-lg font-semibold text-gray-800">
+                {{ curso.nombre }}
+              </h2>
+
+              <p class="text-sm text-gray-500">
+                {{ curso.grado }} - Sección {{ curso.seccion }}
+              </p>
+
+              <!-- ACCIONES -->
+              <div class="mt-4 flex justify-between items-center">
+
+                <span class="text-xs text-gray-400">
+                  ID: {{ curso.id }}
+                </span>
+
+                <button class="text-sm text-blue-600 hover:underline">
+                  Ver curso →
+                </button>
+
+              </div>
+
+            </div>
+
+          </div>
+
+        }
 
       </div>
 
-      <!-- Cursos -->
-      <div class="mt-8 bg-white rounded-xl shadow p-6">
+      <!-- ESTADÍSTICAS EXTRA -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
 
-        <h2 class="text-xl font-semibold mb-4">
-          Mis cursos
-        </h2>
+        <div class="bg-white p-4 rounded-xl shadow">
+          <p class="text-gray-500 text-sm">Estudiantes</p>
+          <p class="text-2xl font-bold">{{ est.totalEstudiantes }}</p>
+        </div>
 
-        <table class="w-full">
+        <div class="bg-white p-4 rounded-xl shadow">
+          <p class="text-gray-500 text-sm">Asistencias Hoy</p>
+          <p class="text-2xl font-bold">{{ est.asistenciasHoy }}</p>
+        </div>
 
-          <thead>
-            <tr class="border-b">
-              <th class="text-left py-2">Curso</th>
-              <th class="text-left py-2">Grado</th>
-              <th class="text-left py-2">Sección</th>
-            </tr>
-          </thead>
-
-          <tbody>
-            @for (curso of est.cursos; track curso.id) {
-              <tr class="border-b">
-                <td class="py-3">{{ curso.nombre }}</td>
-                <td>{{ curso.grado }}</td>
-                <td>{{ curso.seccion }}</td>
-              </tr>
-            }
-          </tbody>
-
-        </table>
+        <div class="bg-white p-4 rounded-xl shadow">
+          <p class="text-gray-500 text-sm">Tareas Pendientes</p>
+          <p class="text-2xl font-bold">{{ est.tareasPendientes }}</p>
+        </div>
 
       </div>
 
