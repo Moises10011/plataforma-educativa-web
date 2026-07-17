@@ -1,0 +1,36 @@
+<div class="space-y-4">
+  <div class="text-sm text-gray-400">
+    <a routerLink="/docente/cursos" class="hover:text-institucional-700">Mis Cursos</a>
+    <span class="mx-1">›</span>
+    <span class="text-gray-600 font-medium">{{ asignacion()?.curso?.nombre }}</span>
+  </div>
+
+  <div class="bg-institucional-700 rounded-2xl p-6 text-white">
+    @if (cargando()) {
+      <div class="animate-pulse space-y-2">
+        <div class="h-6 w-56 bg-white/20 rounded"></div>
+        <div class="h-3 w-40 bg-white/20 rounded"></div>
+      </div>
+    } @else if (asignacion()) {
+      <h1 class="text-2xl font-bold">{{ asignacion()?.curso?.nombre }}</h1>
+      <p class="text-sm text-white/80 mt-1">
+        {{ asignacion()?.grado?.nombre }} - {{ asignacion()?.seccion?.nombre }}
+        ·
+        {{ asignacion()?.periodo?.nombre }}
+      </p>
+    } @else {
+      <p class="text-sm text-white/80">No se pudo cargar la información del curso.</p>
+    }
+  </div>
+
+  <div class="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+    <nav class="flex border-b border-gray-100 px-2">
+      <a [routerLink]="['/docente/cursos', idAsignacion(), 'tareas']" routerLinkActive="border-institucional-600 text-institucional-700" class="px-4 py-3 text-sm font-semibold text-gray-500 border-b-2 border-transparent hover:text-institucional-700 transition-colors">Tareas</a>
+      <a [routerLink]="['/docente/cursos', idAsignacion(), 'materiales']" routerLinkActive="border-institucional-600 text-institucional-700" class="px-4 py-3 text-sm font-semibold text-gray-500 border-b-2 border-transparent hover:text-institucional-700 transition-colors">Materiales</a>
+      <a [routerLink]="['/docente/cursos', idAsignacion(), 'estudiantes']" routerLinkActive="border-institucional-600 text-institucional-700" class="px-4 py-3 text-sm font-semibold text-gray-500 border-b-2 border-transparent hover:text-institucional-700 transition-colors">Estudiantes</a>
+    </nav>
+    <div class="p-5">
+      <router-outlet></router-outlet>
+    </div>
+  </div>
+</div>

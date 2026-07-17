@@ -1,0 +1,63 @@
+<div class="space-y-6">
+  <!-- Encabezado -->
+  <div class="text-center">
+    <h1 class="font-serif text-3xl font-bold tracking-tight text-institucional-700">Estudiantes</h1>
+    <p class="text-sm text-gray-500 mt-1">Estudiantes matriculados en este curso</p>
+  </div>
+
+  <!-- Contenido -->
+  @if (cargando()) {
+    <div class="bg-white rounded-xl shadow-sm p-5 h-40 animate-pulse"></div>
+  } @else if (!estudiantes().length) {
+    <!-- Estado vacío -->
+    <div class="bg-white rounded-xl shadow-sm p-10 text-center">
+      <svg class="w-16 h-16 text-gray-300 mx-auto mb-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
+      </svg>
+      <p class="text-sm text-gray-500">No hay estudiantes en este curso</p>
+      <p class="text-xs text-gray-400 mt-1">Aún no hay estudiantes matriculados en este curso</p>
+    </div>
+  } @else {
+    <!-- Tabla de estudiantes -->
+    <div class="bg-white rounded-xl shadow-md overflow-hidden border border-gray-300">
+      <div class="px-6 py-4 border-b border-gray-300 flex items-center justify-between">
+        <div>
+          <h3 class="text-sm font-bold text-gray-900 uppercase tracking-wide">Lista de Estudiantes</h3>
+          <p class="text-xs text-gray-500 mt-0.5">{{ estudiantes().length }} {{ estudiantes().length === 1 ? 'estudiante' : 'estudiantes' }} matriculados</p>
+        </div>
+        <button
+          class="inline-flex items-center gap-1.5 text-xs font-semibold bg-institucional-600 text-white px-4 py-2 rounded-lg hover:bg-institucional-700 transition-colors shadow-sm"
+          (click)="exportarExcel()">
+          <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+          </svg>
+          Exportar
+        </button>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="bg-gray-900">
+              <th class="text-center text-xs font-bold text-white uppercase tracking-wider px-4 py-3.5 w-16">N°</th>
+              <th class="text-left text-xs font-bold text-white uppercase tracking-wider px-5 py-3.5">DNI</th>
+              <th class="text-left text-xs font-bold text-white uppercase tracking-wider px-5 py-3.5">Nombres</th>
+              <th class="text-left text-xs font-bold text-white uppercase tracking-wider px-5 py-3.5">Apellidos</th>
+              <th class="text-left text-xs font-bold text-white uppercase tracking-wider px-5 py-3.5">Correo</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-200">
+            @for (est of estudiantes(); track trackByEstudiante($index, est)) {
+              <tr [class.bg-gray-50]="$index % 2 !== 0" class="hover:bg-institucional-50 transition-colors">
+                <td class="text-center px-4 py-3 text-gray-500 font-medium border-r border-gray-200">{{ $index + 1 }}</td>
+                <td class="px-5 py-3 text-gray-700 font-mono text-xs border-r border-gray-200">{{ est.dni || '—' }}</td>
+                <td class="px-5 py-3 text-gray-900 font-semibold border-r border-gray-200">{{ est.nombres }}</td>
+                <td class="px-5 py-3 text-gray-900 font-semibold border-r border-gray-200">{{ est.apellidos }}</td>
+                <td class="px-5 py-3 text-gray-600">{{ est.correo }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  }
+</div>

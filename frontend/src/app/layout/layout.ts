@@ -8,6 +8,9 @@ import { environment } from '../../environments/environment';
 interface SubMenuItem {
   etiqueta: string;
   ruta: string;
+  // Solo se usa en "Mis Cursos" del Estudiante: nombre del docente asignado.
+  // null / undefined => aún no hay docente asignado a ese curso.
+  docente?: string | null;
 }
 
 interface CategoriaMenu {
@@ -22,6 +25,45 @@ interface Institucion {
   direccion?: string;
 }
 
+// Curso tal como lo devuelve el backend para el estudiante logueado.
+interface CursoEstudiante {
+  id: number;
+  idAsignacion: number;
+  nombre: string;
+  docente: string | null;
+}
+
+// Forma real de la respuesta del endpoint GET /usuario/estudiante/cursos
+interface CursoAsignacionResponse {
+  id_asignacion: number;
+  curso: { id_curso: number; nombre: string; descripcion?: string };
+  docente: { id_usuario: number; nombres: string; apellidos: string } | null;
+}
+
+interface CursosEstudianteResponse {
+  cursos: CursoAsignacionResponse[];
+}
+
+// Curso asignado al docente logueado (para su propio "Mis Cursos").
+interface CursoDocente {
+  id: number;
+  nombre: string;
+}
+
+// Forma real de la respuesta del endpoint GET /usuario/docente/dashboard
+interface AsignacionDocenteResponse {
+  id_asignacion: number;
+  curso: { id_curso: number; nombre: string; descripcion?: string };
+  grado: { nombre: string };
+  seccion: { nombre: string };
+  periodo: { nombre: string };
+  total_estudiantes: number;
+}
+
+interface DocenteDashboardResponse {
+  asignaciones: AsignacionDocenteResponse[];
+}
+
 @Component({
   selector: 'app-layout',
   imports: [RouterOutlet, RouterLink, RouterLinkActive, CommonModule],
@@ -34,6 +76,14 @@ export class Layout implements OnInit {
   categoriaAbierta = signal<string | null>(null);
   institucion = signal<Institucion | null>(null);
 
+  // Cursos reales del estudiante logueado, cargados desde el backend.
+  // El mismo listado de cursos aplica de 1° a 5°; lo que cambia es
+  // simplemente qué cursos trae el endpoint según el grado/sección del alumno.
+  cursosEstudiante = signal<CursoEstudiante[]>([]);
+
+  // Cursos reales asignados al docente logueado.
+  cursosDocente = signal<CursoDocente[]>([]);
+
   constructor(
     public authService: AuthService,
     private router: Router,
@@ -41,15 +91,66 @@ export class Layout implements OnInit {
   ) {}
 
   ngOnInit(): void {
-      this.http.get<Institucion>(`${environment.apiUrl}/institucion`).subscribe({
+    this.http.get<Institucion>(`${environment.apiUrl}/institucion`).subscribe({
       next: (data) => this.institucion.set(data),
     });
+
+    if (this.authService.tieneRol('Estudiante')) {
+      this.cargarCursosEstudiante();
+    }
+
+    if (this.authService.tieneRol('Docente')) {
+      this.cargarCursosDocente();
+    }
+  }
+
+  private cargarCursosEstudiante(): void {
+    this.http
+      .get<CursosEstudianteResponse>(`${environment.apiUrl}/usuario/estudiante/cursos`)
+      .subscribe({
+        next: (data) => {
+          const cursos = (data.cursos ?? []).map((item) => ({
+            id: item.curso.id_curso,
+            idAsignacion: item.id_asignacion,
+            nombre: item.curso.nombre,
+            docente: item.docente
+              ? `${item.docente.nombres} ${item.docente.apellidos}`
+              : null,
+          }));
+          this.cursosEstudiante.set(cursos);
+        },
+        error: () => this.cursosEstudiante.set([]),
+      });
+  }
+
+  private cargarCursosDocente(): void {
+    this.http
+      .get<DocenteDashboardResponse>(`${environment.apiUrl}/usuario/docente/dashboard`)
+      .subscribe({
+        next: (data) => {
+          const cursos = (data.asignaciones ?? []).map((item) => ({
+            id: item.curso.id_curso,
+            nombre: item.curso.nombre,
+          }));
+          this.cursosDocente.set(cursos);
+        },
+        error: () => this.cursosDocente.set([]),
+      });
   }
 
   logoUrl = computed(() => {
     const logo = this.institucion()?.logo;
     if (!logo) return null;
-    return `${environment.apiUrl}/uploads/institucion/${logo}`;
+    return `${environment.filesUrl}/uploads/institucion/${logo}`;
+  });
+
+  // Grado y sección del estudiante, para mostrar debajo de su nombre en el header.
+  gradoSeccion = computed<string | null>(() => {
+    const usuario = this.authService.usuarioActual() as any;
+    const grado = usuario?.grado;
+    const seccion = usuario?.seccion;
+    if (!grado) return null;
+    return seccion ? `Grado ${grado} - Sección ${seccion}` : `Grado ${grado}`;
   });
 
   categoriasMenu = computed<CategoriaMenu[]>(() => {
@@ -91,22 +192,18 @@ export class Layout implements OnInit {
     }
 
     if (this.authService.tieneRol('Docente')) {
+      // "Mis Cursos" ahora es un desplegable con los cursos reales
+      // asignados al docente (igual que en el Estudiante).
+      // Evaluación y Comunicados quedan igual que antes.
+      // Se agrega la categoría Documentos.
       return [
         {
-          etiqueta: 'Mi Aula',
+          etiqueta: 'Mis Cursos',
           icono: 'academic',
-          items: [
-            { etiqueta: 'Mis Cursos', ruta: '/docente/cursos' },
-            { etiqueta: 'Mis Estudiantes', ruta: '/docente/estudiantes' },
-          ],
-        },
-        {
-          etiqueta: 'Actividades',
-          icono: 'document',
-          items: [
-            { etiqueta: 'Tareas', ruta: '/docente/tareas' },
-            { etiqueta: 'Materiales', ruta: '/docente/materiales' },
-          ],
+          items: this.cursosDocente().map((curso) => ({
+            etiqueta: curso.nombre,
+            ruta: `/docente/cursos/${curso.id}`,
+          })),
         },
         {
           etiqueta: 'Evaluación',
@@ -123,41 +220,32 @@ export class Layout implements OnInit {
             { etiqueta: 'Comunicados', ruta: '/docente/comunicados' },
           ],
         },
+        {
+          etiqueta: 'Documentos',
+          icono: 'document',
+          items: [
+            { etiqueta: 'Documentos', ruta: '/docente/documentos' },
+          ],
+        },
       ];
     }
 
     if (this.authService.tieneRol('Estudiante')) {
+      // Único bloque desplegable para el estudiante: sus cursos reales.
+      // Solo se muestran (y se pueden abrir) los cursos que ya tienen
+      // una asignación real (docente asignado); los que no, no aparecen
+      // como enlace en el sidebar, ya que aún no tienen tablón/tareas/materiales.
+      // "Comunicados" y "Notas" se muestran como enlaces directos en el template,
+      // igual que "Dashboard", porque no necesitan submenú.
       return [
         {
-          etiqueta: 'Mi Aprendizaje',
+          etiqueta: 'Mis Cursos',
           icono: 'academic',
-          items: [
-            { etiqueta: 'Mis Cursos', ruta: '/estudiante/cursos' },
-            { etiqueta: 'Materiales', ruta: '/estudiante/materiales' },
-          ],
-        },
-        {
-          etiqueta: 'Actividades',
-          icono: 'document',
-          items: [
-            { etiqueta: 'Tareas', ruta: '/estudiante/tareas' },
-            { etiqueta: 'Entregas', ruta: '/estudiante/entregas' },
-          ],
-        },
-        {
-          etiqueta: 'Mi Progreso',
-          icono: 'chart',
-          items: [
-            { etiqueta: 'Mis Notas', ruta: '/estudiante/notas' },
-            { etiqueta: 'Asistencia', ruta: '/estudiante/asistencia' },
-          ],
-        },
-        {
-          etiqueta: 'Comunicaciones',
-          icono: 'megaphone',
-          items: [
-            { etiqueta: 'Comunicados', ruta: '/estudiante/comunicados' },
-          ],
+          items: this.cursosEstudiante().map((curso) => ({
+            etiqueta: curso.nombre,
+            ruta: `/estudiante/cursos/${curso.id}`,
+            docente: curso.docente,
+          })),
         },
       ];
     }

@@ -28,6 +28,9 @@ export class Tarea {
   @Column({ type: 'datetime', nullable: true })
   fecha_entrega!: Date;
 
+  @Column({ type: 'simple-json', nullable: true })
+  archivos!: string[] | null;
+
   @ManyToOne(() => AsignacionCurso)
   @JoinColumn({ name: 'id_asignacion' })
   asignacion!: AsignacionCurso;

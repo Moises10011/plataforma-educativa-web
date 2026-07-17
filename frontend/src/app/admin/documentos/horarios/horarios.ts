@@ -432,7 +432,7 @@ export class AdminHorarios implements OnInit {
           next: () => {
             this.guardando.set(false);
             this.cerrarModal();
-            this.exito.set('Horario actualizado correctamente');
+            this.mostrarExito('Horario actualizado correctamente');
             this.cargarHorarios();
           },
           error: (err: HttpErrorResponse) => {
@@ -446,7 +446,7 @@ export class AdminHorarios implements OnInit {
           this.guardando.set(false);
           this.cerrarModal();
           const cantidad = Array.isArray(data) ? data.length : 1;
-          this.exito.set(`${cantidad} horario(s) subido(s) correctamente`);
+          this.mostrarExito(`${cantidad} horario(s) subido(s) correctamente`);
           this.cargarHorarios();
         },
         error: (err: HttpErrorResponse) => {
@@ -467,20 +467,22 @@ export class AdminHorarios implements OnInit {
 
   // ===== Eliminar =====
 
+  idHorarioAEliminar = signal<number | null>(null);
+
   confirmarEliminar(id: number): void {
-    this.idAEliminar.set(id);
+    this.idHorarioAEliminar.set(id);
     this.modalEliminar.set(true);
   }
 
-  eliminar(): void {
-    const id = this.idAEliminar();
+  eliminarHorario(): void {
+    const id = this.idHorarioAEliminar();
     if (!id) return;
 
     this.http.delete(`${environment.apiUrl}/horario/${id}`).subscribe({
       next: () => {
         this.modalEliminar.set(false);
-        this.idAEliminar.set(null);
-        this.exito.set('Horario eliminado correctamente');
+        this.idHorarioAEliminar.set(null);
+        this.mostrarExito('Horario eliminado correctamente');
         this.cargarHorarios();
       },
       error: () => this.error.set('Error al eliminar el horario'),
@@ -489,17 +491,35 @@ export class AdminHorarios implements OnInit {
 
   cerrarModalEliminar(): void {
     this.modalEliminar.set(false);
-    this.idAEliminar.set(null);
+    this.idHorarioAEliminar.set(null);
   }
 
   // ===== Acciones =====
 
   verHorario(id: number): void {
-    window.open(`${environment.apiUrl}/horario/${id}/ver`, '_blank');
+    this.http.get(`${environment.apiUrl}/horario/${id}/ver`, { responseType: 'blob' })
+      .subscribe({
+        next: (blob) => {
+          const url = window.URL.createObjectURL(blob);
+          window.open(url, '_blank');
+        },
+        error: () => this.error.set('Error al abrir el horario'),
+      });
   }
 
   descargarHorario(id: number): void {
-    window.open(`${environment.apiUrl}/horario/${id}/descargar`, '_blank');
+    this.http.get(`${environment.apiUrl}/horario/${id}/descargar`, { responseType: 'blob' })
+      .subscribe({
+        next: (blob) => {
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = ''; // el backend ya manda el nombre en Content-Disposition
+          a.click();
+          window.URL.revokeObjectURL(url);
+        },
+        error: () => this.error.set('Error al descargar el horario'),
+      });
   }
 
   seleccionarHorario(horario: Horario): void {
@@ -524,7 +544,14 @@ export class AdminHorarios implements OnInit {
   limpiarExito(): void {
     this.exito.set('');
   }
-
+  mostrarExito(mensaje: string): void {
+    this.exito.set(mensaje);
+    setTimeout(() => {
+      if (this.exito() === mensaje) {
+        this.exito.set('');
+      }
+    }, 3000);
+  }
   limpiarError(): void {
     this.error.set('');
   }

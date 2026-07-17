@@ -131,7 +131,7 @@ export class AdminInstitucionales implements OnInit {
       error: () => this.secciones.set([]),
     });
 
-    this.http.get<Docente[]>(`${environment.apiUrl}/usuario?rol=docente`).subscribe({
+    this.http.get<Docente[]>(`${environment.apiUrl}/usuario/docentes`).subscribe({
       next: (data) => this.docentes.set(data),
       error: () => this.docentes.set([]),
     });

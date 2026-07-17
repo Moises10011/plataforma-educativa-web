@@ -8,7 +8,7 @@ import {
 import { Tarea } from '../../tarea/entities/tarea.entity';
 import { Usuario } from '../../usuario/entities/usuario.entity';
 
-@Entity('Entrega_Tarea')
+@Entity('entrega_tarea')
 export class EntregaTarea {
   @PrimaryGeneratedColumn({ name: 'id_entrega' })
   id_entrega!: number;
@@ -19,11 +19,14 @@ export class EntregaTarea {
   @Column({ name: 'id_usuario_estudiante' })
   id_usuario_estudiante!: number;
 
-  @Column({ type: 'varchar', length: 255, nullable: true })
-  archivo!: string;
+  @Column({ type: 'simple-json', nullable: true })
+  archivos!: string[] | null;
 
   @Column({ type: 'varchar', length: 255, nullable: true })
   comentario!: string;
+
+  @Column({ type: 'varchar', length: 5, nullable: true })
+  nota!: string | null;
 
   @Column({ type: 'datetime', nullable: true })
   fecha_entrega!: Date;

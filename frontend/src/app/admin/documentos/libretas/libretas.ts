@@ -448,12 +448,41 @@ export class AdminLibretas implements OnInit {
 
   // ===== Acciones =====
 
-  verLibreta(id: number): void {
-    window.open(`${environment.apiUrl}/libreta/${id}/ver`, '_blank');
+  private mimePorExtension(ext: string): string {
+    const mapa: Record<string, string> = {
+      pdf: 'application/pdf', jpg: 'image/jpeg', jpeg: 'image/jpeg',
+      png: 'image/png', gif: 'image/gif', webp: 'image/webp',
+    };
+    return mapa[ext] ?? 'application/octet-stream';
   }
 
-  descargarLibreta(id: number): void {
-    window.open(`${environment.apiUrl}/libreta/${id}/descargar`, '_blank');
+  verLibreta(id: number, nombreArchivo?: string): void {
+    const ext = nombreArchivo?.split('.').pop()?.toLowerCase() ?? 'pdf';
+    const ventana = window.open('', '_blank');
+
+    this.http.get(`${environment.apiUrl}/libreta/${id}/ver`, { responseType: 'blob' }).subscribe({
+      next: (blob) => {
+        const url = window.URL.createObjectURL(new Blob([blob], { type: blob.type || this.mimePorExtension(ext) }));
+        if (ventana) ventana.location.href = url;
+        else this.error.set('El navegador bloqueó la ventana emergente. Habilita los pop-ups.');
+        setTimeout(() => window.URL.revokeObjectURL(url), 60_000);
+      },
+      error: () => { ventana?.close(); this.error.set('No se pudo abrir la libreta.'); },
+    });
+  }
+
+  descargarLibreta(id: number, nombreArchivo?: string): void {
+    const ext = nombreArchivo?.split('.').pop()?.toLowerCase() ?? 'pdf';
+    this.http.get(`${environment.apiUrl}/libreta/${id}/descargar`, { responseType: 'blob' }).subscribe({
+      next: (blob) => {
+        const url = window.URL.createObjectURL(new Blob([blob], { type: blob.type || this.mimePorExtension(ext) }));
+        const a = document.createElement('a');
+        a.href = url; a.download = `libreta.${ext}`;
+        document.body.appendChild(a); a.click(); document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+      },
+      error: () => this.error.set('No se pudo descargar la libreta.'),
+    });
   }
 
   confirmarEliminar(id: number): void {

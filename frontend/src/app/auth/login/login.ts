@@ -55,7 +55,7 @@ export class Login implements OnInit {
   }
 
   obtenerUrlLogo(): string {
-    return `${environment.apiUrl}/uploads/institucion/${this.institucion?.logo}`;
+    return `${environment.filesUrl}/uploads/institucion/${this.institucion?.logo}`;
   }
 
   toggleMostrarPassword(): void {

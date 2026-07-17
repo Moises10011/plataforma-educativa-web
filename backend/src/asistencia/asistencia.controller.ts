@@ -121,6 +121,16 @@ export class AsistenciaController {
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('Docente')
+  @Delete('fecha/:id_asignacion/:fecha')
+  eliminarPorFecha(
+    @Param('id_asignacion', ParseIntPipe) id_asignacion: number,
+    @Param('fecha') fecha: string, // formato yyyy-mm-dd
+  ) {
+    return this.asistenciaService.eliminarPorFecha(id_asignacion, fecha);
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('Administrador')
   @Delete(':id')
   remove(@Param('id', ParseIntPipe) id: number) {

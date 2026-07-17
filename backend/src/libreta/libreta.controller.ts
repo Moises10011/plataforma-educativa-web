@@ -27,6 +27,14 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
 import { crearMulterConfig } from '../common/config/multer.config';
+import { ForbiddenException } from '@nestjs/common';
+
+import { Req } from '@nestjs/common';
+import type { Request } from 'express';
+
+interface AuthRequest extends Request {
+  user: { id_usuario: number; correo: string; roles?: string[] };
+}
 
 @Controller('libreta')
 export class LibretaController {
@@ -91,6 +99,12 @@ export class LibretaController {
       id_periodo,
     );
   }
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('Estudiante')
+  @Get('estudiante/mis-libretas')
+  misLibretas(@Req() req: AuthRequest) {
+    return this.libretaService.findAll({ id_estudiante: req.user.id_usuario });
+  }
 
   @UseGuards(JwtAuthGuard)
   @Get(':id')
@@ -100,18 +114,41 @@ export class LibretaController {
 
   @UseGuards(JwtAuthGuard)
   @Get(':id/descargar')
-  async descargar(@Param('id', ParseIntPipe) id: number, @Res() res: Response) {
+  async descargar(
+    @Param('id', ParseIntPipe) id: number,
+    @Req() req: AuthRequest,
+    @Res() res: Response,
+  ) {
     const libreta = await this.libretaService.findOne(id);
+    this.verificarAccesoEstudiante(libreta, req.user);
     const ruta = join(process.cwd(), 'uploads', 'libretas', libreta.archivo);
     res.download(ruta);
   }
 
   @UseGuards(JwtAuthGuard)
   @Get(':id/ver')
-  async ver(@Param('id', ParseIntPipe) id: number, @Res() res: Response) {
+  async ver(
+    @Param('id', ParseIntPipe) id: number,
+    @Req() req: AuthRequest,
+    @Res() res: Response,
+  ) {
     const libreta = await this.libretaService.findOne(id);
+    this.verificarAccesoEstudiante(libreta, req.user);
     const ruta = join(process.cwd(), 'uploads', 'libretas', libreta.archivo);
     res.sendFile(ruta);
+  }
+
+  private verificarAccesoEstudiante(
+    libreta: { id_estudiante: number },
+    user: { id_usuario: number; roles?: string[] },
+  ) {
+    const esEstudiante = user.roles?.includes('Estudiante');
+    const esPropietario = libreta.id_estudiante === user.id_usuario;
+    if (esEstudiante && !esPropietario) {
+      throw new ForbiddenException(
+        'No puedes ver la libreta de otro estudiante',
+      );
+    }
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)

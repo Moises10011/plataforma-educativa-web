@@ -3,6 +3,7 @@ import {
   IsOptional,
   IsNotEmpty,
   IsDateString,
+  IsEmail,
   Length,
   Matches,
 } from 'class-validator';
@@ -18,13 +19,13 @@ export class CreateUsuarioDto {
 
   @IsString()
   @IsOptional()
-  @Length(8, 8, { message: 'El DNI debe tener 8 dígitos' })
+  @Length(8, 8, { message: 'El DNI debe tener exactamente 8 dígitos' })
   @Matches(/^\d{8}$/, { message: 'El DNI solo debe contener números' })
   dni?: string;
 
   @IsString()
   @IsOptional()
-  @Length(9, 9, { message: 'El teléfono debe tener 9 dígitos' })
+  @Length(9, 9, { message: 'El teléfono debe tener exactamente 9 dígitos' })
   @Matches(/^\d{9}$/, { message: 'El teléfono solo debe contener números' })
   telefono?: string;
 
@@ -36,9 +37,9 @@ export class CreateUsuarioDto {
   @IsOptional()
   fecha_nacimiento?: string;
 
-  @IsString()
-  @IsOptional()
-  correo?: string;
+  @IsEmail({}, { message: 'El correo no tiene un formato válido' })
+  @IsNotEmpty()
+  correo!: string;
 
   @IsString()
   @IsNotEmpty()

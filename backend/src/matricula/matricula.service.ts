@@ -7,6 +7,8 @@ import { CreateMatriculaDto } from './dto/create-matricula.dto';
 import { UpdateMatriculaDto } from './dto/update-matricula.dto';
 import { AsignacionCurso } from '../asignacion-curso/entities/asignacion-curso.entity';
 import { generarExcel } from '../common/utils/excel.util';
+import { Grado } from '../grado/entities/grado.entity';
+import { Seccion } from '../seccion/entities/seccion.entity';
 
 interface AuthUser {
   id_usuario: number;
@@ -20,6 +22,10 @@ export class MatriculaService {
     private readonly matriculaRepository: Repository<Matricula>,
     @InjectRepository(AsignacionCurso)
     private readonly asignacionRepository: Repository<AsignacionCurso>,
+    @InjectRepository(Grado)
+    private readonly gradoRepository: Repository<Grado>,
+    @InjectRepository(Seccion)
+    private readonly seccionRepository: Repository<Seccion>,
   ) {}
 
   async create(createMatriculaDto: CreateMatriculaDto) {
@@ -122,5 +128,52 @@ export class MatriculaService {
       ],
       filas,
     );
+  }
+  async distribucionPorGrado() {
+    const grados = await this.gradoRepository.find({
+      order: { nombre: 'ASC' },
+    });
+
+    const distribucion = await Promise.all(
+      grados.map(async (grado) => {
+        const cantidad = await this.matriculaRepository
+          .createQueryBuilder('m')
+          .where('m.id_grado = :id_grado', { id_grado: grado.id_grado })
+          .andWhere('m.estado = :estado', { estado: true })
+          .getCount();
+
+        return {
+          nombre: grado.nombre,
+          cantidad,
+        };
+      }),
+    );
+
+    return distribucion;
+  }
+
+  async distribucionPorSeccion() {
+    const secciones = await this.seccionRepository.find({
+      order: { nombre: 'ASC' },
+    });
+
+    const distribucion = await Promise.all(
+      secciones.map(async (seccion) => {
+        const cantidad = await this.matriculaRepository
+          .createQueryBuilder('m')
+          .where('m.id_seccion = :id_seccion', {
+            id_seccion: seccion.id_seccion,
+          })
+          .andWhere('m.estado = :estado', { estado: true })
+          .getCount();
+
+        return {
+          nombre: seccion.nombre,
+          cantidad,
+        };
+      }),
+    );
+
+    return distribucion;
   }
 }

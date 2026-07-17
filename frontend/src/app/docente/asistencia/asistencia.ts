@@ -4,28 +4,15 @@ import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
 
-/** Estados posibles de un registro de asistencia diaria */
-type EstadoAsistencia = 'presente' | 'ausente' | 'tardanza' | 'justificado';
-
-interface CursoDocente {
+interface AsignacionMini {
   id_asignacion: number;
-  curso: { id_curso: number; nombre: string };
-  grado: { nombre: string };
-  seccion: { nombre: string };
-  periodo: { nombre: string };
-}
-
-interface EncabezadoCurso {
-  institucion: string;
-  docente: string;
   curso: string;
-  nivel: string;
   grado: string;
   seccion: string;
   periodo: string;
 }
 
-interface EstudianteCurso {
+interface EstudianteMini {
   id_usuario: number;
   nombres: string;
   apellidos: string;
@@ -34,278 +21,341 @@ interface EstudianteCurso {
 interface AsistenciaRegistro {
   id_asistencia: number;
   fecha: string;
-  estado: EstadoAsistencia;
+  estado: string;
   estudiante: { id_usuario: number; nombres: string; apellidos: string };
 }
 
-/**
- * Respuesta reutilizada del endpoint mensual, de la cual solo tomamos
- * el encabezado institucional y la lista de estudiantes (roster).
- * Los campos de calendario (dias_del_mes, asistencia_diaria, resumen)
- * ya no se usan en esta vista.
- */
-interface RespuestaRosterCurso {
-  encabezado: EncabezadoCurso;
-  estudiantes: EstudianteCurso[];
+interface ColumnaFecha {
+  iso: string;       
+  etiqueta: string;  
 }
 
-/** Dígito escrito en la celda -> estado real de asistencia. Fuente única de verdad. */
-const DIGITO_A_ESTADO: Record<string, EstadoAsistencia> = {
-  '1': 'presente',
-  '0': 'ausente',
-  '2': 'tardanza',
-  '3': 'justificado',
-};
+type EstadoAsistencia = '' | 'presente' | 'falta' | 'tardanza';
 
-/** Inverso del mapa anterior, para precargar los dígitos de registros ya guardados */
-const ESTADO_A_DIGITO: Record<EstadoAsistencia, string> = {
-  presente: '1',
-  ausente: '0',
-  tardanza: '2',
-  justificado: '3',
-};
-
-/** Color de fondo por estado, para pintar la celda mientras se escribe */
-const COLOR_FONDO_ASISTENCIA: Record<EstadoAsistencia, string> = {
-  presente: '#2ecc71',
-  ausente: '#e74c3c',
-  tardanza: '#f1c40f',
-  justificado: '#3498db',
-};
-
-/** Color de texto por estado */
-const COLOR_TEXTO_ASISTENCIA: Record<EstadoAsistencia, string> = {
-  presente: '#fff',
-  ausente: '#fff',
-  tardanza: '#333',
-  justificado: '#fff',
-};
-
-const DIGITOS_VALIDOS = Object.keys(DIGITO_A_ESTADO);
+const CICLO: EstadoAsistencia[] = ['', 'presente', 'falta', 'tardanza'];
 
 @Component({
-  selector: 'app-docente-asistencia',
+  selector: 'app-asistencia-registro',
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './asistencia.html',
   styleUrl: './asistencia.css',
 })
-export class DocenteAsistencia implements OnInit {
-  cursos = signal<CursoDocente[]>([]);
-  cargandoCursos = signal(true);
+export class AsistenciaRegistroComponent implements OnInit {
+
+  // ── Cursos ──────────────────────────────────────────────────────────────
+  asignaciones = signal<AsignacionMini[]>([]);
   idAsignacionSeleccionada = signal<number | null>(null);
 
-  cargandoRoster = signal(false);
-  encabezado = signal<EncabezadoCurso | null>(null);
-  estudiantes = signal<EstudianteCurso[]>([]);
+  asignacionActual = computed(() =>
+    this.asignaciones().find(
+      (a) => a.id_asignacion === this.idAsignacionSeleccionada(),
+    ) ?? null,
+  );
 
-  registros = signal<AsistenciaRegistro[]>([]);
+  // ── Roster y asistencia ─────────────────────────────────────────────────
+  estudiantes  = signal<EstudianteMini[]>([]);
+  columnas     = signal<ColumnaFecha[]>([]);
+  /** clave: `${id_usuario}_${iso}` → estado */
+  mapaAsistencia    = signal<Map<string, EstadoAsistencia>>(new Map());
+  cambiosPendientes = signal<Set<string>>(new Set());
 
-  fecha = signal<string>(new Date().toISOString().split('T')[0]);
-  valores = signal<Record<number, string | undefined>>({});
+  // ── Modal agregar fecha ─────────────────────────────────────────────────
+  modalFechaAbierto = signal(false);
+  fechaInputValor   = signal('');
 
+  // ── Selección de columna y eliminación de llamado ───────────────────────
+  /** iso de la columna de fecha seleccionada (click en la cabecera) */
+  isoSeleccionado = signal<string>('');
+  modalEliminarFechaAbierto = signal(false);
+  fechaAEliminar = computed(() => this.isoAEtiqueta(this.isoSeleccionado()));
+  eliminando = signal(false);
+
+  // ── Estado general ──────────────────────────────────────────────────────
+  cargando  = signal(false);
   guardando = signal(false);
-  error = signal<string | null>(null);
-  mensajeExito = signal<string | null>(null);
-
-  readonly digitosValidos = DIGITOS_VALIDOS;
-
-  cursoSeleccionado = computed(() =>
-    this.cursos().find((c) => c.id_asignacion === this.idAsignacionSeleccionada()),
-  );
-
-  /** Últimos registros guardados, más recientes primero, para el historial visible debajo de la hoja */
-  historialReciente = computed(() =>
-    [...this.registros()].sort((a, b) => (a.fecha < b.fecha ? 1 : -1)).slice(0, 30),
-  );
+  error     = signal('');
+  exito     = signal('');
 
   constructor(private http: HttpClient) {}
 
   ngOnInit(): void {
-    this.http
-      .get<{ asignaciones: CursoDocente[] }>(`${environment.apiUrl}/usuario/docente/dashboard`)
-      .subscribe({
-        next: (data) => {
-          this.cursos.set(data.asignaciones ?? []);
-          this.cargandoCursos.set(false);
-        },
-        error: () => this.cargandoCursos.set(false),
-      });
+    this.cargarAsignaciones();
   }
 
-  onCursoChange(idAsignacion: number | null): void {
-    this.idAsignacionSeleccionada.set(idAsignacion);
-    this.encabezado.set(null);
-    this.estudiantes.set([]);
-    this.registros.set([]);
-    this.valores.set({});
-    this.error.set(null);
-    this.mensajeExito.set(null);
-    if (!idAsignacion) return;
+  // ── Helpers ─────────────────────────────────────────────────────────────
 
-    this.cargarRoster(idAsignacion);
-    this.cargarRegistros(idAsignacion);
+  private isoAEtiqueta(iso: string): string {
+    if (!iso) return '';
+    const [anio, mes, dia] = iso.split('-');
+    return `${dia}/${mes}/${anio}`;
   }
 
-  private cargarRoster(idAsignacion: number): void {
-    this.cargandoRoster.set(true);
-    const hoy = new Date();
+  private construirColumna(iso: string): ColumnaFecha {
+    return { iso, etiqueta: this.isoAEtiqueta(iso) };
+  }
 
+  private mostrarExito(msg: string): void {
+    this.exito.set(msg);
+    setTimeout(() => this.exito.set(''), 3000);
+  }
+
+  // ── Carga de datos ──────────────────────────────────────────────────────
+
+  cargarAsignaciones(): void {
     this.http
-      .get<RespuestaRosterCurso>(
-        `${environment.apiUrl}/asistencia/curso/${idAsignacion}/mes/${hoy.getMonth() + 1}/${hoy.getFullYear()}`,
+      .get<AsignacionMini[]>(
+        `${environment.apiUrl}/asignacion-curso/docente/mis-asignaciones`,
       )
       .subscribe({
-        next: (data) => {
-          this.encabezado.set(data.encabezado);
-          this.estudiantes.set(data.estudiantes ?? []);
-          this.cargandoRoster.set(false);
-          this.precargarValoresDeFecha();
-        },
-        error: () => this.cargandoRoster.set(false),
+        next: (data) => this.asignaciones.set(data),
+        error: () => this.asignaciones.set([]),
       });
   }
 
-  private cargarRegistros(idAsignacion: number): void {
+  seleccionarCurso(id: number): void {
+    this.idAsignacionSeleccionada.set(id);
+    this.cambiosPendientes.set(new Set());
+    this.columnas.set([]);
+    this.mapaAsistencia.set(new Map());
+    this.isoSeleccionado.set('');
+    this.cargarDatos();
+  }
+
+  private cargarDatos(): void {
+    const id = this.idAsignacionSeleccionada();
+    if (!id) return;
+
+    this.cargando.set(true);
+    this.error.set('');
+
     this.http
-      .get<AsistenciaRegistro[]>(`${environment.apiUrl}/asignacion-curso/${idAsignacion}/asistencia`)
+      .get<EstudianteMini[]>(`${environment.apiUrl}/asignacion-curso/${id}/estudiantes`)
       .subscribe({
         next: (data) => {
-          this.registros.set(data);
-          this.precargarValoresDeFecha();
+          this.estudiantes.set(data);
+          this.cargarAsistenciaExistente(id);
+        },
+        error: () => {
+          this.cargando.set(false);
+          this.error.set('Error al cargar los estudiantes');
         },
       });
   }
 
-  // ---------- Fila de fecha + captura por dígitos ----------
+  private cargarAsistenciaExistente(id: number): void {
+    this.http
+      .get<AsistenciaRegistro[]>(`${environment.apiUrl}/asignacion-curso/${id}/asistencia`)
+      .subscribe({
+        next: (data) => {
+          const mapa = new Map<string, EstadoAsistencia>();
+          const isosUnicos = new Set<string>();
 
-  onFechaChange(nuevaFecha: string): void {
-    this.fecha.set(nuevaFecha);
-    this.mensajeExito.set(null);
-    this.error.set(null);
-    this.valores.set({});
-    this.precargarValoresDeFecha();
+          for (const r of data) {
+            const iso = r.fecha.slice(0, 10);
+            isosUnicos.add(iso);
+            mapa.set(`${r.estudiante.id_usuario}_${iso}`, r.estado as EstadoAsistencia);
+          }
+
+          this.mapaAsistencia.set(mapa);
+          this.columnas.set(
+            Array.from(isosUnicos).sort().map((iso) => this.construirColumna(iso)),
+          );
+          this.cargando.set(false);
+        },
+        error: () => {
+          this.mapaAsistencia.set(new Map());
+          this.columnas.set([]);
+          this.cargando.set(false);
+        },
+      });
   }
 
-  /** Si ya existe asistencia guardada para la fecha seleccionada, precarga los dígitos */
-  private precargarValoresDeFecha(): void {
-    const fecha = this.fecha();
-    const registrosDelDia = this.registros().filter((r) => r.fecha === fecha);
-    if (registrosDelDia.length === 0) return;
+  // ── Celdas ──────────────────────────────────────────────────────────────
 
-    const nuevosValores: Record<number, string | undefined> = {};
-    registrosDelDia.forEach((r) => {
-      nuevosValores[r.estudiante.id_usuario] = ESTADO_A_DIGITO[r.estado];
-    });
-    this.valores.set(nuevosValores);
+  estadoCelda(id_usuario: number, iso: string): EstadoAsistencia {
+    return this.mapaAsistencia().get(`${id_usuario}_${iso}`) ?? '';
   }
 
-  estadoDe(idUsuario: number): EstadoAsistencia | null {
-    const digito = this.valores()[idUsuario];
-    return digito ? (DIGITO_A_ESTADO[digito] ?? null) : null;
+  clickCelda(id_usuario: number, iso: string): void {
+    const clave   = `${id_usuario}_${iso}`;
+    const actual  = this.mapaAsistencia().get(clave) ?? '';
+    const siguiente = CICLO[(CICLO.indexOf(actual) + 1) % CICLO.length];
+
+    const nuevoMapa = new Map(this.mapaAsistencia());
+    siguiente === '' ? nuevoMapa.delete(clave) : nuevoMapa.set(clave, siguiente);
+    this.mapaAsistencia.set(nuevoMapa);
+
+    const nuevosCambios = new Set(this.cambiosPendientes());
+    nuevosCambios.add(clave);
+    this.cambiosPendientes.set(nuevosCambios);
   }
 
-  colorFondoCelda(idUsuario: number): string {
-    const estado = this.estadoDe(idUsuario);
-    return estado ? COLOR_FONDO_ASISTENCIA[estado] : '#ffffff';
+  // ── Selección de columna de fecha ───────────────────────────────────────
+
+  seleccionarFecha(iso: string): void {
+    // click de nuevo sobre la misma columna la deselecciona
+    this.isoSeleccionado.set(this.isoSeleccionado() === iso ? '' : iso);
   }
 
-  colorTextoCelda(idUsuario: number): string {
-    const estado = this.estadoDe(idUsuario);
-    return estado ? COLOR_TEXTO_ASISTENCIA[estado] : '#333333';
+  // ── Modal agregar fecha ─────────────────────────────────────────────────
+
+  abrirModalFecha(): void {
+    const hoy = new Date();
+    const mm  = String(hoy.getMonth() + 1).padStart(2, '0');
+    const dd  = String(hoy.getDate()).padStart(2, '0');
+    this.fechaInputValor.set(`${hoy.getFullYear()}-${mm}-${dd}`);
+    this.modalFechaAbierto.set(true);
   }
 
-  onCeldaInput(idUsuario: number, valorCrudo: string, index: number): void {
-    const digito = valorCrudo.slice(-1);
-    const esValido = DIGITOS_VALIDOS.includes(digito);
+  cerrarModalFecha(): void { this.modalFechaAbierto.set(false); }
 
-    this.valores.update((actual) => ({
-      ...actual,
-      [idUsuario]: esValido ? digito : undefined,
-    }));
+  confirmarFecha(): void {
+    const iso = this.fechaInputValor();
+    if (!iso) return;
 
-    if (esValido) {
-      this.enfocarCelda(index + 1);
+    if (this.columnas().some((c) => c.iso === iso)) {
+      this.error.set('Esa fecha ya está en la tabla');
+      this.modalFechaAbierto.set(false);
+      return;
     }
+
+    const actualizadas = [...this.columnas(), this.construirColumna(iso)].sort(
+      (a, b) => a.iso.localeCompare(b.iso),
+    );
+    this.columnas.set(actualizadas);
+    this.modalFechaAbierto.set(false);
   }
 
-  onCeldaKeydown(event: KeyboardEvent, index: number): void {
-    if (event.key === 'ArrowRight' || event.key === 'Enter') {
-      event.preventDefault();
-      this.enfocarCelda(index + 1);
-    } else if (event.key === 'ArrowLeft') {
-      event.preventDefault();
-      this.enfocarCelda(index - 1);
+  // ── Eliminar llamado de la fecha seleccionada ───────────────────────────
+
+  solicitarEliminarFecha(): void {
+    if (!this.isoSeleccionado()) return;
+    this.modalEliminarFechaAbierto.set(true);
+  }
+
+  cerrarModalEliminarFecha(): void {
+    this.modalEliminarFechaAbierto.set(false);
+  }
+
+  confirmarEliminarFecha(): void {
+    const id  = this.idAsignacionSeleccionada();
+    const iso = this.isoSeleccionado();
+    if (!id || !iso) return;
+
+    this.eliminando.set(true);
+    this.error.set('');
+
+    // DELETE /asistencia/fecha/{id_asignacion}/{yyyy-mm-dd}
+    this.http
+      .delete(`${environment.apiUrl}/asistencia/fecha/${id}/${iso}`)
+      .subscribe({
+        next: () => {
+          this.columnas.set(this.columnas().filter((c) => c.iso !== iso));
+
+          const nuevoMapa = new Map(this.mapaAsistencia());
+          for (const clave of nuevoMapa.keys()) {
+            if (clave.endsWith(`_${iso}`)) nuevoMapa.delete(clave);
+          }
+          this.mapaAsistencia.set(nuevoMapa);
+
+          const nuevosCambios = new Set(this.cambiosPendientes());
+          for (const clave of nuevosCambios) {
+            if (clave.endsWith(`_${iso}`)) nuevosCambios.delete(clave);
+          }
+          this.cambiosPendientes.set(nuevosCambios);
+
+          this.isoSeleccionado.set('');
+          this.eliminando.set(false);
+          this.cerrarModalEliminarFecha();
+          this.mostrarExito('Llamado de asistencia eliminado correctamente');
+        },
+        error: () => {
+          this.eliminando.set(false);
+          this.error.set('Error al eliminar el llamado de asistencia');
+        },
+      });
+  }
+
+  // ── Guardar ─────────────────────────────────────────────────────────────
+
+  guardar(): void {
+    const id = this.idAsignacionSeleccionada();
+    if (!id || this.cambiosPendientes().size === 0) return;
+
+    const porFecha = new Map<string, { id_usuario: number; estado: string }[]>();
+
+    for (const clave of this.cambiosPendientes()) {
+      const idx       = clave.indexOf('_');
+      const idUsuario = Number(clave.slice(0, idx));
+      const iso       = clave.slice(idx + 1);
+      const estado    = this.mapaAsistencia().get(clave) ?? '';
+      if (!estado) continue;
+      if (!porFecha.has(iso)) porFecha.set(iso, []);
+      porFecha.get(iso)!.push({ id_usuario: idUsuario, estado });
     }
-  }
 
-  private enfocarCelda(index: number): void {
-    const celdas = document.querySelectorAll<HTMLInputElement>('.celda-digito');
-    const celda = celdas[index];
-    celda?.focus();
-    celda?.select();
-  }
-
-  // ---------- Guardado ----------
-
-  guardarAsistencia(): void {
-    const idAsignacion = this.idAsignacionSeleccionada();
-    if (!idAsignacion) return;
-
-    const valoresActuales = this.valores();
-    const registrosAEnviar = this.estudiantes()
-      .filter((e) => DIGITOS_VALIDOS.includes(valoresActuales[e.id_usuario] ?? ''))
-      .map((e) => ({
-        id_usuario: e.id_usuario,
-        estado: DIGITO_A_ESTADO[valoresActuales[e.id_usuario]!],
-      }));
-
-    if (registrosAEnviar.length === 0) {
-      this.error.set('Escribe al menos un dígito de asistencia (0-3) antes de guardar.');
+    const fechas = Array.from(porFecha.keys());
+    if (fechas.length === 0) {
+      this.mostrarExito('No hay cambios nuevos para guardar');
       return;
     }
 
     this.guardando.set(true);
-    this.error.set(null);
-    this.mensajeExito.set(null);
+    this.error.set('');
+
+    let completados = 0;
+    let hayError    = false;
+
+    for (const fecha of fechas) {
+      const registros = porFecha.get(fecha)!;
+      this.http
+        .post(`${environment.apiUrl}/asignacion-curso/${id}/asistencia/lote`, {
+          fecha,
+          registros,
+        })
+        .subscribe({
+          next: () => {
+            completados++;
+            if (completados === fechas.length) {
+              this.guardando.set(false);
+              if (!hayError) {
+                this.cambiosPendientes.set(new Set());
+                this.mostrarExito('Asistencia guardada correctamente');
+              }
+            }
+          },
+          error: () => {
+            hayError = true;
+            completados++;
+            this.guardando.set(false);
+            this.error.set('Error al guardar algunos registros de asistencia');
+          },
+        });
+    }
+  }
+
+  exportar(): void {
+    const id = this.idAsignacionSeleccionada();
+    if (!id) return;
 
     this.http
-      .post(`${environment.apiUrl}/asignacion-curso/${idAsignacion}/asistencia/lote`, {
-        fecha: this.fecha(),
-        registros: registrosAEnviar,
+      .get(`${environment.apiUrl}/asistencia/exportar/${id}`, {
+        responseType: 'blob',
       })
       .subscribe({
-        next: () => {
-          this.guardando.set(false);
-          this.mensajeExito.set('Asistencia guardada correctamente.');
-          this.cargarRegistros(idAsignacion);
+        next: (blob) => {
+          const nombreCurso = this.asignacionActual()?.curso ?? 'curso';
+          const url = window.URL.createObjectURL(blob);
+          const enlace = document.createElement('a');
+          enlace.href = url;
+          enlace.download = `asistencia_${nombreCurso}.xlsx`;
+          enlace.click();
+          window.URL.revokeObjectURL(url);
         },
         error: () => {
-          this.guardando.set(false);
-          this.error.set('No se pudo guardar la asistencia.');
+          this.error.set('Error al exportar la asistencia');
         },
       });
-  }
-
-  colorEstado(estado: string): string {
-    const colores: Record<string, string> = {
-      presente: 'text-green-700 bg-green-100',
-      tardanza: 'text-amber-700 bg-amber-100',
-      ausente: 'text-red-700 bg-red-100',
-      justificado: 'text-blue-700 bg-blue-100',
-    };
-    return colores[estado] || 'text-gray-700 bg-gray-100';
-  }
-
-  trackByCurso(_index: number, c: CursoDocente): number {
-    return c.id_asignacion;
-  }
-
-  trackByEstudiante(_index: number, e: EstudianteCurso): number {
-    return e.id_usuario;
-  }
-
-  trackByRegistro(_index: number, r: AsistenciaRegistro): number {
-    return r.id_asistencia;
   }
 }

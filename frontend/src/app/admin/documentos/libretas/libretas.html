@@ -147,12 +147,8 @@
               </td>
               <td class="td-fecha">{{ formatearFecha(l.fecha_subida) }}</td>
               <td class="td-acciones">
-                <button class="btn-icon btn-icon-ver" title="Ver PDF" (click)="verLibreta(l.id_libreta)">
-                  👁️
-                </button>
-                <button class="btn-icon btn-icon-descargar" title="Descargar" (click)="descargarLibreta(l.id_libreta)">
-                  ⬇️
-                </button>
+                <button class="btn-icon btn-icon-ver" title="Ver PDF" (click)="verLibreta(l.id_libreta, l.archivo)">👁️</button>
+                <button class="btn-icon btn-icon-descargar" title="Descargar" (click)="descargarLibreta(l.id_libreta, l.archivo)">⬇️</button>
                 <button class="btn-icon btn-icon-eliminar" title="Eliminar" (click)="confirmarEliminar(l.id_libreta)">
                   🗑️
                 </button>
@@ -371,12 +367,8 @@
             </div>
             <div class="estudiante-card-actions">
               @if (e.tiene_libreta && e.libreta) {
-                <button class="btn btn-sm btn-outline" (click)="verLibreta(e.libreta!.id_libreta)">
-                  👁️ Ver
-                </button>
-                <button class="btn btn-sm btn-outline" (click)="descargarLibreta(e.libreta!.id_libreta)">
-                  ⬇️ Descargar
-                </button>
+              <button class="btn btn-sm btn-outline" (click)="verLibreta(e.libreta!.id_libreta, e.libreta!.archivo)">👁️ Ver</button>
+              <button class="btn btn-sm btn-outline" (click)="descargarLibreta(e.libreta!.id_libreta, e.libreta!.archivo)">⬇️ Descargar</button>
               }
               <button class="btn btn-sm btn-primary" (click)="abrirModalIndividual(e)">
                 + Subir PDF

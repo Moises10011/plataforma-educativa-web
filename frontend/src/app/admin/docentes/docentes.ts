@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
 import { forkJoin } from 'rxjs';
+import * as ExcelJS from 'exceljs';
 
 interface Docente {
   id_usuario: number;
@@ -54,6 +55,8 @@ interface PeriodoAcademico {
 })
 export class AdminDocentes implements OnInit {
 
+  exportando = signal(false);
+
   docentes = signal<Docente[]>([]);
   asignaciones = signal<AsignacionCurso[]>([]);
   cursos = signal<Curso[]>([]);
@@ -90,6 +93,7 @@ export class AdminDocentes implements OnInit {
     nombres: '',
     apellidos: '',
     dni: '',
+    correo: '',
     telefono: '',
     direccion: '',
     fecha_nacimiento: '',
@@ -172,6 +176,7 @@ export class AdminDocentes implements OnInit {
     nombres: '',
     apellidos: '',
     dni: '',
+    correo: '',
     telefono: '',
     direccion: '',
     fecha_nacimiento: '',
@@ -249,7 +254,7 @@ export class AdminDocentes implements OnInit {
   }
 
   abrirModalNuevoDocente(): void {
-    this.nuevoDocenteForm = { nombres: '', apellidos: '', dni: '', telefono: '', direccion: '', fecha_nacimiento: '' };
+    this.nuevoDocenteForm = { nombres: '', apellidos: '', dni: '', correo: '', telefono: '', direccion: '', fecha_nacimiento: '' };
     this.credencialesGeneradas.set(null);
     this.error.set('');
     this.modalNuevoDocente.set(true);
@@ -267,6 +272,7 @@ export class AdminDocentes implements OnInit {
       nombres: docente.nombres,
       apellidos: docente.apellidos,
       dni: docente.dni || '',
+      correo: docente.correo || '',
       telefono: docente.telefono || '',
       direccion: '',
       fecha_nacimiento: '',
@@ -385,9 +391,9 @@ guardarAsignacion(): void {
   // ============ DOCENTES ============
 
   guardarNuevoDocente(): void {
-    const { nombres, apellidos, dni } = this.nuevoDocenteForm;
-    if (!nombres || !apellidos || !dni) {
-      this.error.set('Completa nombres, apellidos y DNI');
+    const { nombres, apellidos, dni, correo } = this.nuevoDocenteForm;
+    if (!nombres || !apellidos || !dni || !correo) {
+      this.error.set('Completa nombres, apellidos, DNI y correo');
       return;
     }
     this.guardando.set(true);
@@ -410,8 +416,8 @@ guardarAsignacion(): void {
   guardarEdicionDocente(): void {
     const { id_usuario, ...dataToSend } = this.editarDocenteForm;
     
-    if (!dataToSend.nombres || !dataToSend.apellidos || !dataToSend.dni) {
-      this.error.set('Completa nombres, apellidos y DNI');
+    if (!dataToSend.nombres || !dataToSend.apellidos || !dataToSend.dni || !dataToSend.correo) {
+      this.error.set('Completa nombres, apellidos, DNI y correo');
       return;
     }
 
@@ -447,5 +453,100 @@ guardarAsignacion(): void {
           this.error.set(err?.error?.message || 'Error al eliminar docente');
         }
       });
+  }
+  async exportar(): Promise<void> {
+    const datos = this.docentesFiltrados();
+    if (!datos.length) {
+      alert('No hay docentes que coincidan con los filtros para exportar');
+      return;
+    }
+
+    this.exportando.set(true);
+    try {
+      const workbook = new ExcelJS.Workbook();
+      const sheet = workbook.addWorksheet('Docentes');
+
+      const headers = ['Nombres', 'Apellidos', 'DNI', 'Correo', 'Teléfono', 'Estado', 'Cursos Asignados'];
+
+      sheet.mergeCells(`A1:${String.fromCharCode(64 + headers.length)}1`);
+      const titulo = sheet.getCell('A1');
+      titulo.value = 'Reporte de Docentes';
+      titulo.font = { bold: true, size: 14, color: { argb: 'FFFFFFFF' } };
+      titulo.alignment = { horizontal: 'center', vertical: 'middle' };
+      titulo.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF0F766E' } };
+      sheet.getRow(1).height = 28;
+
+      sheet.mergeCells(`A2:${String.fromCharCode(64 + headers.length)}2`);
+      const subtitulo = sheet.getCell('A2');
+      subtitulo.value = this.descripcionFiltros();
+      subtitulo.font = { italic: true, size: 10, color: { argb: 'FF6B7280' } };
+      subtitulo.alignment = { horizontal: 'center', vertical: 'middle' };
+      sheet.getRow(2).height = 20;
+
+      const headerRow = sheet.addRow(headers);
+      headerRow.eachCell((cell) => {
+        cell.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+        cell.alignment = { horizontal: 'center', vertical: 'middle' };
+        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF14B8A6' } };
+        cell.border = {
+          top: { style: 'thin' }, left: { style: 'thin' },
+          bottom: { style: 'thin' }, right: { style: 'thin' },
+        };
+      });
+
+      for (const d of datos) {
+        const row = sheet.addRow([
+          d.nombres,
+          d.apellidos,
+          d.dni ?? '—',
+          d.correo,
+          d.telefono ?? '—',
+          d.estado ? 'Activo' : 'Inactivo',
+          this.contarCursos(d.id_usuario),
+        ]);
+        row.eachCell((cell, colNumber) => {
+          cell.alignment = { horizontal: colNumber === 1 || colNumber === 2 ? 'left' : 'center', vertical: 'middle' };
+          cell.border = {
+            top: { style: 'thin' }, left: { style: 'thin' },
+            bottom: { style: 'thin' }, right: { style: 'thin' },
+          };
+          if (colNumber === 6) {
+            cell.font = { color: { argb: d.estado ? 'FF15803D' : 'FFB91C1C' }, bold: true };
+          }
+        });
+      }
+
+      sheet.columns = [
+        { width: 20 }, { width: 20 }, { width: 12 },
+        { width: 28 }, { width: 14 }, { width: 12 }, { width: 16 },
+      ];
+
+      const buffer = await workbook.xlsx.writeBuffer();
+      const blob = new Blob([buffer], {
+        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `docentes_${new Date().toISOString().slice(0, 10)}.xlsx`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } finally {
+      this.exportando.set(false);
+    }
+  }
+
+  private descripcionFiltros(): string {
+    const partes: string[] = [];
+    const curso = this.cursos().find(c => c.id_curso === this.filtroCurso());
+    const grado = this.grados().find(g => g.id_grado === this.filtroGrado());
+    const seccion = this.secciones().find(s => s.id_seccion === this.filtroSeccion());
+
+    if (curso) partes.push(`Curso: ${curso.nombre}`);
+    if (grado) partes.push(`Grado: ${grado.nombre}`);
+    if (seccion) partes.push(`Sección: ${seccion.nombre}`);
+    if (this.filtroBusqueda()) partes.push(`Búsqueda: "${this.filtroBusqueda()}"`);
+
+    return partes.length ? partes.join(' | ') : 'Todos los registros';
   }
 }

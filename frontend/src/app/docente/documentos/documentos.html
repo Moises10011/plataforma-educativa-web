@@ -1,0 +1,85 @@
+<div class="space-y-8">
+  <!-- Encabezado -->
+  <div class="text-center max-w-xl mx-auto">
+    <h1 class="text-3xl font-serif font-bold text-gray-900 tracking-tight">Documentos</h1>
+    <p class="text-sm text-gray-500 mt-2">Documentos institucionales publicados</p>
+    <div class="w-12 h-0.5 bg-institucional-500 mx-auto mt-4 rounded-full"></div>
+  </div>
+
+  <!-- Contenido -->
+  @if (cargando()) {
+    <div class="space-y-4 max-w-3xl mx-auto">
+      @for (i of [1,2,3]; track i) {
+        <div class="bg-white rounded-2xl shadow-sm p-6 h-24 animate-pulse"></div>
+      }
+    </div>
+  } @else if (!documentos().length) {
+    <!-- Estado vacío -->
+    <div class="bg-white rounded-2xl shadow-sm p-14 text-center max-w-xl mx-auto">
+      <svg class="w-16 h-16 text-gray-300 mx-auto mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+      </svg>
+      <p class="text-sm font-medium text-gray-600">No hay documentos publicados</p>
+      <p class="text-xs text-gray-400 mt-1">Los documentos institucionales aparecerán aquí</p>
+    </div>
+  } @else {
+    <!-- Lista de documentos -->
+    <div class="space-y-4 max-w-3xl mx-auto">
+      @for (d of documentos(); track d.id_documento) {
+        <button (click)="abrirDocumento(d)"
+          class="w-full text-left bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md hover:border-institucional-200 transition-all duration-200 group">
+          <div class="p-6 flex items-start gap-5">
+
+            <!-- Ícono -->
+            <div class="w-12 h-12 rounded-xl bg-institucional-50 flex items-center justify-center flex-shrink-0 group-hover:bg-institucional-100 transition-colors">
+              <svg class="w-5 h-5 text-institucional-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+              </svg>
+            </div>
+
+            <!-- Contenido principal -->
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-2 flex-wrap">
+                <h3 class="text-base font-semibold text-gray-900 truncate group-hover:text-institucional-700 transition-colors">
+                  {{ d.titulo }}
+                </h3>
+                @if (esReciente(d.fecha_publicacion)) {
+                  <span class="text-[10px] font-bold uppercase tracking-wide text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full flex-shrink-0">
+                    Nuevo
+                  </span>
+                }
+              </div>
+
+              @if (d.descripcion) {
+                <p class="text-sm text-gray-500 mt-1 line-clamp-2">{{ d.descripcion }}</p>
+              }
+
+              <div class="flex items-center flex-wrap gap-x-3 gap-y-1 mt-3">
+                <span class="inline-flex items-center gap-1.5 text-xs text-gray-400">
+                  <span class="w-4 h-4 rounded bg-institucional-100 flex items-center justify-center flex-shrink-0">
+                    <span class="text-[8px] font-bold text-institucional-600">{{ extensionDe(d.url_archivo) || 'DOC' }}</span>
+                  </span>
+                  <span class="truncate max-w-[220px]">{{ nombreArchivo(d.url_archivo) }}</span>
+                </span>
+
+                <span class="text-gray-300">·</span>
+
+                <span class="inline-flex items-center gap-1.5 text-xs text-gray-400">
+                  <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                  </svg>
+                  {{ d.fecha_publicacion | date:'dd MMM yyyy' }}
+                </span>
+              </div>
+            </div>
+
+            <!-- Flecha -->
+            <svg class="w-5 h-5 text-gray-300 group-hover:text-institucional-500 flex-shrink-0 mt-1 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+            </svg>
+          </div>
+        </button>
+      }
+    </div>
+  }
+</div>

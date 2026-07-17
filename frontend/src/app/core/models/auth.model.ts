@@ -8,6 +8,10 @@ export interface UsuarioAutenticado {
   nombres: string;
   correo: string;
   roles: string[];
+  // Solo vienen con valor para usuarios con rol "Estudiante".
+  // Para Administrador/Docente llegan null o undefined.
+  grado?: string | number | null;
+  seccion?: string | null;
 }
 
 export interface LoginResponse {

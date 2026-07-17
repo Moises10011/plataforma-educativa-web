@@ -10,12 +10,13 @@ import {
   UseGuards,
   Req,
   Res,
+  Query,
   UseInterceptors,
   UploadedFile,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import type { Request, Response } from 'express';
-import { join } from 'path';
+import { join, extname } from 'path';
 import { MaterialService } from './material.service';
 import { CreateMaterialDto } from './dto/create-material.dto';
 import { UpdateMaterialDto } from './dto/update-material.dto';
@@ -25,17 +26,14 @@ import { Roles } from '../common/decorators/roles.decorator';
 import { crearMulterConfig } from '../common/config/multer.config';
 
 interface AuthRequest extends Request {
-  user: {
-    id_usuario: number;
-    correo: string;
-    roles?: string[];
-  };
+  user: { id_usuario: number; correo: string; roles?: string[] };
 }
 
 @Controller('material')
 export class MaterialController {
   constructor(private readonly materialService: MaterialService) {}
 
+  // POST - crear material
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('Administrador', 'Docente')
   @Post()
@@ -48,6 +46,7 @@ export class MaterialController {
     return this.materialService.create(createMaterialDto, req.user, archivo);
   }
 
+  // GET rutas específicas sin parámetros dinámicos
   @UseGuards(JwtAuthGuard)
   @Get('estudiante/mis-materiales')
   misMaterialesEstudiante(@Req() req: AuthRequest) {
@@ -60,21 +59,14 @@ export class MaterialController {
     return this.materialService.findAll(req.user);
   }
 
-  @UseGuards(JwtAuthGuard)
-  @Get()
-  findAll(@Req() req: AuthRequest) {
-    return this.materialService.findAll(req.user);
-  }
-
-  @UseGuards(JwtAuthGuard)
-  @Get(':id')
-  findOne(@Param('id', ParseIntPipe) id: number) {
-    return this.materialService.findOne(id);
-  }
-
+  // GET rutas con :id/subrutas - ANTES que :id solo
   @UseGuards(JwtAuthGuard)
   @Get(':id/descargar')
-  async descargar(@Param('id', ParseIntPipe) id: number, @Res() res: Response) {
+  async descargar(
+    @Param('id', ParseIntPipe) id: number,
+    @Res() res: Response,
+    @Query('modo') modo?: string,
+  ) {
     const material = await this.materialService.findOne(id);
 
     if (!material.archivo) {
@@ -85,9 +77,32 @@ export class MaterialController {
     }
 
     const ruta = join(process.cwd(), 'uploads', 'material', material.archivo);
-    res.download(ruta);
+    const ext = extname(material.archivo);
+    const nombreBonito = `${material.titulo}${ext}`;
+
+    if (modo === 'ver') {
+      res.sendFile(ruta);
+      return;
+    }
+
+    res.download(ruta, nombreBonito);
   }
 
+  // GET :id - solo después de rutas específicas
+  @UseGuards(JwtAuthGuard)
+  @Get(':id')
+  findOne(@Param('id', ParseIntPipe) id: number) {
+    return this.materialService.findOne(id);
+  }
+
+  // GET general sin parámetros
+  @UseGuards(JwtAuthGuard)
+  @Get()
+  findAll(@Req() req: AuthRequest) {
+    return this.materialService.findAll(req.user);
+  }
+
+  // PUT - actualizar material
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('Administrador', 'Docente')
   @Put(':id')
@@ -99,6 +114,7 @@ export class MaterialController {
     return this.materialService.update(id, updateMaterialDto, req.user);
   }
 
+  // DELETE - eliminar material
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('Administrador', 'Docente')
   @Delete(':id')

@@ -9,7 +9,10 @@ import {
   ParseIntPipe,
   UseGuards,
   Req,
+  UseInterceptors,
+  UploadedFiles,
 } from '@nestjs/common';
+import { FilesInterceptor } from '@nestjs/platform-express';
 import { Request } from 'express';
 import { TareaService } from './tarea.service';
 import { CreateTareaDto } from './dto/create-tarea.dto';
@@ -17,6 +20,7 @@ import { UpdateTareaDto } from './dto/update-tarea.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
+import { crearMulterConfig } from '../common/config/multer.config';
 
 interface AuthRequest extends Request {
   user: {
@@ -33,14 +37,26 @@ export class TareaController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('Docente')
   @Post()
-  create(@Body() createTareaDto: CreateTareaDto, @Req() req: AuthRequest) {
-    return this.tareaService.create(createTareaDto, req.user);
+  @UseInterceptors(
+    FilesInterceptor('archivos', 10, crearMulterConfig('tareas')),
+  )
+  create(
+    @Body() createTareaDto: CreateTareaDto,
+    @Req() req: AuthRequest,
+    @UploadedFiles() archivos?: Express.Multer.File[],
+  ) {
+    return this.tareaService.create(createTareaDto, req.user, archivos);
   }
 
   @UseGuards(JwtAuthGuard)
   @Get('estudiante/mis-tareas')
   misTareasEstudiante(@Req() req: AuthRequest) {
     return this.tareaService.findAll(req.user);
+  }
+  @UseGuards(JwtAuthGuard)
+  @Get('estudiante/pendientes')
+  misTareasPendientes(@Req() req: AuthRequest) {
+    return this.tareaService.findPendientesEstudiante(req.user);
   }
 
   @UseGuards(JwtAuthGuard)

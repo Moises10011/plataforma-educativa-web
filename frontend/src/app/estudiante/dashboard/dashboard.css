@@ -1,0 +1,126 @@
+/* ===== Título de bienvenida ===== */
+.saludo-titulo {
+  font-family: 'Playfair Display', 'Georgia', serif;
+  font-weight: 700;
+  letter-spacing: normal;
+  font-size: 2.4rem;
+  line-height: 1.2;
+  color: #002266;
+  margin: 0;
+}
+
+.saludo-emoji {
+  display: inline-block;
+  animation: wave 2.2s ease-in-out infinite;
+  transform-origin: 70% 70%;
+}
+
+@keyframes wave {
+  0%, 60%, 100% { transform: rotate(0deg); }
+  10% { transform: rotate(14deg); }
+  20% { transform: rotate(-8deg); }
+  30% { transform: rotate(14deg); }
+  40% { transform: rotate(-4deg); }
+  50% { transform: rotate(10deg); }
+}
+
+/* ===== Entradas generales ===== */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.5s ease-out;
+}
+
+.animate-fade-in-delay {
+  animation: fadeIn 0.6s ease-out 0.15s both;
+}
+
+@keyframes cardIn {
+  from { opacity: 0; transform: translateY(18px) scale(0.97); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.card-animada {
+  animation: cardIn 0.5s ease-out both;
+}
+
+.delay-1 { animation-delay: 0.05s; }
+.delay-2 { animation-delay: 0.15s; }
+.delay-3 { animation-delay: 0.25s; }
+
+/* ===== Skeleton loading ===== */
+.animate-pulse {
+  animation: pulse 1.8s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+/* ===== Iconos de cabecera de card ===== */
+.icon-box {
+  width: 3rem;
+  height: 3rem;
+  border-radius: 0.85rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: transform 0.25s ease;
+}
+
+.card-animada:hover .icon-box {
+  transform: scale(1.08) rotate(-3deg);
+}
+
+/* ===== Contador de tareas ===== */
+.contador-tareas {
+  font-size: 1.9rem;
+  font-weight: 800;
+  color: #e11d48;
+  animation: pop 0.4s ease-out 0.4s both;
+}
+
+@keyframes pop {
+  0% { opacity: 0; transform: scale(0.5); }
+  70% { opacity: 1; transform: scale(1.1); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+/* ===== Items de tarea (stagger) ===== */
+.tarea-item {
+  opacity: 0;
+  animation: slideInLeft 0.4s ease-out forwards;
+}
+
+@keyframes slideInLeft {
+  from { opacity: 0; transform: translateX(-10px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+.fecha-chip {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #e11d48;
+  background-color: #fff1f2;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* ===== Directorio de docentes (stagger) ===== */
+.docente-item-card {
+  opacity: 0;
+  animation: fadeUp 0.4s ease-out forwards;
+  cursor: default;
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}

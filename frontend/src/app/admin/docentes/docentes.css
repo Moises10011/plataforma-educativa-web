@@ -1,0 +1,140 @@
+/* ==========================================================================
+   admin-shared.css
+   Estilos de apoyo para las vistas de administración (Docentes, Estudiantes).
+   Estos estilos refuerzan el layout base de Tailwind para que el encabezado
+   (título + acciones) no se rompa aunque falte alguna clase utilitaria.
+   ========================================================================== */
+
+/* Encabezado de página: título a la izquierda, acciones a la derecha */
+.admin-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 1.5rem;
+}
+
+.admin-header__title h1 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #111827;
+  line-height: 1.2;
+}
+
+.admin-header__title p {
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin-top: 0.25rem;
+}
+
+/* Grupo de botones de acción (siempre a la derecha, nunca se apilan mal) */
+.admin-header__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+  margin-left: auto; /* refuerzo extra por si el padre pierde justify-between */
+}
+
+/* Botón base reutilizable */
+.admin-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: background-color 0.15s ease, opacity 0.15s ease, color 0.15s ease;
+  white-space: nowrap;
+}
+
+.admin-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.admin-btn svg {
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
+}
+
+/* Variante: botón secundario (bordeado, texto gris) — Exportar */
+.admin-btn--secondary {
+  background-color: #ffffff;
+  border-color: #e5e7eb;
+  color: #4b5563;
+}
+.admin-btn--secondary:hover:not(:disabled) {
+  background-color: #f9fafb;
+}
+
+/* Variante: botón outline (Nuevo Docente / Matricular en tab secundario) */
+.admin-btn--outline {
+  background-color: #ffffff;
+  border-color: #e5e7eb;
+  color: #374151;
+}
+.admin-btn--outline:hover:not(:disabled) {
+  background-color: #f9fafb;
+}
+
+/* Variante: botón primario institucional (acción principal) */
+.admin-btn--primary {
+  background-color: #7f1d1d; /* institucional-600 aprox., ajusta al tono real */
+  color: #ffffff;
+}
+.admin-btn--primary:hover:not(:disabled) {
+  background-color: #6b1717; /* institucional-700 aprox. */
+}
+
+/* Variante: botón de peligro (Eliminar) */
+.admin-btn--danger {
+  background-color: #dc2626;
+  color: #ffffff;
+}
+.admin-btn--danger:hover:not(:disabled) {
+  background-color: #b91c1c;
+}
+
+/* Fila de filtros: siempre en una línea con wrap ordenado */
+.admin-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.admin-filters select,
+.admin-filters input[type='text'] {
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  padding: 0.375rem 0.75rem;
+  font-size: 0.875rem;
+}
+
+.admin-filters select:focus,
+.admin-filters input[type='text']:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(20, 184, 166, 0.5); /* institucional-500 aprox. */
+}
+
+/* Responsive: en pantallas angostas, el header pasa a columna
+   sin que los botones se encimen con el título */
+@media (max-width: 640px) {
+  .admin-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .admin-header__actions {
+    width: 100%;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+    margin-left: 0;
+  }
+}

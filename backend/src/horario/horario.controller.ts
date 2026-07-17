@@ -87,6 +87,13 @@ export class HorarioController {
     }));
   }
 
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('Estudiante')
+  @Get('estudiante/mi-horario')
+  misHorarios(@Req() req: RequestConUsuario) {
+    return this.horarioService.misHorariosEstudiante(req.user.id_usuario);
+  }
+
   @UseGuards(JwtAuthGuard)
   @Get(':id')
   findOne(@Param('id', ParseIntPipe) id: number) {

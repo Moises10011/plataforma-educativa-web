@@ -8,13 +8,24 @@ import {
   Param,
   ParseIntPipe,
   UseGuards,
+  Req,
+  Res,
 } from '@nestjs/common';
+import type { Request, Response } from 'express';
 import { AsignacionCursoService } from './asignacion-curso.service';
 import { CreateAsignacionCursoDto } from './dto/create-asignacion-curso.dto';
 import { UpdateAsignacionCursoDto } from './dto/update-asignacion-curso.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
+
+interface AuthRequest extends Request {
+  user: {
+    id_usuario: number;
+    correo: string;
+    roles?: string[];
+  };
+}
 
 @Controller('asignacion-curso')
 export class AsignacionCursoController {
@@ -36,6 +47,19 @@ export class AsignacionCursoController {
   }
 
   @UseGuards(JwtAuthGuard)
+  @Get('estudiante/mis-docentes')
+  findMisDocentes(@Req() req: AuthRequest) {
+    return this.asignacionCursoService.findMisDocentes(req.user);
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('Docente')
+  @Get('docente/mis-asignaciones')
+  findMisAsignaciones(@Req() req: AuthRequest) {
+    return this.asignacionCursoService.findMisAsignaciones(req.user);
+  }
+
+  @UseGuards(JwtAuthGuard)
   @Get(':id')
   findOne(@Param('id', ParseIntPipe) id: number) {
     return this.asignacionCursoService.findOne(id);
@@ -45,6 +69,23 @@ export class AsignacionCursoController {
   @Get(':id/estudiantes')
   findEstudiantes(@Param('id', ParseIntPipe) id: number) {
     return this.asignacionCursoService.findEstudiantes(id);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get(':id/estudiantes/exportar')
+  async exportarEstudiantes(
+    @Param('id', ParseIntPipe) id: number,
+    @Res() res: Response,
+  ) {
+    const buffer =
+      await this.asignacionCursoService.exportarEstudiantesExcel(id);
+
+    res.set({
+      'Content-Type':
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'Content-Disposition': `attachment; filename=estudiantes_${id}.xlsx`,
+    });
+    res.send(buffer);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -96,6 +137,64 @@ export class AsignacionCursoController {
   @Get(':id/materiales')
   findMateriales(@Param('id', ParseIntPipe) id: number) {
     return this.asignacionCursoService.findMateriales(id);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get(':id/competencias')
+  findCompetencias(@Param('id', ParseIntPipe) id: number) {
+    return this.asignacionCursoService.findCompetencias(id);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get(':id/notas/:id_periodo')
+  findNotas(
+    @Param('id', ParseIntPipe) id: number,
+    @Param('id_periodo', ParseIntPipe) id_periodo: number,
+  ) {
+    return this.asignacionCursoService.findNotas(id, id_periodo);
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('Docente')
+  @Post(':id/notas/lote')
+  registrarNotaLote(
+    @Param('id', ParseIntPipe) id: number,
+    @Body()
+    body: {
+      id_periodo: number;
+      registros: {
+        id_usuario: number;
+        id_competencia: number;
+        valor: string;
+      }[];
+      eliminaciones?: { id_usuario: number; id_competencia: number }[];
+    },
+  ) {
+    return this.asignacionCursoService.registrarNotaLote(
+      id,
+      body.id_periodo,
+      body.registros,
+      body.eliminaciones ?? [],
+    );
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get(':id/notas/exportar/:id_periodo')
+  async exportarNotas(
+    @Param('id', ParseIntPipe) id: number,
+    @Param('id_periodo', ParseIntPipe) id_periodo: number,
+    @Res() res: Response,
+  ) {
+    const buffer = await this.asignacionCursoService.exportarNotasExcel(
+      id,
+      id_periodo,
+    );
+    res.set({
+      'Content-Type':
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'Content-Disposition': `attachment; filename=notas_${id}_${id_periodo}.xlsx`,
+    });
+    res.send(buffer);
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)

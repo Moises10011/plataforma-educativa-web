@@ -64,15 +64,23 @@ export const routes: Routes = [
       { path: '', component: DocenteDashboard },
       // Mi Aula
       { path: 'cursos', loadComponent: () => import('./docente/cursos/cursos').then(m => m.DocenteCursos) },
-      { path: 'estudiantes', loadComponent: () => import('./docente/estudiantes/estudiantes').then(m => m.DocenteEstudiantes) },
-      // Actividades
-      { path: 'tareas', loadComponent: () => import('./docente/tareas/tareas').then(m => m.DocenteTareas) },
-      { path: 'materiales', loadComponent: () => import('./docente/materiales/materiales').then(m => m.DocenteMateriales) },
+      {
+        path: 'cursos/:id',
+        loadComponent: () => import('./docente/cursos/detalle/curso-detalle').then(m => m.CursoDetalle),
+        children: [
+          { path: '', redirectTo: 'tablon', pathMatch: 'full' },
+          { path: 'tareas', loadComponent: () => import('./docente/cursos/detalle/tareas/curso-tareas').then(m => m.CursoTareas) },
+          { path: 'materiales', loadComponent: () => import('./docente/cursos/detalle/materiales/curso-materiales').then(m => m.CursoMateriales) },
+          { path: 'estudiantes', loadComponent: () => import('./docente/cursos/detalle/estudiantes/curso-estudiantes').then(m => m.CursoEstudiantes) },
+        ],
+      },
       // Evaluación
       { path: 'notas', loadComponent: () => import('./docente/notas/notas').then(m => m.DocenteNotas) },
-      { path: 'asistencia', loadComponent: () => import('./docente/asistencia/asistencia').then(m => m.DocenteAsistencia) },
+      { path: 'asistencia', loadComponent: () => import('./docente/asistencia/asistencia').then(m => m.AsistenciaRegistroComponent) },
       // Comunicaciones
       { path: 'comunicados', loadComponent: () => import('./docente/comunicados/comunicados').then(m => m.DocenteComunicados) },
+      //documentoa
+      { path: 'documentos', loadComponent: () => import('./docente/documentos/documentos').then(m => m.DocenteDocumentos) },
       // Wildcard dentro de docente
       { path: '**', redirectTo: '' },
     ],
@@ -88,14 +96,20 @@ export const routes: Routes = [
       { path: '', component: EstudianteDashboard },
       // Mi Aprendizaje
       { path: 'cursos', loadComponent: () => import('./estudiante/cursos/cursos').then(m => m.EstudianteCursos) },
-      { path: 'materiales', loadComponent: () => import('./estudiante/materiales/materiales').then(m => m.EstudianteMateriales) },
-      // Actividades
-      { path: 'tareas', loadComponent: () => import('./estudiante/tareas/tareas').then(m => m.EstudianteTareas) },
-      { path: 'entregas', loadComponent: () => import('./estudiante/entregas/entregas').then(m => m.EstudianteEntregas) },
-      // Mi Progreso
+      {
+        path: 'cursos/:id',
+        loadComponent: () => import('./estudiante/cursos/detalle/curso-detalle').then(m => m.CursoDetalle),
+        children: [
+          { path: '', redirectTo: 'tablon', pathMatch: 'full' },
+          { path: 'tareas', loadComponent: () => import('./estudiante/cursos/detalle/tareas/curso-tareas').then(m => m.CursoTareas) },
+          { path: 'materiales', loadComponent: () => import('./estudiante/cursos/detalle/materiales/curso-materiales').then(m => m.CursoMateriales) },
+        ],
+      },
+      //horario
+      {path: 'horario', loadComponent: () => import('./estudiante/horario/horario').then(m => m.EstudianteHorario) },
+      //notas
       { path: 'notas', loadComponent: () => import('./estudiante/notas/notas').then(m => m.EstudianteNotas) },
-      { path: 'asistencia', loadComponent: () => import('./estudiante/asistencia/asistencia').then(m => m.EstudianteAsistencia) },
-      // Comunicaciones
+      //Comunicados
       { path: 'comunicados', loadComponent: () => import('./estudiante/comunicados/comunicados').then(m => m.EstudianteComunicados) },
       // Wildcard dentro de estudiante
       { path: '**', redirectTo: '' },

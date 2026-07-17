@@ -43,7 +43,17 @@ export class MatriculaController {
   findAll(@Req() req: AuthRequest) {
     return this.matriculaService.findAll(req.user);
   }
+  @UseGuards(JwtAuthGuard)
+  @Get('distribucion/grado')
+  distribucionPorGrado() {
+    return this.matriculaService.distribucionPorGrado();
+  }
 
+  @UseGuards(JwtAuthGuard)
+  @Get('distribucion/seccion')
+  distribucionPorSeccion() {
+    return this.matriculaService.distribucionPorSeccion();
+  }
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('Administrador')
   @Get('exportar/:id_periodo')

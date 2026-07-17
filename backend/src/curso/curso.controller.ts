@@ -34,6 +34,12 @@ export class CursoController {
   }
 
   @UseGuards(JwtAuthGuard)
+  @Get('estudiante/:id')
+  findMisCursos(@Param('id', ParseIntPipe) id: number) {
+    return this.cursoService.findMisCursos(id);
+  }
+
+  @UseGuards(JwtAuthGuard)
   @Get(':id')
   findOne(@Param('id', ParseIntPipe) id: number) {
     return this.cursoService.findOne(id);

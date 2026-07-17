@@ -1,147 +1,162 @@
 <div class="asistencia-container">
-  <!-- Encabezado institucional, siempre visible -->
-  @if (encabezado(); as datos) {
-    <div class="header-spreadsheet">
-      <div class="header-titulo">CONTROL DE ASISTENCIA</div>
-      <div class="header-campos">
-        <div class="campo-fila">
-          <span class="campo-etiqueta">INSTITUCION EDUCATIVA:</span>
-          <span class="campo-valor">{{ datos.institucion }}</span>
-        </div>
-        <div class="campo-fila">
-          <span class="campo-etiqueta">DOCENTE:</span>
-          <span class="campo-valor">{{ datos.docente }}</span>
-        </div>
-        <div class="campo-fila">
-          <span class="campo-etiqueta">CURSO:</span>
-          <span class="campo-valor">{{ datos.curso }}</span>
-        </div>
-        <div class="campo-fila">
-          <span class="campo-etiqueta">NIVEL:</span>
-          <span class="campo-valor">{{ datos.nivel }}</span>
-        </div>
-        <div class="campo-fila-horizontal">
-          <div class="campo-fila">
-            <span class="campo-etiqueta">GRADO:</span>
-            <span class="campo-valor">{{ datos.grado }}</span>
-          </div>
-          <div class="campo-fila">
-            <span class="campo-etiqueta">SECCION:</span>
-            <span class="campo-valor">{{ datos.seccion }}</span>
-          </div>
-        </div>
-      </div>
-    </div>
-  }
 
-  <!-- Selector de curso -->
-  <div class="toolbar">
-    <select
-      class="curso-select"
-      [ngModel]="idAsignacionSeleccionada()"
-      (ngModelChange)="onCursoChange($event)">
-      <option [ngValue]="null">Selecciona un curso</option>
-      @for (c of cursos(); track trackByCurso($index, c)) {
-        <option [ngValue]="c.id_asignacion">
-          {{ c.curso.nombre }} · {{ c.grado.nombre }} {{ c.seccion.nombre }} · {{ c.periodo.nombre }}
-        </option>
+  <!-- ===== Selector de curso ===== -->
+  <div class="cursos-card">
+    <p class="cursos-label">Selecciona un curso</p>
+    <div class="cursos-lista">
+      @for (a of asignaciones(); track a.id_asignacion) {
+        <label class="curso-radio" [class.curso-radio-activo]="idAsignacionSeleccionada() === a.id_asignacion">
+          <input type="radio" name="curso"
+            [checked]="idAsignacionSeleccionada() === a.id_asignacion"
+            (change)="seleccionarCurso(a.id_asignacion)" />
+          <span class="curso-nombre">{{ a.curso }}</span>
+          <span class="curso-detalle">{{ a.grado }} "{{ a.seccion }}"</span>
+        </label>
+      } @empty {
+        <p class="text-sm text-gray-400 italic">No tienes cursos asignados.</p>
       }
-    </select>
+    </div>
   </div>
 
-  @if (cargandoCursos()) {
-    <div class="skeleton"></div>
-  } @else if (!idAsignacionSeleccionada()) {
-    <div class="empty-state"><p>Selecciona un curso para tomar asistencia</p></div>
-  } @else if (cargandoRoster()) {
-    <div class="skeleton"></div>
-  } @else {
-    <!-- Hoja de asistencia tipo Excel: estudiantes como columnas -->
-    <div class="hoja-asistencia">
-      <div class="hoja-controles">
-        <label class="fecha-label">
-          Fecha:
-          <input
-            type="date"
-            class="fecha-input"
-            [ngModel]="fecha()"
-            (ngModelChange)="onFechaChange($event)" />
-        </label>
-        <button class="btn-guardar" [disabled]="guardando()" (click)="guardarAsistencia()">
-          {{ guardando() ? 'Guardando...' : 'Guardar asistencia' }}
-        </button>
+  @if (idAsignacionSeleccionada()) {
+
+    @if (error()) {
+      <div class="alert alert-error">{{ error() }}</div>
+    }
+    @if (exito()) {
+      <div class="alert alert-exito">{{ exito() }}</div>
+    }
+
+    <div class="tabla-card">
+      <div class="tabla-header">
+        <h3 class="tabla-titulo">
+          Registro de asistencia — {{ asignacionActual()?.curso }}
+        </h3>
+        <div class="tabla-acciones">
+          <button class="btn btn-outline" (click)="exportar()">Exportar</button>
+          <button class="btn btn-danger"
+            (click)="solicitarEliminarFecha()"
+            [disabled]="!isoSeleccionado() || eliminando()">
+            Eliminar
+          </button>
+          <button class="btn btn-primary"
+            (click)="guardar()"
+            [disabled]="guardando() || cambiosPendientes().size === 0">
+            {{ guardando() ? 'Guardando...' : 'Guardar' }}
+          </button>
+        </div>
       </div>
 
-      @if (error(); as msg) {
-        <div class="aviso aviso-error"><p>{{ msg }}</p></div>
-      }
-      @if (mensajeExito(); as msg) {
-        <div class="aviso aviso-exito"><p>{{ msg }}</p></div>
-      }
+      @if (cargando()) {
+        <div class="loading">Cargando asistencia...</div>
+      } @else {
+        <div class="tabla-scroll">
+          <table class="tabla-asistencia">
+            <thead>
+              <tr>
+                <th class="col-num">#</th>
+                <th class="col-nombre">Nombres</th>
 
-      <div class="hoja-scroll">
-        <table class="hoja-tabla">
-          <thead>
-            <tr>
-              <th class="celda-fija">Fecha</th>
-              @for (e of estudiantes(); track trackByEstudiante($index, e)) {
-                <th>{{ e.apellidos }}, {{ e.nombres }}</th>
-              }
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td class="celda-fija celda-fecha-valor">{{ fecha() | date:'dd/MM/yyyy' }}</td>
-              @for (e of estudiantes(); track trackByEstudiante($index, e); let i = $index) {
-                <td>
-                  <input
-                    class="celda-digito"
-                    type="text"
-                    inputmode="numeric"
-                    maxlength="1"
-                    [value]="valores()[e.id_usuario] ?? ''"
-                    [style.backgroundColor]="colorFondoCelda(e.id_usuario)"
-                    [style.color]="colorTextoCelda(e.id_usuario)"
-                    (input)="onCeldaInput(e.id_usuario, $any($event.target).value, i)"
-                    (keydown)="onCeldaKeydown($event, i)" />
-                </td>
-              }
-            </tr>
-          </tbody>
-        </table>
-      </div>
+                @for (c of columnas(); track c.iso) {
+                  <th class="col-dia"
+                    [class.col-dia-seleccionada]="isoSeleccionado() === c.iso"
+                    (click)="seleccionarFecha(c.iso)"
+                    title="Seleccionar fecha {{ c.etiqueta }}">
+                    <div class="th-fecha-inner">
+                      <span class="dia-header">{{ c.etiqueta }}</span>
+                    </div>
+                  </th>
+                }
 
-      <div class="leyenda-box leyenda-horizontal">
-        <div class="leyenda-item"><span class="leyenda-codigo codigo-presente">1</span><span>Presente</span></div>
-        <div class="leyenda-item"><span class="leyenda-codigo codigo-ausente">0</span><span>Ausente</span></div>
-        <div class="leyenda-item"><span class="leyenda-codigo codigo-tardanza">2</span><span>Tardanza</span></div>
-        <div class="leyenda-item"><span class="leyenda-codigo codigo-justificado">3</span><span>Justificado</span></div>
+                <th class="col-agregar">
+                  <button class="btn-agregar" (click)="abrirModalFecha()" title="Agregar fecha">+</button>
+                </th>
+              </tr>
+            </thead>
+
+            <tbody>
+              @for (est of estudiantes(); track est.id_usuario; let i = $index) {
+                <tr>
+                  <td class="col-num">{{ i + 1 }}</td>
+                  <td class="col-nombre">{{ est.apellidos }} {{ est.nombres }}</td>
+
+                  @for (c of columnas(); track c.iso) {
+                    <td class="celda-asistencia"
+                      [class.celda-presente]="estadoCelda(est.id_usuario, c.iso) === 'presente'"
+                      [class.celda-falta]="estadoCelda(est.id_usuario, c.iso) === 'falta'"
+                      [class.celda-tardanza]="estadoCelda(est.id_usuario, c.iso) === 'tardanza'"
+                      (click)="clickCelda(est.id_usuario, c.iso)">
+                      @if (estadoCelda(est.id_usuario, c.iso) === 'presente') {
+                        <span class="punto">●</span>
+                      }
+                      @if (estadoCelda(est.id_usuario, c.iso) === 'falta') {
+                        <span class="marca">✕</span>
+                      }
+                      @if (estadoCelda(est.id_usuario, c.iso) === 'tardanza') {
+                        <span class="marca">T</span>
+                      }
+                    </td>
+                  }
+
+                  <td class="col-agregar"></td>
+                </tr>
+              } @empty {
+                <tr>
+                  <td [attr.colspan]="columnas().length + 3"
+                    style="text-align:center;color:#9ca3af;padding:1.5rem">
+                    No hay estudiantes matriculados en este curso.
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+
+        <div class="leyenda">
+          <span><span class="leyenda-punto vacio"></span> Sin registrar</span>
+          <span><span class="leyenda-punto presente"></span> Presente</span>
+          <span><span class="leyenda-punto falta"></span> Falta</span>
+          <span><span class="leyenda-punto tardanza"></span> Tardanza</span>
+        </div>
+      }
+    </div>
+  }
+
+  <!-- ===== Modal: agregar fecha ===== -->
+  @if (modalFechaAbierto()) {
+    <div class="modal-overlay" (click)="cerrarModalFecha()">
+      <div class="modal-box" (click)="$event.stopPropagation()">
+        <h4>Agregar fecha</h4>
+        <input type="date" class="input-fecha"
+          [value]="fechaInputValor()"
+          (input)="fechaInputValor.set($any($event.target).value)" />
+        <div class="modal-acciones" style="margin-top:1rem">
+          <button class="btn btn-outline" (click)="cerrarModalFecha()">Cancelar</button>
+          <button class="btn btn-primary" (click)="confirmarFecha()">Agregar</button>
+        </div>
       </div>
     </div>
-
-    <!-- Historial reciente, solo lectura -->
-    @if (historialReciente().length > 0) {
-      <div class="historial-box">
-        <div class="historial-titulo">REGISTROS RECIENTES</div>
-        <table class="historial-tabla">
-          <thead>
-            <tr>
-              <th>Fecha</th>
-              <th>Estudiante</th>
-              <th>Estado</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (r of historialReciente(); track trackByRegistro($index, r)) {
-              <tr>
-                <td>{{ r.fecha | date:'dd/MM/yyyy' }}</td>
-                <td>{{ r.estudiante.apellidos }}, {{ r.estudiante.nombres }}</td>
-                <td><span class="badge-estado" [ngClass]="colorEstado(r.estado)">{{ r.estado }}</span></td>
-              </tr>
-            }
-          </tbody>
-        </table>
-      </div>
-    }
   }
+
+  <!-- ===== Modal: confirmar eliminar llamado (fecha seleccionada) ===== -->
+  @if (modalEliminarFechaAbierto()) {
+    <div class="modal-overlay" (click)="cerrarModalEliminarFecha()">
+      <div class="modal-box" (click)="$event.stopPropagation()">
+        <h4>Eliminar llamado de asistencia</h4>
+        <p>
+          ¿Eliminar el llamado del <strong>{{ fechaAEliminar() }}</strong>
+          y todos sus registros? Esta acción no se puede deshacer.
+        </p>
+        <div class="modal-acciones">
+          <button class="btn btn-outline" (click)="cerrarModalEliminarFecha()">Cancelar</button>
+          <button class="btn btn-danger"
+            (click)="confirmarEliminarFecha()"
+            [disabled]="eliminando()">
+            {{ eliminando() ? 'Eliminando...' : 'Eliminar' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
 </div>
