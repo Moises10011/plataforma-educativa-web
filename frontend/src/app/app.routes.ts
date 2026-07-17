@@ -5,6 +5,7 @@ import { RecuperarPassword } from './auth/recuperar-password/recuperar-password'
 import { RestablecerPassword } from './auth/restablecer-password/restablecer-password';
 import { Layout } from './layout/layout';
 import { roleGuard } from './core/guards/role-guard';
+import { AccesoDenegadoComponent } from './core/components/acceso-denegado/acceso-denegado';
 
 import { Dashboard as AdminDashboard } from './admin/dashboard/dashboard';
 import { DocenteDashboard } from './docente/dashboard/dashboard';
@@ -38,6 +39,7 @@ export const routes: Routes = [
     children: [
       { path: '', component: AdminDashboard },
       // Gestión académica
+      { path: 'periodos', loadComponent: () => import('./admin/periodos/periodos').then(m => m.AdminPeriodos) },
       { path: 'estudiantes', loadComponent: () => import('./admin/estudiantes/estudiantes').then(m => m.AdminEstudiantes) },
       { path: 'docentes', loadComponent: () => import('./admin/docentes/docentes').then(m => m.AdminDocentes) },
       // Gestión documental
@@ -114,6 +116,12 @@ export const routes: Routes = [
       // Wildcard dentro de estudiante
       { path: '**', redirectTo: '' },
     ],
+  },
+
+  // ─── Acceso Denegado ──────────────────────────────────────────────────────
+  {
+    path: 'acceso-denegado',
+    component: AccesoDenegadoComponent,
   },
 
   // ─── Ruta no encontrada ───────────────────────────────────────────────────

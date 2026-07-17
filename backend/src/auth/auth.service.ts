@@ -2,6 +2,7 @@ import {
   Injectable,
   UnauthorizedException,
   BadRequestException,
+  ForbiddenException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -11,6 +12,9 @@ import * as crypto from 'crypto';
 
 import { Usuario } from '../usuario/entities/usuario.entity';
 import { PasswordReset } from '../password-reset/entities/password-reset.entity';
+import { Matricula } from '../matricula/entities/matricula.entity';
+import { AsignacionCurso } from '../asignacion-curso/entities/asignacion-curso.entity';
+import { PeriodoAcademico } from '../periodo-academico/entities/periodo-academico.entity';
 import { LoginDto } from './dto/login.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
@@ -23,6 +27,12 @@ export class AuthService {
     private readonly usuarioRepository: Repository<Usuario>,
     @InjectRepository(PasswordReset)
     private readonly passwordResetRepository: Repository<PasswordReset>,
+    @InjectRepository(Matricula)
+    private readonly matriculaRepository: Repository<Matricula>,
+    @InjectRepository(AsignacionCurso)
+    private readonly asignacionRepository: Repository<AsignacionCurso>,
+    @InjectRepository(PeriodoAcademico)
+    private readonly periodoRepository: Repository<PeriodoAcademico>,
     private readonly jwtService: JwtService,
     private readonly mailService: MailService,
   ) {}
@@ -59,6 +69,54 @@ export class AuthService {
     }
 
     const nombresRoles = usuario.roles.map((rol) => rol.nombre_rol);
+
+    // 6. Verificar acceso al periodo activo (solo para Estudiante y Docente)
+    const esEstudiante = nombresRoles.includes('Estudiante');
+    const esDocente = nombresRoles.includes('Docente');
+    if (esEstudiante || esDocente) {
+      const periodoActivo = await this.periodoRepository.findOne({
+        where: { estado: true },
+      });
+
+      if (!periodoActivo) {
+        throw new ForbiddenException(
+          'No hay un periodo académico activo. Contacte al administrador.',
+        );
+      }
+
+      // Para estudiantes: verificar matrícula en el periodo activo
+      if (esEstudiante) {
+        const matricula = await this.matriculaRepository.findOne({
+          where: {
+            id_usuario: usuario.id_usuario,
+            id_periodo: periodoActivo.id_periodo,
+            estado: true,
+          },
+        });
+
+        if (!matricula) {
+          throw new ForbiddenException(
+            `No tienes matrícula activa en el periodo ${periodoActivo.nombre}. Contacta al administrador.`,
+          );
+        }
+      }
+
+      // Para docentes: verificar asignación de curso en el periodo activo
+      if (esDocente) {
+        const asignacion = await this.asignacionRepository.findOne({
+          where: {
+            id_usuario_docente: usuario.id_usuario,
+            id_periodo: periodoActivo.id_periodo,
+          },
+        });
+
+        if (!asignacion) {
+          throw new ForbiddenException(
+            `No tienes asignación de cursos en el periodo ${periodoActivo.nombre}. Contacta al administrador.`,
+          );
+        }
+      }
+    }
 
     const payload = {
       sub: usuario.id_usuario,

@@ -85,9 +85,17 @@ export class Login implements OnInit {
           this.error.set('Rol no autorizado o no reconocido');
         }
       },
-      error: () => {
+      error: (err) => {
         this.cargando.set(false);
-        this.error.set('Correo o contrasena incorrectos');
+        
+        if (err.status === 403) {
+          // Error de acceso denegado (sin matrícula en periodo activo)
+          this.router.navigate(['/acceso-denegado'], {
+            state: { mensaje: err.error?.message || 'Acceso denegado' }
+          });
+        } else {
+          this.error.set(err.error?.message || 'Correo o contrasena incorrectos');
+        }
       },
     });
   }

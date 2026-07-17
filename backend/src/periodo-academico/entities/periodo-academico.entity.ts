@@ -8,6 +8,9 @@ export class PeriodoAcademico {
   @Column({ type: 'varchar', length: 20 })
   nombre!: string;
 
+  @Column({ type: 'int' })
+  anio!: number;
+
   @Column({ type: 'date' })
   fecha_inicio!: Date;
 
