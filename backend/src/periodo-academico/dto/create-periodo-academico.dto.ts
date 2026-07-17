@@ -6,6 +6,7 @@ import {
   IsOptional,
   IsInt,
   Min,
+  IsIn,
 } from 'class-validator';
 
 export class CreatePeriodoAcademicoDto {
@@ -28,4 +29,8 @@ export class CreatePeriodoAcademicoDto {
   @IsBoolean()
   @IsOptional()
   estado?: boolean;
+
+  @IsIn(['bimestral', 'trimestral'])
+  @IsOptional()
+  tipo_periodo?: 'bimestral' | 'trimestral';
 }

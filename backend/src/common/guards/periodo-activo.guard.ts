@@ -1,8 +1,25 @@
-import { Injectable, CanActivate, ExecutionContext, ForbiddenException } from '@nestjs/common';
+import {
+  Injectable,
+  CanActivate,
+  ExecutionContext,
+  ForbiddenException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { Request } from 'express';
 import { Matricula } from '../../matricula/entities/matricula.entity';
 import { PeriodoAcademico } from '../../periodo-academico/entities/periodo-academico.entity';
+
+interface UsuarioAutenticado {
+  id_usuario: number;
+  roles?: string[];
+}
+
+interface RequestConUsuario extends Request {
+  user?: UsuarioAutenticado;
+  periodoActivo?: PeriodoAcademico;
+  matriculaActiva?: Matricula;
+}
 
 @Injectable()
 export class PeriodoActivoGuard implements CanActivate {
@@ -14,7 +31,7 @@ export class PeriodoActivoGuard implements CanActivate {
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const request = context.switchToHttp().getRequest();
+    const request = context.switchToHttp().getRequest<RequestConUsuario>();
     const usuario = request.user;
 
     if (!usuario) {
@@ -32,7 +49,9 @@ export class PeriodoActivoGuard implements CanActivate {
     });
 
     if (!periodoActivo) {
-      throw new ForbiddenException('No hay un periodo académico activo. Contacte al administrador.');
+      throw new ForbiddenException(
+        'No hay un periodo académico activo. Contacte al administrador.',
+      );
     }
 
     // Verificar si el usuario tiene matrícula en el periodo activo
@@ -46,7 +65,7 @@ export class PeriodoActivoGuard implements CanActivate {
 
     if (!matricula) {
       throw new ForbiddenException(
-        `No tienes matrícula activa en el periodo ${periodoActivo.nombre}. Contacta al administrador.`
+        `No tienes matrícula activa en el periodo ${periodoActivo.nombre}. Contacta al administrador.`,
       );
     }
 

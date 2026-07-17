@@ -19,23 +19,27 @@
   </div>
 
   <!-- ===== Selector de bimestre/trimestre ===== -->
-  <div class="cursos-card">
-    <p class="cursos-label">Selecciona un bimestre / trimestre</p>
-    <div class="cursos-lista">
-      @for (p of periodos(); track p.id_periodo) {
-        <label class="curso-radio" [class.curso-radio-activo]="idPeriodoSeleccionado() === p.id_periodo">
-          <input type="radio" name="periodo"
-            [checked]="idPeriodoSeleccionado() === p.id_periodo"
-            (change)="seleccionarPeriodo(p.id_periodo)" />
-          <span class="curso-nombre">{{ p.nombre }}</span>
-        </label>
-      } @empty {
-        <p class="text-sm text-gray-400 italic">No hay periodos disponibles.</p>
-      }
+  @if (idAsignacionSeleccionada()) {
+    <div class="cursos-card">
+      <p class="cursos-label">Selecciona un bimestre / trimestre</p>
+      <div class="cursos-lista">
+        @for (b of bimestres(); track b.id_bimestre) {
+          <label class="curso-radio" [class.curso-radio-activo]="idBimestreSeleccionado() === b.id_bimestre">
+            <input type="radio" name="bimestre"
+              [checked]="idBimestreSeleccionado() === b.id_bimestre"
+              (change)="seleccionarBimestre(b.id_bimestre)" />
+            <span class="curso-nombre">{{ b.nombre }}</span>
+          </label>
+        } @empty {
+          <p class="text-sm text-gray-400 italic">
+            Este periodo aún no tiene bimestres configurados. Pide al administrador que los cree.
+          </p>
+        }
+      </div>
     </div>
-  </div>
+  }
 
-  @if (idAsignacionSeleccionada() && idPeriodoSeleccionado()) {
+  @if (idAsignacionSeleccionada() && idBimestreSeleccionado()) {
 
     @if (error()) {
       <div class="alert alert-error">{{ error() }}</div>
@@ -50,6 +54,7 @@
           Registro de notas — {{ asignacionActual()?.curso }}
         </h3>
         <div class="tabla-acciones">
+          <button class="btn btn-outline" (click)="actualizar()">Actualizar</button>
           <button class="btn btn-outline" (click)="exportar()">Exportar</button>
           <button class="btn btn-outline"
             (click)="deshacer()"
@@ -71,16 +76,29 @@
           <table class="tabla-notas">
             <thead>
               <tr>
-                <th class="col-num">#</th>
-                <th class="col-nombre">Nombres</th>
+                <th class="col-num" rowspan="2">#</th>
+                <th class="col-nombre" rowspan="2">Nombres</th>
 
                 @for (c of competencias(); track c.id_competencia) {
-                  <th class="col-competencia" title="{{ c.nombre }}">
+                  <th class="col-competencia" [attr.colspan]="notasDeCompetencia(c.id_competencia).length + 2">
                     <span class="competencia-header">{{ c.nombre }}</span>
                   </th>
                 }
-
-                <th class="col-promedio">Promedio</th>
+              </tr>
+              <tr>
+                @for (c of competencias(); track c.id_competencia) {
+                  @for (n of notasDeCompetencia(c.id_competencia); track n.id) {
+                    <th class="col-nota" (click)="abrirModalEditarNota(n)" title="Editar / eliminar">
+                      {{ n.nombre }}
+                    </th>
+                  }
+                  <th class="col-crear-nota">
+                    <button type="button" class="btn-crear-nota" (click)="abrirModalCrearNota(c.id_competencia)">
+                      + Crear nota
+                    </button>
+                  </th>
+                  <th class="col-promedio-comp">Promedio</th>
+                }
               </tr>
             </thead>
 
@@ -91,24 +109,25 @@
                   <td class="col-nombre">{{ est.apellidos }} {{ est.nombres }}</td>
 
                   @for (c of competencias(); track c.id_competencia) {
-                    <td class="celda-nota"
-                      tabindex="0"
-                      [class.celda-ad]="estadoCelda(est.id_usuario, c.id_competencia) === 'AD'"
-                      [class.celda-a]="estadoCelda(est.id_usuario, c.id_competencia) === 'A'"
-                      [class.celda-b]="estadoCelda(est.id_usuario, c.id_competencia) === 'B'"
-                      [class.celda-c]="estadoCelda(est.id_usuario, c.id_competencia) === 'C'"
-                      (click)="clickCelda(est.id_usuario, c.id_competencia)"
-                      (keydown)="borrarConTecla($event, est.id_usuario, c.id_competencia)">
-                      {{ estadoCelda(est.id_usuario, c.id_competencia) }}
-                    </td>
+                    @for (n of notasDeCompetencia(c.id_competencia); track n.id) {
+                      <td class="celda-nota"
+                        tabindex="0"
+                        [class.celda-ad]="estadoCeldaNota(est.id_usuario, n.id) === 'AD'"
+                        [class.celda-a]="estadoCeldaNota(est.id_usuario, n.id) === 'A'"
+                        [class.celda-b]="estadoCeldaNota(est.id_usuario, n.id) === 'B'"
+                        [class.celda-c]="estadoCeldaNota(est.id_usuario, n.id) === 'C'"
+                        (click)="clickCeldaNota(est.id_usuario, n.id)"
+                        (keydown)="borrarConTecla($event, est.id_usuario, n.id)">
+                        {{ estadoCeldaNota(est.id_usuario, n.id) }}
+                      </td>
+                    }
+                    <td class="col-crear-nota"></td>
+                    <td class="col-promedio-comp">{{ promedioCompetencia(est.id_usuario, c.id_competencia) }}</td>
                   }
-
-                  <td class="col-promedio">{{ promedioEstudiante(est.id_usuario) }}</td>
                 </tr>
               } @empty {
                 <tr>
-                  <td [attr.colspan]="competencias().length + 3"
-                    style="text-align:center;color:#9ca3af;padding:1.5rem">
+                  <td style="text-align:center;color:#9ca3af;padding:1.5rem" colspan="99">
                     No hay estudiantes matriculados en este curso.
                   </td>
                 </tr>
@@ -125,6 +144,41 @@
           <span><span class="leyenda-punto c"></span> C - En inicio</span>
         </div>
       }
+    </div>
+  }
+
+  <!-- ===== Modal 1: crear nota ===== -->
+  @if (modalCrearNotaAbierto()) {
+    <div class="modal-overlay" (click)="cerrarModalCrearNota()">
+      <div class="modal-caja" (click)="$event.stopPropagation()">
+        <h4 class="modal-titulo">Nueva nota</h4>
+        <input type="text" class="modal-input" placeholder="Ej: Práctica 1, Examen..."
+          [ngModel]="nombreNuevaNota()"
+          (ngModelChange)="nombreNuevaNota.set($event)"
+          (keydown.enter)="confirmarCrearNota()" />
+        <div class="modal-acciones">
+          <button type="button" class="btn btn-outline btn-mini" (click)="cerrarModalCrearNota()">Cancelar</button>
+          <button type="button" class="btn btn-primary btn-mini" (click)="confirmarCrearNota()">Crear</button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- ===== Modal 2: editar / eliminar nota ===== -->
+  @if (modalEditarNotaAbierto()) {
+    <div class="modal-overlay" (click)="cerrarModalEditarNota()">
+      <div class="modal-caja" (click)="$event.stopPropagation()">
+        <h4 class="modal-titulo">Editar nota</h4>
+        <input type="text" class="modal-input"
+          [ngModel]="nombreEditarNota()"
+          (ngModelChange)="nombreEditarNota.set($event)"
+          (keydown.enter)="guardarEdicionNota()" />
+        <div class="modal-acciones modal-acciones-3">
+          <button type="button" class="btn btn-danger btn-mini" (click)="eliminarNotaColumna()">Eliminar</button>
+          <button type="button" class="btn btn-outline btn-mini" (click)="cerrarModalEditarNota()">Cancelar</button>
+          <button type="button" class="btn btn-primary btn-mini" (click)="guardarEdicionNota()">Guardar</button>
+        </div>
+      </div>
     </div>
   }
 

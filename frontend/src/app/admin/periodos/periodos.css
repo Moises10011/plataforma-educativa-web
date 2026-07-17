@@ -4,6 +4,10 @@
   margin: 0 auto;
 }
 
+.content {
+  margin-top: 1rem;
+}
+
 .header {
   display: flex;
   justify-content: space-between;
@@ -326,6 +330,16 @@
   font-size: 0.875rem;
 }
 
+.btn-outline {
+  background: transparent;
+  border: 1px solid currentColor;
+  color: inherit;
+}
+
+.btn-outline:hover:not(:disabled) {
+  background: rgba(0, 0, 0, 0.1);
+}
+
 /* Alerts */
 .alert {
   padding: 1rem;
@@ -382,5 +396,50 @@
   .tabla th,
   .tabla td {
     padding: 0.5rem;
+  }
+  .periodo-activo-acciones {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 0.75rem;
+  }
+
+  .form-hint {
+    font-size: 0.8rem;
+    color: #6b7280;
+    margin-top: 0.25rem;
+  }
+
+  .lista-bimestres {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .lista-bimestres li {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+  }
+
+  .lista-bimestres-vacia {
+    justify-content: center !important;
+    color: #9ca3af;
+    font-style: italic;
+    border-style: dashed !important;
+  }
+
+  .form-row-inline {
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  .form-row-inline input {
+    flex: 1;
   }
 }

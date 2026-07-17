@@ -8,7 +8,7 @@ import {
 } from 'typeorm';
 import { Usuario } from '../../usuario/entities/usuario.entity';
 
-@Entity('Comunicado')
+@Entity('comunicado')
 export class Comunicado {
   @PrimaryGeneratedColumn({ name: 'id_comunicado' })
   id_comunicado!: number;

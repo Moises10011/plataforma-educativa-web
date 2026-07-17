@@ -10,18 +10,28 @@ import { Repository } from 'typeorm';
 import { PeriodoAcademico } from './entities/periodo-academico.entity';
 import { CreatePeriodoAcademicoDto } from './dto/create-periodo-academico.dto';
 import { UpdatePeriodoAcademicoDto } from './dto/update-periodo-academico.dto';
+import { BimestreService } from '../bimestre/bimestre.service';
 
 @Injectable()
 export class PeriodoAcademicoService {
   constructor(
     @InjectRepository(PeriodoAcademico)
     private readonly periodoRepository: Repository<PeriodoAcademico>,
+    private readonly bimestreService: BimestreService,
   ) {}
 
   async create(createPeriodoAcademicoDto: CreatePeriodoAcademicoDto) {
     await this.validarPeriodo(createPeriodoAcademicoDto);
     const periodo = this.periodoRepository.create(createPeriodoAcademicoDto);
-    return await this.periodoRepository.save(periodo);
+    const periodoGuardado = await this.periodoRepository.save(periodo);
+
+    // Genera automáticamente los bimestres/trimestres de este periodo
+    await this.bimestreService.crearParaPeriodo(
+      periodoGuardado.id_periodo,
+      periodoGuardado.tipo_periodo,
+    );
+
+    return periodoGuardado;
   }
 
   findAll() {
@@ -100,6 +110,9 @@ export class PeriodoAcademicoService {
         'No se puede eliminar el periodo porque tiene matrículas asociadas. Cierre el periodo en su lugar.',
       );
     }
+
+    // Limpia los bimestres del periodo antes de borrarlo
+    await this.bimestreService.eliminarPorPeriodo(id);
 
     await this.periodoRepository.remove(periodo);
     return { message: `Periodo #${id} eliminado correctamente` };

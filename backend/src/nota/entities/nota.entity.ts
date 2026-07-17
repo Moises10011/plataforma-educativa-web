@@ -10,7 +10,7 @@ import { EntregaTarea } from '../../entrega-tarea/entities/entrega-tarea.entity'
 import { Usuario } from '../../usuario/entities/usuario.entity';
 import { Competencia } from '../../competencia/entities/competencia.entity';
 
-@Entity('Nota')
+@Entity('nota')
 export class Nota {
   @PrimaryGeneratedColumn({ name: 'id_nota' })
   id_nota!: number;

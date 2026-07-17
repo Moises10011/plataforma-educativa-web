@@ -297,6 +297,7 @@ export class AsignacionCursoService {
       grado: a.grado.nombre,
       seccion: a.seccion.nombre,
       periodo: a.periodo.nombre,
+      id_periodo: a.periodo.id_periodo,
     }));
   }
 

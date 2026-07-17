@@ -1,8 +1,10 @@
-import { Component, OnInit, signal, computed } from '@angular/core';
+import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
+
+type TipoPeriodo = 'bimestral' | 'trimestral';
 
 interface PeriodoAcademico {
   id_periodo: number;
@@ -10,6 +12,14 @@ interface PeriodoAcademico {
   anio: number;
   fecha_inicio: string;
   fecha_fin: string;
+  estado: boolean;
+  tipo_periodo: TipoPeriodo;
+}
+
+interface Bimestre {
+  id_bimestre: number;
+  id_periodo: number;
+  nombre: string;
   estado: boolean;
 }
 
@@ -38,6 +48,7 @@ export class AdminPeriodos implements OnInit {
     fecha_inicio: '',
     fecha_fin: '',
     estado: true,
+    tipo_periodo: 'trimestral' as TipoPeriodo,
   };
 
   editarPeriodo = {
@@ -47,7 +58,19 @@ export class AdminPeriodos implements OnInit {
     fecha_inicio: '',
     fecha_fin: '',
     estado: true,
+    tipo_periodo: 'trimestral' as TipoPeriodo,
   };
+
+  // ── Modal: gestionar bimestres de un período ──────────────────────────
+  modalBimestres = signal(false);
+  periodoBimestres = signal<PeriodoAcademico | null>(null);
+  bimestres = signal<Bimestre[]>([]);
+  cargandoBimestres = signal(false);
+  errorBimestres = signal('');
+
+  nombreNuevoBimestre = signal('');
+  creandoBimestre = signal(false);
+  eliminandoBimestreId = signal<number | null>(null);
 
   constructor(private http: HttpClient) {}
 
@@ -76,6 +99,7 @@ export class AdminPeriodos implements OnInit {
       fecha_inicio: '',
       fecha_fin: '',
       estado: true,
+      tipo_periodo: 'trimestral',
     };
     this.error.set('');
     this.modalNuevo.set(true);
@@ -90,6 +114,7 @@ export class AdminPeriodos implements OnInit {
       fecha_inicio: periodo.fecha_inicio,
       fecha_fin: periodo.fecha_fin,
       estado: periodo.estado,
+      tipo_periodo: periodo.tipo_periodo ?? 'trimestral',
     };
     this.error.set('');
     this.modalEditar.set(true);
@@ -137,8 +162,8 @@ export class AdminPeriodos implements OnInit {
   }
 
   actualizarPeriodo(): void {
-    const { id_periodo, nombre, anio, fecha_inicio, fecha_fin, estado } = this.editarPeriodo;
-    if (!nombre || !anio || !fecha_inicio || !fecha_fin) {
+    const { id_periodo, ...datosParaEnviar } = this.editarPeriodo;
+    if (!datosParaEnviar.nombre || !datosParaEnviar.anio || !datosParaEnviar.fecha_inicio || !datosParaEnviar.fecha_fin) {
       this.error.set('Todos los campos son obligatorios');
       return;
     }
@@ -146,7 +171,7 @@ export class AdminPeriodos implements OnInit {
     this.guardando.set(true);
     this.error.set('');
 
-    this.http.put<PeriodoAcademico>(`${environment.apiUrl}/periodo-academico/${id_periodo}`, this.editarPeriodo).subscribe({
+    this.http.put<PeriodoAcademico>(`${environment.apiUrl}/periodo-academico/${id_periodo}`, datosParaEnviar).subscribe({
       next: () => {
         this.guardando.set(false);
         this.cerrarModal();
@@ -207,5 +232,85 @@ export class AdminPeriodos implements OnInit {
     if (!fecha) return '';
     const date = new Date(fecha);
     return date.toLocaleDateString('es-PE', { year: 'numeric', month: 'long', day: 'numeric' });
+  }
+
+  // ── Modal: gestionar bimestres ────────────────────────────────────────
+
+  abrirModalBimestres(periodo: PeriodoAcademico): void {
+    this.periodoBimestres.set(periodo);
+    this.nombreNuevoBimestre.set('');
+    this.errorBimestres.set('');
+    this.modalBimestres.set(true);
+    this.cargarBimestresDePeriodo(periodo.id_periodo);
+  }
+
+  cerrarModalBimestres(): void {
+    this.modalBimestres.set(false);
+    this.periodoBimestres.set(null);
+    this.bimestres.set([]);
+  }
+
+  private cargarBimestresDePeriodo(id_periodo: number): void {
+    this.cargandoBimestres.set(true);
+    this.http
+      .get<Bimestre[]>(`${environment.apiUrl}/bimestre?id_periodo=${id_periodo}`)
+      .subscribe({
+        next: (data) => {
+          this.bimestres.set(data);
+          this.cargandoBimestres.set(false);
+        },
+        error: () => {
+          this.errorBimestres.set('Error al cargar los bimestres');
+          this.cargandoBimestres.set(false);
+        },
+      });
+  }
+
+  crearBimestreManual(): void {
+    const id_periodo = this.periodoBimestres()?.id_periodo;
+    const nombre = this.nombreNuevoBimestre().trim();
+    if (!id_periodo || !nombre || this.creandoBimestre()) return;
+
+    this.creandoBimestre.set(true);
+    this.errorBimestres.set('');
+
+    this.http
+      .post<Bimestre>(`${environment.apiUrl}/bimestre`, { id_periodo, nombre, estado: true })
+      .subscribe({
+        next: (nuevo) => {
+          this.bimestres.update((lista) => [...lista, nuevo]);
+          this.nombreNuevoBimestre.set('');
+          this.creandoBimestre.set(false);
+        },
+        error: (err) => {
+          this.creandoBimestre.set(false);
+          this.errorBimestres.set(err?.error?.message ?? 'Error al crear el bimestre');
+        },
+      });
+  }
+
+  eliminarBimestre(bimestre: Bimestre): void {
+    const confirmado = window.confirm(
+      `¿Eliminar "${bimestre.nombre}"? Esta acción no se puede deshacer.`,
+    );
+    if (!confirmado) return;
+
+    this.eliminandoBimestreId.set(bimestre.id_bimestre);
+    this.errorBimestres.set('');
+
+    this.http
+      .delete(`${environment.apiUrl}/bimestre/${bimestre.id_bimestre}`)
+      .subscribe({
+        next: () => {
+          this.bimestres.update((lista) =>
+            lista.filter((b) => b.id_bimestre !== bimestre.id_bimestre),
+          );
+          this.eliminandoBimestreId.set(null);
+        },
+        error: (err) => {
+          this.eliminandoBimestreId.set(null);
+          this.errorBimestres.set(err?.error?.message ?? 'Error al eliminar el bimestre');
+        },
+      });
   }
 }

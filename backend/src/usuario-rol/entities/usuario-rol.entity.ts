@@ -2,7 +2,7 @@ import { Entity, PrimaryColumn, ManyToOne, JoinColumn } from 'typeorm';
 import { Usuario } from '../../usuario/entities/usuario.entity';
 import { Rol } from '../../rol/entities/rol.entity';
 
-@Entity('Usuario_Rol')
+@Entity('usuario_Rol')
 export class UsuarioRol {
   @PrimaryColumn({ name: 'id_usuario' })
   id_usuario!: number;
