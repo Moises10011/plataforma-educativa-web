@@ -2,15 +2,17 @@ import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
- 
-interface Nota {
-  id_nota: number;
-  valor: number;
-  descripcion?: string;
-  curso: { nombre: string };
-  periodo: { nombre: string };
+
+interface Libreta {
+  id_libreta: number;
+  archivo: string;
+  fecha_subida: string;
+  periodo?: {
+    id_periodo: number;
+    nombre: string;
+  };
 }
- 
+
 @Component({
   selector: 'app-estudiante-notas',
   standalone: true,
@@ -19,23 +21,98 @@ interface Nota {
   styleUrl: './notas.css',
 })
 export class EstudianteNotas implements OnInit {
-  notas = signal<Nota[]>([]);
+  libretas = signal<Libreta[]>([]);
   cargando = signal(true);
- 
+  error = signal<string | null>(null);
+
+  private extensionesVisibles = ['pdf', 'jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'];
+
+  private mimePorExtensionMap: Record<string, string> = {
+    pdf: 'application/pdf',
+    jpg: 'image/jpeg',
+    jpeg: 'image/jpeg',
+    png: 'image/png',
+    gif: 'image/gif',
+    webp: 'image/webp',
+    svg: 'image/svg+xml',
+  };
+
   constructor(private http: HttpClient) {}
- 
+
   ngOnInit(): void {
     this.http
-      .get<Nota[]>(`${environment.apiUrl}/nota/estudiante/mis-notas`)
+      .get<Libreta[]>(`${environment.apiUrl}/libreta/estudiante/mis-libretas`)
       .subscribe({
-        next: (data) => { this.notas.set(data); this.cargando.set(false); },
-        error: () => this.cargando.set(false),
+        next: (data) => {
+          this.libretas.set(data ?? []);
+          this.cargando.set(false);
+        },
+        error: (error) => {
+          console.error('Error al cargar libretas:', error);
+          this.cargando.set(false);
+        },
       });
   }
- 
-  colorNota(valor: number): string {
-    if (valor >= 14) return 'text-green-700 bg-green-100';
-    if (valor >= 11) return 'text-amber-700 bg-amber-100';
-    return 'text-red-700 bg-red-100';
+
+  esImagen(archivo: string): boolean {
+    return /\.(png|jpe?g|gif|webp)$/i.test(archivo);
+  }
+
+  private extension(archivo: string): string {
+    return archivo.split('.').pop()?.toLowerCase() ?? '';
+  }
+
+  private mimePorExtension(ext: string): string {
+    return this.mimePorExtensionMap[ext] ?? 'application/octet-stream';
+  }
+
+  verLibreta(libreta: Libreta): void {
+    const ext = this.extension(libreta.archivo);
+    const esVisible = this.extensionesVisibles.includes(ext);
+    const ventana = esVisible ? window.open('', '_blank') : null;
+
+    this.http.get(`${environment.apiUrl}/libreta/${libreta.id_libreta}/ver`, {
+      responseType: 'blob',
+    }).subscribe({
+      next: (blob) => {
+        const tipoBlob = new Blob([blob], { type: blob.type || this.mimePorExtension(ext) });
+        const url = window.URL.createObjectURL(tipoBlob);
+
+        if (esVisible && ventana) {
+          ventana.location.href = url;
+        } else {
+          this.descargarBlob(url, `${libreta.periodo?.nombre || 'libreta'}.${ext}`);
+        }
+        setTimeout(() => window.URL.revokeObjectURL(url), 60_000);
+      },
+      error: () => {
+        ventana?.close();
+        this.error.set('No se pudo abrir la libreta.');
+      },
+    });
+  }
+
+  descargarLibreta(libreta: Libreta): void {
+    const ext = this.extension(libreta.archivo);
+    this.http.get(`${environment.apiUrl}/libreta/${libreta.id_libreta}/descargar`, {
+      responseType: 'blob',
+    }).subscribe({
+      next: (blob) => {
+        const tipoBlob = new Blob([blob], { type: blob.type || this.mimePorExtension(ext) });
+        const url = window.URL.createObjectURL(tipoBlob);
+        this.descargarBlob(url, `${libreta.periodo?.nombre || 'libreta'}.${ext}`);
+        window.URL.revokeObjectURL(url);
+      },
+      error: () => this.error.set('No se pudo descargar la libreta.'),
+    });
+  }
+
+  private descargarBlob(url: string, nombre: string): void {
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = nombre;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
   }
 }

@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import * as XLSX from 'xlsx';
 import { environment } from '../../../environments/environment';
+import * as ExcelJS from 'exceljs';
 
 interface Matricula {
   id_matricula: number;
@@ -60,6 +61,7 @@ export class AdminEstudiantes implements OnInit {
     nombres: '',
     apellidos: '',
     dni: '',
+    correo: '',
     telefono: '',
     direccion: '',
     fecha_nacimiento: '',
@@ -74,6 +76,7 @@ export class AdminEstudiantes implements OnInit {
     nombres: '',
     apellidos: '',
     dni: '',
+    correo: '',
     telefono: '',
     direccion: '',
     fecha_nacimiento: '',
@@ -92,11 +95,6 @@ export class AdminEstudiantes implements OnInit {
   seccionesFiltradas = computed(() => this.secciones());
   seccionesFiltradasEditar = computed(() => this.secciones());
   seccionesFiltradasMasivo = computed(() => this.secciones());
-
-  correoPreview = computed(() => {
-    const dni = this.nuevoEstudiante.dni;
-    return dni ? `${dni}@micaela.edu.pe` : '';
-  });
 
   passwordPreview = computed(() => {
     const nombres = this.nuevoEstudiante.nombres;
@@ -166,7 +164,7 @@ export class AdminEstudiantes implements OnInit {
   abrirModalNuevo(): void {
     const activo = this.periodos().find(p => p.estado);
     this.nuevoEstudiante = {
-      nombres: '', apellidos: '', dni: '', telefono: '',
+      nombres: '', apellidos: '', dni: '', correo: '', telefono: '',
       direccion: '', fecha_nacimiento: '',
       id_grado: null, id_seccion: null,
       id_periodo: activo?.id_periodo ?? null,
@@ -198,6 +196,7 @@ export class AdminEstudiantes implements OnInit {
       nombres: m.usuario.nombres,
       apellidos: m.usuario.apellidos,
       dni: m.usuario.dni ?? '',
+      correo: m.usuario.correo ?? '',
       telefono: '',
       direccion: '',
       fecha_nacimiento: '',
@@ -219,9 +218,9 @@ export class AdminEstudiantes implements OnInit {
   }
 
   matricular(): void {
-    const { nombres, apellidos, dni, id_grado, id_seccion, id_periodo } = this.nuevoEstudiante;
-    if (!nombres || !apellidos || !dni || !id_grado || !id_seccion || !id_periodo) {
-      this.error.set('Nombres, apellidos, DNI, grado, sección y periodo son obligatorios');
+    const { nombres, apellidos, dni, correo, id_grado, id_seccion, id_periodo } = this.nuevoEstudiante;
+    if (!nombres || !apellidos || !dni || !correo || !id_grado || !id_seccion || !id_periodo) {
+      this.error.set('Nombres, apellidos, DNI, correo, grado, sección y periodo son obligatorios');
       return;
     }
     this.guardando.set(true);
@@ -251,6 +250,7 @@ export class AdminEstudiantes implements OnInit {
         nombres: this.editarForm.nombres,
         apellidos: this.editarForm.apellidos,
         dni: this.editarForm.dni,
+        correo: this.editarForm.correo,
         telefono: this.editarForm.telefono,
         direccion: this.editarForm.direccion,
         fecha_nacimiento: this.editarForm.fecha_nacimiento,
@@ -286,21 +286,62 @@ export class AdminEstudiantes implements OnInit {
 
   // ─── CARGA MASIVA ──────────────────────────────────────────────────────────
 
-  descargarPlantilla(): void {
-    const datos = [
-      {
-        nombres: 'Juan Carlos',
-        apellidos: 'Perez Lopez',
-        dni: '12345678',
-        telefono: '987654321',
-        direccion: 'Av. Principal 123',
-        fecha_nacimiento: '2010-05-15',
-      },
+  async descargarPlantilla(): Promise<void> {
+    const workbook = new ExcelJS.Workbook();
+    const sheet = workbook.addWorksheet('Estudiantes');
+
+    sheet.mergeCells('A1:G1');
+    const titulo = sheet.getCell('A1');
+    titulo.value = 'Plantilla de Carga Masiva - Estudiantes';
+    titulo.font = { bold: true, size: 14, color: { argb: 'FFFFFFFF' } };
+    titulo.alignment = { horizontal: 'center', vertical: 'middle' };
+    titulo.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF0F766E' } };
+    sheet.getRow(1).height = 28;
+
+    const headers = ['nombres', 'apellidos', 'dni', 'correo', 'telefono', 'direccion', 'fecha_nacimiento'];
+    const headerRow = sheet.addRow(headers);
+    headerRow.eachCell((cell) => {
+      cell.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+      cell.alignment = { horizontal: 'center', vertical: 'middle' };
+      cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF14B8A6' } };
+      cell.border = {
+        top: { style: 'thin' }, left: { style: 'thin' },
+        bottom: { style: 'thin' }, right: { style: 'thin' },
+      };
+    });
+
+    const ejemplo = sheet.addRow([
+      'Juan Carlos',
+      'Perez Lopez',
+      '12345678',
+      'juan.perez@example.com',
+      '987654321',
+      'Av. Principal 123',
+      '2010-05-15',
+    ]);
+    ejemplo.eachCell((cell) => {
+      cell.alignment = { horizontal: 'center', vertical: 'middle' };
+      cell.border = {
+        top: { style: 'thin' }, left: { style: 'thin' },
+        bottom: { style: 'thin' }, right: { style: 'thin' },
+      };
+    });
+
+    sheet.columns = [
+      { width: 20 }, { width: 20 }, { width: 12 },
+      { width: 28 }, { width: 14 }, { width: 28 }, { width: 16 },
     ];
-    const ws = XLSX.utils.json_to_sheet(datos);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'Estudiantes');
-    XLSX.writeFile(wb, 'plantilla_estudiantes.xlsx');
+
+    const buffer = await workbook.xlsx.writeBuffer();
+    const blob = new Blob([buffer], {
+      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'plantilla_estudiantes.xlsx';
+    a.click();
+    URL.revokeObjectURL(url);
   }
 
   onArchivoSeleccionado(event: Event): void {
@@ -333,6 +374,7 @@ export class AdminEstudiantes implements OnInit {
       nombres: fila.nombres,
       apellidos: fila.apellidos,
       dni: String(fila.dni),
+      correo: fila.correo,
       telefono: fila.telefono ? String(fila.telefono) : undefined,
       direccion: fila.direccion ?? undefined,
       fecha_nacimiento: fila.fecha_nacimiento ?? undefined,
@@ -359,21 +401,100 @@ export class AdminEstudiantes implements OnInit {
     });
   }
 
-  exportar(): void {
-    const id = this.filtroPeriodo();
-    if (!id) { alert('Selecciona un periodo para exportar'); return; }
+  async exportar(): Promise<void> {
+    const datos = this.matriculasFiltradas;
+    if (!datos.length) {
+      alert('No hay matrículas que coincidan con los filtros para exportar');
+      return;
+    }
+
     this.exportando.set(true);
-    this.http.get(`${environment.apiUrl}/matricula/exportar/${id}`, { responseType: 'blob' }).subscribe({
-      next: (blob) => {
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `matriculados_${id}.xlsx`;
-        a.click();
-        URL.revokeObjectURL(url);
-        this.exportando.set(false);
-      },
-      error: () => this.exportando.set(false),
-    });
+    try {
+      const workbook = new ExcelJS.Workbook();
+      const sheet = workbook.addWorksheet('Matrículas');
+
+      const headers = ['Nombres', 'Apellidos', 'DNI', 'Correo', 'Grado', 'Sección', 'Periodo', 'Estado'];
+
+      sheet.mergeCells(`A1:${String.fromCharCode(64 + headers.length)}1`);
+      const titulo = sheet.getCell('A1');
+      titulo.value = 'Reporte de Estudiantes Matriculados';
+      titulo.font = { bold: true, size: 14, color: { argb: 'FFFFFFFF' } };
+      titulo.alignment = { horizontal: 'center', vertical: 'middle' };
+      titulo.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF0F766E' } };
+      sheet.getRow(1).height = 28;
+
+      sheet.mergeCells(`A2:${String.fromCharCode(64 + headers.length)}2`);
+      const subtitulo = sheet.getCell('A2');
+      subtitulo.value = this.descripcionFiltros();
+      subtitulo.font = { italic: true, size: 10, color: { argb: 'FF6B7280' } };
+      subtitulo.alignment = { horizontal: 'center', vertical: 'middle' };
+      sheet.getRow(2).height = 20;
+
+      const headerRow = sheet.addRow(headers);
+      headerRow.eachCell((cell) => {
+        cell.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+        cell.alignment = { horizontal: 'center', vertical: 'middle' };
+        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF14B8A6' } };
+        cell.border = {
+          top: { style: 'thin' }, left: { style: 'thin' },
+          bottom: { style: 'thin' }, right: { style: 'thin' },
+        };
+      });
+
+      for (const m of datos) {
+        const row = sheet.addRow([
+          m.usuario.nombres,
+          m.usuario.apellidos,
+          m.usuario.dni ?? '—',
+          m.usuario.correo ?? '—',
+          m.grado.nombre,
+          m.seccion.nombre,
+          m.periodo.nombre,
+          m.estado ? 'Activo' : 'Inactivo',
+        ]);
+        row.eachCell((cell, colNumber) => {
+          cell.alignment = { horizontal: colNumber === 1 || colNumber === 2 ? 'left' : 'center', vertical: 'middle' };
+          cell.border = {
+            top: { style: 'thin' }, left: { style: 'thin' },
+            bottom: { style: 'thin' }, right: { style: 'thin' },
+          };
+          if (colNumber === 8) {
+            cell.font = { color: { argb: m.estado ? 'FF15803D' : 'FFB91C1C' }, bold: true };
+          }
+        });
+      }
+
+      sheet.columns = [
+        { width: 20 }, { width: 20 }, { width: 12 },
+        { width: 28 }, { width: 14 }, { width: 14 }, { width: 16 }, { width: 12 },
+      ];
+
+      const buffer = await workbook.xlsx.writeBuffer();
+      const blob = new Blob([buffer], {
+        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `matriculados_${new Date().toISOString().slice(0, 10)}.xlsx`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } finally {
+      this.exportando.set(false);
+    }
+  }
+
+  private descripcionFiltros(): string {
+    const partes: string[] = [];
+    const grado = this.grados().find(g => g.id_grado === this.filtroGrado());
+    const seccion = this.secciones().find(s => s.id_seccion === this.filtroSeccion());
+    const periodo = this.periodos().find(p => p.id_periodo === this.filtroPeriodo());
+
+    if (grado) partes.push(`Grado: ${grado.nombre}`);
+    if (seccion) partes.push(`Sección: ${seccion.nombre}`);
+    if (periodo) partes.push(`Periodo: ${periodo.nombre}`);
+    if (this.filtroBusqueda()) partes.push(`Búsqueda: "${this.filtroBusqueda()}"`);
+
+    return partes.length ? partes.join(' | ') : 'Todos los registros';
   }
 }

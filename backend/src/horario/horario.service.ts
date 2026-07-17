@@ -11,12 +11,15 @@ import { join } from 'path';
 import { Horario } from './entities/horario.entity';
 import { CreateHorarioDto } from './dto/create-horario.dto';
 import { UpdateHorarioDto } from './dto/update-horario.dto';
+import { Matricula } from '../matricula/entities/matricula.entity';
 
 @Injectable()
 export class HorarioService {
   constructor(
     @InjectRepository(Horario)
     private readonly horarioRepository: Repository<Horario>,
+    @InjectRepository(Matricula)
+    private readonly matriculaRepository: Repository<Matricula>,
   ) {}
 
   async create(dto: CreateHorarioDto, archivos?: Express.Multer.File[]) {
@@ -130,5 +133,29 @@ export class HorarioService {
 
     await this.horarioRepository.remove(horario);
     return { message: `Horario #${id} eliminado correctamente` };
+  }
+  async misHorariosEstudiante(id_usuario: number) {
+    const matriculas = await this.matriculaRepository.find({
+      where: { id_usuario, estado: true },
+    });
+
+    if (matriculas.length === 0) return [];
+
+    const idsGradoSeccion = matriculas.map((m) => ({
+      id_grado: m.id_grado,
+      id_seccion: m.id_seccion,
+    }));
+
+    const todos = await this.horarioRepository.find({
+      where: { tipo: 'estudiante' },
+      relations: { grado: true, seccion: true, periodo: true },
+      order: { fecha_subida: 'DESC' },
+    });
+
+    return todos.filter((h) =>
+      idsGradoSeccion.some(
+        (m) => m.id_grado === h.id_grado && m.id_seccion === h.id_seccion,
+      ),
+    );
   }
 }

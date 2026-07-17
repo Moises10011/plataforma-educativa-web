@@ -1,214 +1,162 @@
-<div>
-  <div class="mb-6 flex items-center justify-between">
-    <div>
-      <h1 class="text-xl font-bold text-gray-900">Asistencia</h1>
-      <p class="text-sm text-gray-500 mt-1">Registros por curso</p>
+<div class="asistencia-container">
+
+  <!-- ===== Selector de curso ===== -->
+  <div class="cursos-card">
+    <p class="cursos-label">Selecciona un curso</p>
+    <div class="cursos-lista">
+      @for (a of asignaciones(); track a.id_asignacion) {
+        <label class="curso-radio" [class.curso-radio-activo]="idAsignacionSeleccionada() === a.id_asignacion">
+          <input type="radio" name="curso"
+            [checked]="idAsignacionSeleccionada() === a.id_asignacion"
+            (change)="seleccionarCurso(a.id_asignacion)" />
+          <span class="curso-nombre">{{ a.curso }}</span>
+          <span class="curso-detalle">{{ a.grado }} "{{ a.seccion }}"</span>
+        </label>
+      } @empty {
+        <p class="text-sm text-gray-400 italic">No tienes cursos asignados.</p>
+      }
     </div>
-    @if (idAsignacionSeleccionada()) {
-      <button
-        class="text-sm bg-institucional-600 text-white px-4 py-2 rounded-lg hover:bg-institucional-700 transition-colors"
-        (click)="abrirModalAsistencia()">
-        + Tomar asistencia hoy
-      </button>
-    }
   </div>
 
-  <div class="mb-4">
-    <select
-      class="w-full sm:w-72 text-sm border border-gray-200 rounded-lg px-3 py-2 text-gray-700 bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-institucional-500"
-      [ngModel]="idAsignacionSeleccionada()"
-      (ngModelChange)="onCursoChange($event)">
-      <option [ngValue]="null">Selecciona un curso</option>
-      @for (c of cursos(); track c.id_asignacion) {
-        <option [ngValue]="c.id_asignacion">
-          {{ c.curso.nombre }} · {{ c.grado.nombre }} {{ c.seccion.nombre }} · {{ c.periodo.nombre }}
-        </option>
-      }
-    </select>
-  </div>
+  @if (idAsignacionSeleccionada()) {
 
-  @if (cargandoCursos()) {
-    <div class="bg-white rounded-xl shadow-sm p-5 h-40 animate-pulse"></div>
-  } @else if (!idAsignacionSeleccionada()) {
-    <div class="bg-white rounded-xl shadow-sm p-10 text-center">
-      <p class="text-sm text-gray-400">Selecciona un curso para ver la asistencia</p>
-    </div>
-  } @else if (cargando()) {
-    <div class="bg-white rounded-xl shadow-sm p-5 h-40 animate-pulse"></div>
-  } @else {
-    <div class="grid grid-cols-3 gap-3 mb-4">
-      <div class="bg-green-50 rounded-xl p-4 text-center">
-        <p class="text-2xl font-bold text-green-700">{{ totales().presentes }}</p>
-        <p class="text-xs text-green-600 mt-1">Presentes</p>
-      </div>
-      <div class="bg-red-50 rounded-xl p-4 text-center">
-        <p class="text-2xl font-bold text-red-700">{{ totales().ausentes }}</p>
-        <p class="text-xs text-red-600 mt-1">Ausentes</p>
-      </div>
-      <div class="bg-amber-50 rounded-xl p-4 text-center">
-        <p class="text-2xl font-bold text-amber-700">{{ totales().tardanzas }}</p>
-        <p class="text-xs text-amber-600 mt-1">Tardanzas</p>
-      </div>
-    </div>
-
-    <div class="flex gap-2 mb-4">
-      <button
-        class="text-sm px-4 py-1.5 rounded-lg font-medium transition-colors"
-        [class.bg-institucional-600]="vistaActual() === 'registros'"
-        [class.text-white]="vistaActual() === 'registros'"
-        [class.bg-white]="vistaActual() !== 'registros'"
-        [class.text-gray-600]="vistaActual() !== 'registros'"
-        (click)="cambiarVista('registros')">
-        Registros
-      </button>
-      <button
-        class="text-sm px-4 py-1.5 rounded-lg font-medium transition-colors"
-        [class.bg-institucional-600]="vistaActual() === 'resumen'"
-        [class.text-white]="vistaActual() === 'resumen'"
-        [class.bg-white]="vistaActual() !== 'resumen'"
-        [class.text-gray-600]="vistaActual() !== 'resumen'"
-        (click)="cambiarVista('resumen')">
-        Resumen por estudiante
-      </button>
-    </div>
-
-    @if (vistaActual() === 'registros') {
-      @if (!registros().length) {
-        <div class="bg-white rounded-xl shadow-sm p-10 text-center">
-          <p class="text-sm text-gray-400">No hay registros de asistencia en este curso</p>
-        </div>
-      } @else {
-        <div class="bg-white rounded-xl shadow-sm p-5">
-          <div class="overflow-x-auto">
-            <table class="w-full text-sm">
-              <thead>
-                <tr class="border-b border-gray-100">
-                  <th class="text-left text-xs text-gray-500 font-medium pb-3">Fecha</th>
-                  <th class="text-left text-xs text-gray-500 font-medium pb-3">Estudiante</th>
-                  <th class="text-center text-xs text-gray-500 font-medium pb-3">Estado</th>
-                </tr>
-              </thead>
-              <tbody class="divide-y divide-gray-50">
-                @for (r of registros(); track r.id_asistencia) {
-                  <tr class="hover:bg-gray-50 transition-colors">
-                    <td class="py-3 text-gray-600">{{ r.fecha | date:'dd/MM/yyyy' }}</td>
-                    <td class="py-3 font-medium text-gray-800">
-                      {{ r.estudiante.nombres }} {{ r.estudiante.apellidos }}
-                    </td>
-                    <td class="py-3 text-center">
-                      <span class="inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium"
-                        [ngClass]="colorEstado(r.estado)">
-                        {{ r.estado | titlecase }}
-                      </span>
-                    </td>
-                  </tr>
-                }
-              </tbody>
-            </table>
-          </div>
-        </div>
-      }
+    @if (error()) {
+      <div class="alert alert-error">{{ error() }}</div>
+    }
+    @if (exito()) {
+      <div class="alert alert-exito">{{ exito() }}</div>
     }
 
-    @if (vistaActual() === 'resumen') {
-      @if (!resumen().length) {
-        <div class="bg-white rounded-xl shadow-sm p-10 text-center">
-          <p class="text-sm text-gray-400">No hay datos de resumen aún</p>
-        </div>
-      } @else {
-        <div class="bg-white rounded-xl shadow-sm p-5">
-          <div class="overflow-x-auto">
-            <table class="w-full text-sm">
-              <thead>
-                <tr class="border-b border-gray-100">
-                  <th class="text-left text-xs text-gray-500 font-medium pb-3">Estudiante</th>
-                  <th class="text-center text-xs text-gray-500 font-medium pb-3">Presentes</th>
-                  <th class="text-center text-xs text-gray-500 font-medium pb-3">Tardanzas</th>
-                  <th class="text-center text-xs text-gray-500 font-medium pb-3">Ausentes</th>
-                </tr>
-              </thead>
-              <tbody class="divide-y divide-gray-50">
-                @for (r of resumen(); track r.id_usuario) {
-                  <tr class="hover:bg-gray-50 transition-colors">
-                    <td class="py-3 font-medium text-gray-800">
-                      {{ r.nombres }} {{ r.apellidos }}
-                    </td>
-                    <td class="py-3 text-center">
-                      <span class="inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium text-green-700 bg-green-100">
-                        {{ r.presentes }}
-                      </span>
-                    </td>
-                    <td class="py-3 text-center">
-                      <span class="inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium text-amber-700 bg-amber-100">
-                        {{ r.tardanzas }}
-                      </span>
-                    </td>
-                    <td class="py-3 text-center">
-                      <span class="inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium text-red-700 bg-red-100">
-                        {{ r.ausentes }}
-                      </span>
-                    </td>
-                  </tr>
-                }
-              </tbody>
-            </table>
-          </div>
-        </div>
-      }
-    }
-  }
-
-  @if (modalTomarAsistencia()) {
-    <div class="fixed inset-0 bg-black/40 flex items-center justify-center z-50" (click)="cerrarModal()">
-      <div class="bg-white rounded-xl shadow-xl p-6 w-full max-w-lg max-h-[80vh] flex flex-col" (click)="$event.stopPropagation()">
-
-        <h2 class="text-base font-bold text-gray-900 mb-1">Tomar asistencia</h2>
-        <p class="text-xs text-gray-400 mb-4">{{ fechaHoy }}</p>
-
-        @if (error()) {
-          <p class="text-xs text-red-600 bg-red-50 rounded-lg px-3 py-2 mb-4">{{ error() }}</p>
-        }
-
-        <div class="overflow-y-auto flex-1 divide-y divide-gray-50">
-          @for (e of estudiantesModal(); track e.id_usuario) {
-            <div class="py-3 flex items-center justify-between">
-              <div class="flex items-center gap-2">
-                <div class="w-7 h-7 rounded-full bg-institucional-100 flex items-center justify-center text-xs font-bold text-institucional-700">
-                  {{ e.nombres[0] }}{{ e.apellidos[0] }}
-                </div>
-                <span class="text-sm font-medium text-gray-800">{{ e.nombres }} {{ e.apellidos }}</span>
-              </div>
-              <div class="flex gap-1">
-                <button
-                  class="text-xs px-2.5 py-1 rounded-full font-medium transition-colors"
-                  [ngClass]="e.estado === 'presente' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500 hover:bg-green-50'"
-                  (click)="setEstado(e.id_usuario, 'presente')">P</button>
-                <button
-                  class="text-xs px-2.5 py-1 rounded-full font-medium transition-colors"
-                  [ngClass]="e.estado === 'tardanza' ? 'bg-amber-100 text-amber-700' : 'bg-gray-100 text-gray-500 hover:bg-amber-50'"
-                  (click)="setEstado(e.id_usuario, 'tardanza')">T</button>
-                <button
-                  class="text-xs px-2.5 py-1 rounded-full font-medium transition-colors"
-                  [ngClass]="e.estado === 'ausente' ? 'bg-red-100 text-red-700' : 'bg-gray-100 text-gray-500 hover:bg-red-50'"
-                  (click)="setEstado(e.id_usuario, 'ausente')">A</button>
-              </div>
-            </div>
-          }
-        </div>
-
-        <div class="flex justify-end gap-2 pt-4 border-t border-gray-100 mt-4">
-          <button
-            class="text-sm px-4 py-2 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50"
-            (click)="cerrarModal()">Cancelar</button>
-          <button
-            class="text-sm px-4 py-2 rounded-lg bg-institucional-600 text-white hover:bg-institucional-700 disabled:opacity-50"
-            [disabled]="guardando()"
-            (click)="guardarAsistencia()">
-            {{ guardando() ? 'Guardando...' : 'Guardar asistencia' }}
+    <div class="tabla-card">
+      <div class="tabla-header">
+        <h3 class="tabla-titulo">
+          Registro de asistencia — {{ asignacionActual()?.curso }}
+        </h3>
+        <div class="tabla-acciones">
+          <button class="btn btn-outline" (click)="exportar()">Exportar</button>
+          <button class="btn btn-danger"
+            (click)="solicitarEliminarFecha()"
+            [disabled]="!isoSeleccionado() || eliminando()">
+            Eliminar
+          </button>
+          <button class="btn btn-primary"
+            (click)="guardar()"
+            [disabled]="guardando() || cambiosPendientes().size === 0">
+            {{ guardando() ? 'Guardando...' : 'Guardar' }}
           </button>
         </div>
+      </div>
 
+      @if (cargando()) {
+        <div class="loading">Cargando asistencia...</div>
+      } @else {
+        <div class="tabla-scroll">
+          <table class="tabla-asistencia">
+            <thead>
+              <tr>
+                <th class="col-num">#</th>
+                <th class="col-nombre">Nombres</th>
+
+                @for (c of columnas(); track c.iso) {
+                  <th class="col-dia"
+                    [class.col-dia-seleccionada]="isoSeleccionado() === c.iso"
+                    (click)="seleccionarFecha(c.iso)"
+                    title="Seleccionar fecha {{ c.etiqueta }}">
+                    <div class="th-fecha-inner">
+                      <span class="dia-header">{{ c.etiqueta }}</span>
+                    </div>
+                  </th>
+                }
+
+                <th class="col-agregar">
+                  <button class="btn-agregar" (click)="abrirModalFecha()" title="Agregar fecha">+</button>
+                </th>
+              </tr>
+            </thead>
+
+            <tbody>
+              @for (est of estudiantes(); track est.id_usuario; let i = $index) {
+                <tr>
+                  <td class="col-num">{{ i + 1 }}</td>
+                  <td class="col-nombre">{{ est.apellidos }} {{ est.nombres }}</td>
+
+                  @for (c of columnas(); track c.iso) {
+                    <td class="celda-asistencia"
+                      [class.celda-presente]="estadoCelda(est.id_usuario, c.iso) === 'presente'"
+                      [class.celda-falta]="estadoCelda(est.id_usuario, c.iso) === 'falta'"
+                      [class.celda-tardanza]="estadoCelda(est.id_usuario, c.iso) === 'tardanza'"
+                      (click)="clickCelda(est.id_usuario, c.iso)">
+                      @if (estadoCelda(est.id_usuario, c.iso) === 'presente') {
+                        <span class="punto">●</span>
+                      }
+                      @if (estadoCelda(est.id_usuario, c.iso) === 'falta') {
+                        <span class="marca">✕</span>
+                      }
+                      @if (estadoCelda(est.id_usuario, c.iso) === 'tardanza') {
+                        <span class="marca">T</span>
+                      }
+                    </td>
+                  }
+
+                  <td class="col-agregar"></td>
+                </tr>
+              } @empty {
+                <tr>
+                  <td [attr.colspan]="columnas().length + 3"
+                    style="text-align:center;color:#9ca3af;padding:1.5rem">
+                    No hay estudiantes matriculados en este curso.
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+
+        <div class="leyenda">
+          <span><span class="leyenda-punto vacio"></span> Sin registrar</span>
+          <span><span class="leyenda-punto presente"></span> Presente</span>
+          <span><span class="leyenda-punto falta"></span> Falta</span>
+          <span><span class="leyenda-punto tardanza"></span> Tardanza</span>
+        </div>
+      }
+    </div>
+  }
+
+  <!-- ===== Modal: agregar fecha ===== -->
+  @if (modalFechaAbierto()) {
+    <div class="modal-overlay" (click)="cerrarModalFecha()">
+      <div class="modal-box" (click)="$event.stopPropagation()">
+        <h4>Agregar fecha</h4>
+        <input type="date" class="input-fecha"
+          [value]="fechaInputValor()"
+          (input)="fechaInputValor.set($any($event.target).value)" />
+        <div class="modal-acciones" style="margin-top:1rem">
+          <button class="btn btn-outline" (click)="cerrarModalFecha()">Cancelar</button>
+          <button class="btn btn-primary" (click)="confirmarFecha()">Agregar</button>
+        </div>
       </div>
     </div>
   }
+
+  <!-- ===== Modal: confirmar eliminar llamado (fecha seleccionada) ===== -->
+  @if (modalEliminarFechaAbierto()) {
+    <div class="modal-overlay" (click)="cerrarModalEliminarFecha()">
+      <div class="modal-box" (click)="$event.stopPropagation()">
+        <h4>Eliminar llamado de asistencia</h4>
+        <p>
+          ¿Eliminar el llamado del <strong>{{ fechaAEliminar() }}</strong>
+          y todos sus registros? Esta acción no se puede deshacer.
+        </p>
+        <div class="modal-acciones">
+          <button class="btn btn-outline" (click)="cerrarModalEliminarFecha()">Cancelar</button>
+          <button class="btn btn-danger"
+            (click)="confirmarEliminarFecha()"
+            [disabled]="eliminando()">
+            {{ eliminando() ? 'Eliminando...' : 'Eliminar' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
 </div>

@@ -1,0 +1,283 @@
+<div class="space-y-6">
+  <!-- Encabezado -->
+  <div class="flex items-center justify-between">
+    <div>
+      <h1 class="text-2xl font-bold text-gray-900">Tareas</h1>
+      <p class="text-sm text-gray-500 mt-1">Gestión de tareas de este curso</p>
+    </div>
+    <button
+      class="text-sm bg-institucional-600 text-white px-4 py-2.5 rounded-lg hover:bg-institucional-700 transition-colors shadow-sm"
+      (click)="abrirModalNueva()">
+      <svg class="w-4 h-4 inline-block mr-1.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+      </svg>
+      Nueva tarea
+    </button>
+  </div>
+
+  <!-- Contenido -->
+  @if (cargando()) {
+    <div class="space-y-3">
+      @for (i of [1,2,3]; track i) {
+        <div class="bg-white rounded-xl shadow-sm p-5 h-20 animate-pulse"></div>
+      }
+    </div>
+  } @else if (!tareas().length) {
+    <div class="bg-white rounded-xl shadow-sm p-10 text-center">
+      <svg class="w-16 h-16 text-gray-300 mx-auto mb-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+      </svg>
+      <p class="text-sm text-gray-500">No hay tareas en este curso</p>
+      <p class="text-xs text-gray-400 mt-1">Crea una nueva tarea para comenzar</p>
+    </div>
+  } @else {
+    <div class="space-y-3">
+      @for (t of tareas(); track t.id_tarea) {
+        <div class="bg-white rounded-xl shadow-sm overflow-hidden hover:shadow-md transition-all duration-200">
+          <div class="p-5 flex items-center justify-between cursor-pointer" (click)="toggleEntregas(t.id_tarea)">
+            <div class="flex items-center gap-4 min-w-0 flex-1">
+              <div class="w-10 h-10 rounded-lg bg-amber-50 flex items-center justify-center flex-shrink-0">
+                <svg class="w-5 h-5 text-amber-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                </svg>
+              </div>
+              <div class="flex-1 min-w-0">
+                <h3 class="text-sm font-semibold text-gray-900 truncate">{{ t.titulo }}</h3>
+                @if (t.descripcion) {
+                  <p class="text-xs text-gray-500 mt-0.5 line-clamp-1">{{ t.descripcion }}</p>
+                }
+                <div class="flex items-center gap-3 mt-1.5">
+                  <div class="flex items-center gap-1">
+                    <svg class="w-3.5 h-3.5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                    </svg>
+                    <span class="text-xs text-gray-600">Entrega: {{ t.fecha_entrega | date:'dd/MM/yyyy' }}</span>
+                  </div>
+                </div>
+                @if (t.archivos && t.archivos.length) {
+                  <div class="flex flex-wrap gap-2 mt-2">
+                    @for (a of t.archivos; track a) {
+                      <button
+                        (click)="abrirArchivo(a); $event.stopPropagation()"
+                        class="inline-flex items-center gap-1 text-xs text-institucional-600 hover:text-institucional-700 hover:underline bg-institucional-50 px-2 py-1 rounded">
+                        <svg class="w-3 h-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                        </svg>
+                        {{ nombreCorto(a) }}
+                      </button>
+                    }
+                  </div>
+                }
+              </div>
+            </div>
+            <div class="flex items-center gap-2 ml-3 flex-shrink-0">
+              <span class="text-xs font-medium px-2.5 py-1 rounded-full"
+                [class.bg-red-100]="estaVencida(t.fecha_entrega)"
+                [class.text-red-700]="estaVencida(t.fecha_entrega)"
+                [class.bg-green-100]="!estaVencida(t.fecha_entrega)"
+                [class.text-green-700]="!estaVencida(t.fecha_entrega)">
+                {{ estaVencida(t.fecha_entrega) ? 'Vencida' : 'Activa' }}
+              </span>
+              <button
+                class="text-gray-400 hover:text-red-600 transition-colors p-1.5 rounded-lg hover:bg-red-50"
+                (click)="confirmarEliminar(t.id_tarea); $event.stopPropagation()"
+                title="Eliminar tarea">
+                <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                </svg>
+              </button>
+              <svg class="w-4 h-4 text-gray-400 transition-transform" [class.rotate-180]="tareaExpandida() === t.id_tarea" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+              </svg>
+            </div>
+          </div>
+
+          @if (tareaExpandida() === t.id_tarea) {
+            <div class="border-t border-gray-100 bg-gray-50 px-5 py-4">
+              @if (cargandoEntregas()) {
+                <div class="h-16 bg-white rounded-lg animate-pulse"></div>
+              } @else if (errorEntregas()) {
+                <p class="text-sm text-red-500">{{ errorEntregas() }}</p>
+              } @else if (!entregas().length) {
+                <p class="text-sm text-gray-400 text-center py-4">Aún no hay entregas para esta tarea.</p>
+              } @else {
+                <div class="space-y-2">
+                  @for (e of entregas(); track trackByEntrega($index, e)) {
+                    <div class="bg-white rounded-lg p-3 flex items-center justify-between gap-3">
+                      <div class="flex items-center gap-3 min-w-0 flex-1">
+                        <div class="w-8 h-8 rounded-full bg-institucional-100 flex items-center justify-center text-xs font-bold text-institucional-700 flex-shrink-0">
+                          {{ e.estudiante?.nombres?.[0] }}{{ e.estudiante?.apellidos?.[0] }}
+                        </div>
+                        <div class="min-w-0">
+                          <p class="text-sm font-medium text-gray-800 truncate">
+                            {{ e.estudiante?.nombres }} {{ e.estudiante?.apellidos }}
+                          </p>
+                        @if (e.archivos && e.archivos.length) {
+                          <div class="flex flex-wrap gap-1.5 mt-1">
+                            @for (a of e.archivos; track a) {
+                              <button
+                                (click)="abrirEntrega(a)"
+                                class="inline-flex items-center gap-1 text-xs text-institucional-600 hover:text-institucional-700 hover:underline bg-institucional-50 px-2 py-1 rounded">
+                                <svg class="w-3 h-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                                </svg>
+                                {{ nombreCorto(a) }}
+                              </button>
+                            }
+                          </div>
+                        } @else {
+                          <span class="text-xs text-gray-400">Sin archivo adjunto</span>
+                        }
+                        </div>
+                      </div>
+                      <div class="flex items-center gap-2 flex-shrink-0">
+                        <select
+                          #notaSelect
+                          [ngModel]="e.nota"
+                          class="text-sm border border-gray-200 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-institucional-500">
+                          <option [ngValue]="null">Sin nota</option>
+                          @for (n of notasDisponibles; track n) {
+                            <option [ngValue]="n">{{ n }}</option>
+                          }
+                        </select>
+                        <button
+                          (click)="guardarNota(e, $any(notaSelect.value))"
+                          [disabled]="guardandoNota() === e.id_entrega"
+                          class="text-xs font-semibold text-white bg-institucional-600 hover:bg-institucional-700 disabled:opacity-50 px-3 py-1.5 rounded-lg">
+                          {{ guardandoNota() === e.id_entrega ? '...' : 'Guardar' }}
+                        </button>
+                      </div>
+                    </div>
+                  }
+                </div>
+              }
+            </div>
+          }
+        </div>
+      }
+    </div>
+  }
+
+  <!-- Modal Nueva Tarea -->
+  @if (modalTarea()) {
+    <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" (click)="cerrarModal()">
+      <div class="bg-white rounded-xl shadow-2xl w-full max-w-md" (click)="$event.stopPropagation()">
+        <div class="px-6 py-4 border-b border-gray-100">
+          <div class="flex items-center justify-between">
+            <h2 class="text-lg font-bold text-gray-900">Nueva Tarea</h2>
+            <button (click)="cerrarModal()" class="text-gray-400 hover:text-gray-600 transition-colors">
+              <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        @if (error()) {
+          <div class="px-6 py-3 bg-red-50 border-b border-red-100">
+            <p class="text-sm text-red-600">{{ error() }}</p>
+          </div>
+        }
+
+        <div class="px-6 py-4 space-y-4">
+          <div>
+            <label for="titulo" class="block text-sm font-medium text-gray-700 mb-1.5">Título</label>
+            <input
+              id="titulo"
+              type="text"
+              class="w-full text-sm border border-gray-200 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-institucional-500 focus:border-institucional-500"
+              [(ngModel)]="nueva.titulo"
+              placeholder="Ej. Práctica de álgebra"
+            />
+          </div>
+
+          <div>
+            <label for="descripcion" class="block text-sm font-medium text-gray-700 mb-1.5">Descripción <span class="text-gray-400 font-normal">(opcional)</span></label>
+            <textarea
+              id="descripcion"
+              class="w-full text-sm border border-gray-200 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-institucional-500 focus:border-institucional-500"
+              [(ngModel)]="nueva.descripcion"
+              rows="3"
+              placeholder="Instrucciones de la tarea">
+            </textarea>
+          </div>
+
+          <div>
+            <label for="fecha-entrega" class="block text-sm font-medium text-gray-700 mb-1.5">Fecha de entrega</label>
+            <input
+              id="fecha-entrega"
+              type="date"
+              class="w-full text-sm border border-gray-200 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-institucional-500 focus:border-institucional-500"
+              [(ngModel)]="nueva.fecha_entrega"
+            />
+          </div>
+
+          <div>
+            <label for="archivos" class="block text-sm font-medium text-gray-700 mb-1.5">Archivos <span class="text-gray-400 font-normal">(opcional, uno o más)</span></label>
+            <label class="flex items-center gap-3 border-2 border-dashed border-gray-200 rounded-lg px-4 py-3 cursor-pointer hover:border-institucional-300 hover:bg-institucional-50 transition-colors">
+              <svg class="w-5 h-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+              </svg>
+              <span class="text-sm text-gray-600">
+                {{ archivosNombres.length ? archivosNombres.length + ' archivo(s) seleccionado(s)' : 'Seleccionar archivos' }}
+              </span>
+              <input id="archivos" type="file" multiple hidden (change)="onArchivosChange($event)" />
+            </label>
+            @if (archivosNombres.length) {
+              <ul class="mt-1.5 space-y-1">
+                @for (n of archivosNombres; track n; let i = $index) {
+                  <li class="flex items-center justify-between text-xs text-gray-500 bg-gray-50 rounded px-2 py-1">
+                    <span class="truncate">{{ n }}</span>
+                    <button type="button" (click)="quitarArchivo(i)" class="text-red-400 hover:text-red-600 ml-2 flex-shrink-0">
+                      ✕
+                    </button>
+                  </li>
+                }
+              </ul>
+            }
+          </div>
+        </div>
+
+        <div class="px-6 py-4 border-t border-gray-100 flex justify-end gap-2">
+          <button
+            class="text-sm px-4 py-2 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors"
+            (click)="cerrarModal()">
+            Cancelar
+          </button>
+          <button
+            class="text-sm px-4 py-2 rounded-lg bg-institucional-600 text-white hover:bg-institucional-700 disabled:opacity-50 transition-colors"
+            [disabled]="guardando() || !puedeGuardar()"
+            (click)="guardar()">
+            {{ guardando() ? 'Guardando...' : 'Crear tarea' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Modal Eliminar -->
+  @if (modalEliminar()) {
+    <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" (click)="cerrarModal()">
+      <div class="bg-white rounded-xl shadow-2xl w-full max-w-sm" (click)="$event.stopPropagation()">
+        <div class="px-6 py-4 border-b border-gray-100">
+          <h2 class="text-lg font-bold text-gray-900">Eliminar Tarea</h2>
+        </div>
+        <div class="px-6 py-4">
+          <p class="text-sm text-gray-600">¿Estás seguro de que deseas eliminar esta tarea? Esta acción no se puede deshacer.</p>
+        </div>
+        <div class="px-6 py-4 border-t border-gray-100 flex justify-end gap-2">
+          <button
+            class="text-sm px-4 py-2 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors"
+            (click)="cerrarModal()">
+            Cancelar
+          </button>
+          <button
+            class="text-sm px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700 transition-colors"
+            (click)="eliminar()">
+            Eliminar
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+</div>

@@ -1,116 +1,134 @@
-<div>
-
-  <div class="mb-6">
-    <h1 class="text-xl font-bold text-gray-900">Mi Dashboard</h1>
-    <p class="text-sm text-gray-500 mt-1">Resumen de tu progreso académico</p>
+<div class="min-h-screen flex flex-col">
+  <!-- Bienvenida -->
+  <div class="mb-8 animate-fade-in">
+    <h1 class="saludo-titulo">
+      Hola, Bienvenido {{ nombreUsuario }} <span class="saludo-emoji">👋</span>
+    </h1>
+    @if (matricula()) {
+      <p class="text-base text-gray-500 mt-2 animate-fade-in-delay">
+        {{ matricula()!.grado.nombre }} · Sección {{ matricula()!.seccion.nombre }} · {{ matricula()!.periodo.nombre }}
+      </p>
+    }
   </div>
 
   @if (cargando()) {
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-      @for (i of [1,2,3,4]; track i) {
-        <div class="bg-white rounded-xl shadow-sm p-5 h-24 animate-pulse"></div>
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      @for (i of [1,2]; track i) {
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 h-56 animate-pulse"></div>
       }
     </div>
   } @else {
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
-    <!-- Tarjetas de resumen -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-
-      <div class="bg-white rounded-xl shadow-sm p-5 border-t-[3px] border-institucional-600 hover:shadow-md transition-shadow">
-        <div class="flex items-center justify-between">
-          <div>
-            <p class="text-xs text-gray-500 font-medium mb-1">Promedio General</p>
-            <p class="text-3xl font-bold text-gray-900">{{ estadisticas()?.promedioGeneral ?? 0 }}</p>
-          </div>
-          <div class="w-12 h-12 rounded-xl bg-institucional-50 flex items-center justify-center">
-            <svg class="w-6 h-6 text-institucional-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+      <!-- ===== Matrícula ===== -->
+      <div class="card-animada delay-1 bg-white rounded-2xl shadow-sm border border-gray-100 p-7 border-t-4 border-t-institucional-600 overflow-hidden hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300">
+        <div class="flex items-center gap-3 mb-5">
+          <div class="icon-box bg-institucional-50">
+            <svg class="w-6 h-6 text-institucional-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 14l9-5-9-5-9 5 9 5zm0 0v6m0-6l-9-5m9 5l9-5"></path>
             </svg>
           </div>
+          <h2 class="text-sm font-semibold text-gray-500 tracking-wide uppercase">Mi matrícula</h2>
         </div>
+
+        @if (matricula()) {
+          <div class="space-y-4">
+            <div>
+              <p class="text-xs text-gray-400">Grado y sección</p>
+              <p class="text-xl font-bold text-gray-900 mt-0.5">
+                {{ matricula()!.grado.nombre }} "{{ matricula()!.seccion.nombre }}"
+              </p>
+            </div>
+            <div>
+              <p class="text-xs text-gray-400">Periodo académico</p>
+              <p class="text-sm font-medium text-gray-700 mt-0.5">{{ matricula()!.periodo.nombre }}</p>
+            </div>
+          </div>
+        } @else {
+          <p class="text-sm text-gray-400 italic">No se encontró información de matrícula.</p>
+        }
       </div>
 
-      <div class="bg-white rounded-xl shadow-sm p-5 border-t-[3px] border-green-500 hover:shadow-md transition-shadow">
-        <div class="flex items-center justify-between">
-          <div>
-            <p class="text-xs text-gray-500 font-medium mb-1">Asistencias</p>
-            <p class="text-3xl font-bold text-gray-900">{{ estadisticas()?.asistencias ?? 0 }}</p>
+      <!-- ===== Tareas pendientes ===== -->
+      <div class="card-animada delay-2 bg-white rounded-2xl shadow-sm border border-gray-100 p-7 border-t-4 border-t-rose-500 overflow-hidden hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300">
+        <div class="flex items-center justify-between mb-5">
+          <div class="flex items-center gap-3">
+            <div class="icon-box bg-rose-50">
+              <svg class="w-6 h-6 text-rose-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+              </svg>
+            </div>
+            <h2 class="text-sm font-semibold text-gray-500 tracking-wide uppercase">Tareas pendientes</h2>
           </div>
-          <div class="w-12 h-12 rounded-xl bg-green-50 flex items-center justify-center">
-            <svg class="w-6 h-6 text-green-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-            </svg>
-          </div>
+          @if (tareas().length > 0) {
+            <span class="contador-tareas">{{ tareas().length }}</span>
+          } @else {
+            <span class="text-3xl font-extrabold text-gray-300">0</span>
+          }
         </div>
-      </div>
 
-      <div class="bg-white rounded-xl shadow-sm p-5 border-t-[3px] border-red-400 hover:shadow-md transition-shadow">
-        <div class="flex items-center justify-between">
-          <div>
-            <p class="text-xs text-gray-500 font-medium mb-1">Inasistencias</p>
-            <p class="text-3xl font-bold text-gray-900">{{ estadisticas()?.inasistencias ?? 0 }}</p>
-          </div>
-          <div class="w-12 h-12 rounded-xl bg-red-50 flex items-center justify-center">
-            <svg class="w-6 h-6 text-red-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-            </svg>
-          </div>
-        </div>
+        @if (tareas().length === 0) {
+          <p class="text-sm text-gray-400 italic">¡Estás al día con tus tareas! 🎉</p>
+        } @else {
+          <ul class="space-y-1 max-h-52 overflow-y-auto pr-1">
+            @for (t of tareas(); track t.id; let i = $index) {
+              <li
+                class="tarea-item flex items-center justify-between py-3 border-b border-gray-50 last:border-0"
+                [style.animation-delay.ms]="i * 70"
+              >
+                <div class="min-w-0">
+                  <p class="text-sm font-medium text-gray-800 truncate">{{ t.titulo }}</p>
+                  <p class="text-xs text-gray-400 mt-0.5">{{ t.curso }}</p>
+                </div>
+                <span class="fecha-chip">{{ formatearFecha(t.fecha_entrega) }}</span>
+              </li>
+            }
+          </ul>
+        }
       </div>
-
-      <div class="bg-white rounded-xl shadow-sm p-5 border-t-[3px] border-amber-400 hover:shadow-md transition-shadow">
-        <div class="flex items-center justify-between">
-          <div>
-            <p class="text-xs text-gray-500 font-medium mb-1">Tareas Pendientes</p>
-            <p class="text-3xl font-bold text-gray-900">{{ estadisticas()?.tareasPendientes ?? 0 }}</p>
-          </div>
-          <div class="w-12 h-12 rounded-xl bg-amber-50 flex items-center justify-center">
-            <svg class="w-6 h-6 text-amber-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
-            </svg>
-          </div>
-        </div>
-      </div>
-
     </div>
 
-    <!-- Tabla de cursos -->
-    @if (estadisticas()?.cursos?.length) {
-      <div class="bg-white rounded-xl shadow-sm p-5">
-        <h2 class="text-sm font-semibold text-gray-800 mb-4">Mis Cursos</h2>
-        <div class="overflow-x-auto">
-          <table class="w-full text-sm">
-            <thead>
-              <tr class="border-b border-gray-100">
-                <th class="text-left text-xs text-gray-500 font-medium pb-3">Curso</th>
-                <th class="text-center text-xs text-gray-500 font-medium pb-3">Nota</th>
-                <th class="text-center text-xs text-gray-500 font-medium pb-3">Asistencia</th>
-              </tr>
-            </thead>
-            <tbody class="divide-y divide-gray-50">
-              @for (curso of estadisticas()?.cursos; track curso.nombre) {
-                <tr class="hover:bg-gray-50 transition-colors">
-                  <td class="py-3 text-gray-800 font-medium">{{ curso.nombre }}</td>
-                  <td class="py-3 text-center">
-                    <span class="inline-flex items-center justify-center w-10 h-6 rounded-full text-xs font-semibold"
-                      [class.bg-green-100]="curso.nota >= 14"
-                      [class.text-green-700]="curso.nota >= 14"
-                      [class.bg-amber-100]="curso.nota >= 11 && curso.nota < 14"
-                      [class.text-amber-700]="curso.nota >= 11 && curso.nota < 14"
-                      [class.bg-red-100]="curso.nota < 11"
-                      [class.text-red-700]="curso.nota < 11">
-                      {{ curso.nota }}
-                    </span>
-                  </td>
-                  <td class="py-3 text-center text-gray-600">{{ curso.asistencia }}%</td>
-                </tr>
-              }
-            </tbody>
-          </table>
+    <!-- ===== Directorio de docentes ===== -->
+    <div class="card-animada delay-3 bg-white rounded-2xl shadow-sm border border-gray-100 p-7 mt-6 hover:shadow-lg transition-all duration-300">
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-5">
+        <div class="flex items-center gap-3">
+          <div class="icon-box bg-institucional-50">
+            <svg class="w-6 h-6 text-institucional-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87m6-1.13a4 4 0 10-4-4 4 4 0 004 4zm6 0a4 4 0 10-4-4"></path>
+            </svg>
+          </div>
+          <h2 class="text-sm font-semibold text-gray-500 tracking-wide uppercase">Directorio de docentes</h2>
         </div>
+        <input
+          type="text"
+          placeholder="Buscar docente..."
+          class="w-full sm:w-56 px-4 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-institucional-200 focus:border-institucional-500 transition-all"
+          [value]="busquedaDocente()"
+          (input)="busquedaDocente.set($any($event.target).value)"
+        />
       </div>
-    }
 
+      @if (docentesFiltrados().length === 0) {
+        <p class="text-sm text-gray-400 italic">No se encontraron docentes.</p>
+      } @else {
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          @for (d of docentesFiltrados(); track d.id_usuario_docente; let i = $index) {
+            <div
+              class="docente-item-card flex items-center gap-3 p-3 rounded-xl bg-gray-50 hover:bg-institucional-50 hover:scale-[1.02] transition-all duration-200"
+              [style.animation-delay.ms]="i * 60"
+            >
+              <div class="w-10 h-10 rounded-full bg-institucional-600 text-white flex items-center justify-center font-bold text-sm flex-shrink-0">
+                {{ d.nombres.charAt(0) }}{{ d.apellidos.charAt(0) }}
+              </div>
+              <div class="min-w-0">
+                <p class="text-sm font-medium text-gray-800 truncate">{{ d.nombre_completo }}</p>
+                <p class="text-xs text-institucional-600 font-medium truncate">{{ d.curso }}</p>
+                <p class="text-xs text-gray-400 truncate">{{ d.correo }}</p>
+              </div>
+            </div>
+          }
+        </div>
+      }
+    </div>
   }
-
 </div>

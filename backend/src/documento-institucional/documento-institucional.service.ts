@@ -5,13 +5,14 @@ import {
   InternalServerErrorException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, Repository } from 'typeorm';
+import { DataSource, In, Repository } from 'typeorm';
 import { unlink } from 'fs/promises';
 import { join } from 'path';
 
 import { DocumentoInstitucional } from './entities/documento-institucional.entity';
 import { Destinatario } from '../destinatario/entities/destinatario.entity';
 import type { TipoDestinatario } from '../destinatario/entities/destinatario.entity';
+import { DestinatarioService } from '../destinatario/destinatario.service';
 import { CreateDocumentoInstitucionalDto } from './dto/create-documento-institucional.dto';
 import { UpdateDocumentoInstitucionalDto } from './dto/update-documento-institucional.dto';
 
@@ -28,6 +29,7 @@ export class DocumentoInstitucionalService {
     @InjectRepository(DocumentoInstitucional)
     private readonly documentoRepository: Repository<DocumentoInstitucional>,
     private readonly dataSource: DataSource,
+    private readonly destinatarioService: DestinatarioService,
   ) {}
 
   private validarConsistenciaTipo(datos: {
@@ -92,10 +94,18 @@ export class DocumentoInstitucionalService {
         entidad: 'documento_institucional',
         entidad_id: documentoGuardado.id_documento,
         tipo: dto.tipo,
-        id_grado: dto.tipo === 'estudiantes' ? (dto.id_grado ?? null) : null,
-        id_seccion:
-          dto.tipo === 'estudiantes' ? (dto.id_seccion ?? null) : null,
-        id_usuario: dto.tipo === 'docentes' ? (dto.id_usuario ?? null) : null,
+        grado:
+          dto.tipo === 'estudiantes' && dto.id_grado
+            ? { id_grado: dto.id_grado }
+            : null,
+        seccion:
+          dto.tipo === 'estudiantes' && dto.id_seccion
+            ? { id_seccion: dto.id_seccion }
+            : null,
+        usuario:
+          dto.tipo === 'docentes' && dto.id_usuario
+            ? { id_usuario: dto.id_usuario }
+            : null,
       });
       await queryRunner.manager.save(destinatario);
 
@@ -106,6 +116,7 @@ export class DocumentoInstitucionalService {
       await this.eliminarArchivoFisico(archivo.filename);
 
       if (error instanceof BadRequestException) throw error;
+      console.error('Error al crear documento institucional:', error);
       throw new InternalServerErrorException(
         'No se pudo crear el documento institucional.',
       );
@@ -119,6 +130,28 @@ export class DocumentoInstitucionalService {
       relations: { admin: true },
       order: { fecha_subida: 'DESC' },
     });
+  }
+
+  async findParaUsuario(authUser: AuthUser) {
+    const ids = await this.destinatarioService.obtenerEntidadIdsParaUsuario(
+      'documento_institucional',
+      authUser,
+    );
+
+    if (!ids.length) return [];
+
+    const documentos = await this.documentoRepository.find({
+      where: { id_documento: In(ids) },
+      order: { fecha_subida: 'DESC' },
+    });
+
+    return documentos.map((doc) => ({
+      id_documento: doc.id_documento,
+      titulo: doc.titulo,
+      descripcion: doc.descripcion,
+      url_archivo: `/uploads/documentos/${doc.archivo}`,
+      fecha_publicacion: doc.fecha_subida,
+    }));
   }
 
   async findOne(id: number) {
@@ -158,10 +191,18 @@ export class DocumentoInstitucionalService {
         { entidad: 'documento_institucional', entidad_id: id },
         {
           tipo: dto.tipo,
-          id_grado: dto.tipo === 'estudiantes' ? (dto.id_grado ?? null) : null,
-          id_seccion:
-            dto.tipo === 'estudiantes' ? (dto.id_seccion ?? null) : null,
-          id_usuario: dto.tipo === 'docentes' ? (dto.id_usuario ?? null) : null,
+          grado:
+            dto.tipo === 'estudiantes' && dto.id_grado
+              ? { id_grado: dto.id_grado }
+              : null,
+          seccion:
+            dto.tipo === 'estudiantes' && dto.id_seccion
+              ? { id_seccion: dto.id_seccion }
+              : null,
+          usuario:
+            dto.tipo === 'docentes' && dto.id_usuario
+              ? { id_usuario: dto.id_usuario }
+              : null,
         },
       );
     }

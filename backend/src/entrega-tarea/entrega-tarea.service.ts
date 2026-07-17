@@ -27,7 +27,7 @@ export class EntregaTareaService {
   async create(
     createEntregaTareaDto: CreateEntregaTareaDto,
     authUser: AuthUser,
-    archivo?: Express.Multer.File,
+    archivos?: Express.Multer.File[],
   ) {
     if (createEntregaTareaDto.id_usuario_estudiante !== authUser.id_usuario) {
       throw new ForbiddenException(
@@ -37,7 +37,7 @@ export class EntregaTareaService {
 
     const entrega = this.entregaRepository.create({
       ...createEntregaTareaDto,
-      archivo: archivo ? archivo.filename : undefined,
+      archivos: archivos?.length ? archivos.map((a) => a.filename) : null,
     });
     return await this.entregaRepository.save(entrega);
   }
@@ -56,6 +56,11 @@ export class EntregaTareaService {
       relations: { tarea: true, estudiante: true },
     });
   }
+  async calificar(id: number, nota: string) {
+    const entrega = await this.findOne(id);
+    entrega.nota = nota;
+    return await this.entregaRepository.save(entrega);
+  }
 
   async findOne(id: number) {
     const entrega = await this.entregaRepository.findOne({
@@ -70,7 +75,7 @@ export class EntregaTareaService {
     id: number,
     updateEntregaTareaDto: UpdateEntregaTareaDto,
     authUser: AuthUser,
-    archivo?: Express.Multer.File,
+    archivos?: Express.Multer.File[],
   ) {
     const entrega = await this.findOne(id);
 
@@ -80,23 +85,19 @@ export class EntregaTareaService {
       );
     }
 
-    if (archivo && entrega.archivo) {
-      const rutaAnterior = join(
-        process.cwd(),
-        'uploads',
-        'entregas',
-        entrega.archivo,
-      );
-      try {
-        await unlink(rutaAnterior);
-      } catch {
-        // si no existe el archivo anterior, continuamos sin problema
+    if (archivos?.length && entrega.archivos?.length) {
+      for (const nombre of entrega.archivos) {
+        try {
+          await unlink(join(process.cwd(), 'uploads', 'entregas', nombre));
+        } catch {
+          // si no existe el archivo anterior, continuamos sin problema
+        }
       }
     }
 
     Object.assign(entrega, updateEntregaTareaDto);
-    if (archivo) {
-      entrega.archivo = archivo.filename;
+    if (archivos?.length) {
+      entrega.archivos = archivos.map((a) => a.filename);
     }
 
     return await this.entregaRepository.save(entrega);
@@ -105,12 +106,13 @@ export class EntregaTareaService {
   async remove(id: number) {
     const entrega = await this.findOne(id);
 
-    if (entrega.archivo) {
-      const ruta = join(process.cwd(), 'uploads', 'entregas', entrega.archivo);
-      try {
-        await unlink(ruta);
-      } catch {
-        // si el archivo ya no existe en disco, no detenemos el proceso
+    if (entrega.archivos?.length) {
+      for (const nombre of entrega.archivos) {
+        try {
+          await unlink(join(process.cwd(), 'uploads', 'entregas', nombre));
+        } catch {
+          // si el archivo ya no existe en disco, no detenemos el proceso
+        }
       }
     }
 

@@ -175,9 +175,14 @@
           <div class="space-y-4">
 
             <!-- Preview correo y contraseña -->
-            @if (correoPreview()) {
-              <div class="bg-institucional-50 rounded-lg px-4 py-3 text-xs space-y-1">
-                <p class="text-institucional-700"><span class="font-medium">Correo:</span> {{ correoPreview() }}</p>
+            <div>
+              <label class="block text-xs font-medium text-gray-600 mb-1">Correo electrónico <span class="text-red-500">*</span></label>
+              <input [(ngModel)]="nuevoEstudiante.correo" type="email" placeholder="estudiante@correo.com"
+                class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-institucional-500">
+            </div>
+
+            @if (passwordPreview()) {
+              <div class="bg-institucional-50 rounded-lg px-4 py-3 text-xs">
                 <p class="text-institucional-700"><span class="font-medium">Contraseña inicial:</span> {{ passwordPreview() }}</p>
               </div>
             }
@@ -298,18 +303,20 @@
                 <div class="overflow-x-auto">
                   <table class="w-full text-xs">
                     <thead>
-                      <tr class="border-b border-gray-100">
-                        <th class="px-3 py-2 text-left text-gray-500">Nombres</th>
-                        <th class="px-3 py-2 text-left text-gray-500">Apellidos</th>
-                        <th class="px-3 py-2 text-left text-gray-500">DNI</th>
-                      </tr>
+                    <tr class="border-b border-gray-100">
+                      <th class="px-3 py-2 text-left text-gray-500">Nombres</th>
+                      <th class="px-3 py-2 text-left text-gray-500">Apellidos</th>
+                      <th class="px-3 py-2 text-left text-gray-500">DNI</th>
+                      <th class="px-3 py-2 text-left text-gray-500">Correo</th>
+                    </tr>
                     </thead>
                     <tbody>
                       @for (fila of filasMasivo.slice(0, 3); track $index) {
                         <tr class="border-b border-gray-50">
-                          <td class="px-3 py-2 text-gray-700">{{ fila.nombres }}</td>
-                          <td class="px-3 py-2 text-gray-700">{{ fila.apellidos }}</td>
-                          <td class="px-3 py-2 text-gray-700">{{ fila.dni }}</td>
+                        <td class="px-3 py-2 text-gray-700">{{ fila.nombres }}</td>
+                        <td class="px-3 py-2 text-gray-700">{{ fila.apellidos }}</td>
+                        <td class="px-3 py-2 text-gray-700">{{ fila.dni }}</td>
+                        <td class="px-3 py-2 text-gray-700">{{ fila.correo }}</td>
                         </tr>
                       }
                     </tbody>
@@ -407,7 +414,11 @@
               class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-institucional-500" />
           </div>
         </div>
-
+          <div>
+          <label class="block text-xs font-medium text-gray-600 mb-1">Correo electrónico</label>
+          <input type="email" [(ngModel)]="editarForm.correo"
+            class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-institucional-500" />
+        </div>
         <div class="grid grid-cols-2 gap-3">
           <div>
             <label class="block text-xs font-medium text-gray-600 mb-1">DNI</label>

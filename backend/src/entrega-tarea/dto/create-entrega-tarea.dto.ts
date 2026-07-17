@@ -4,6 +4,7 @@ import {
   IsString,
   IsOptional,
   IsDateString,
+  IsIn,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 
@@ -20,11 +21,11 @@ export class CreateEntregaTareaDto {
 
   @IsString()
   @IsOptional()
-  archivo?: string;
-
-  @IsString()
-  @IsOptional()
   comentario?: string;
+
+  @IsIn(['AD', 'A', 'B', 'C'])
+  @IsOptional()
+  nota?: string;
 
   @IsDateString()
   @IsOptional()

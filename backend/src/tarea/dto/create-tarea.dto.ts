@@ -5,8 +5,10 @@ import {
   IsOptional,
   IsDateString,
 } from 'class-validator';
+import { Type } from 'class-transformer';
 
 export class CreateTareaDto {
+  @Type(() => Number)
   @IsInt()
   @IsNotEmpty()
   id_asignacion!: number;

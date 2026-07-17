@@ -1,0 +1,61 @@
+<div class="min-h-screen">
+  <div class="mb-6">
+    <h1 class="text-2xl font-bold text-gray-900">Mi Horario</h1>
+    <p class="text-sm text-gray-500 mt-1">Horario de clases de tu grado y sección</p>
+  </div>
+
+  <p *ngIf="error()" class="text-sm text-red-500 mb-4">{{ error() }}</p>
+
+  @if (cargando()) {
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      @for (i of [1,2]; track i) {
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5 h-28 animate-pulse"></div>
+      }
+    </div>
+  } @else if (!horarios().length) {
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-12 text-center">
+      <div class="w-16 h-16 rounded-full bg-gray-50 flex items-center justify-center mx-auto mb-4">
+        <svg class="w-8 h-8 text-gray-300" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+        </svg>
+      </div>
+      <p class="text-sm font-medium text-gray-500">Aún no hay horario publicado</p>
+      <p class="text-xs text-gray-400 mt-1">Aparecerá aquí cuando el colegio lo publique</p>
+    </div>
+  } @else {
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      @for (h of horarios(); track trackByHorario($index, h)) {
+        <div
+          (click)="verHorario(h)"
+          class="bg-white rounded-xl shadow-sm border border-gray-100 p-5 hover:shadow-md transition-all duration-200 cursor-pointer border-t-4 border-t-institucional-600">
+          <div class="flex items-start gap-3">
+            <div class="w-12 h-12 rounded-xl bg-institucional-50 flex items-center justify-center flex-shrink-0">
+              @if (esImagen(h.archivo)) {
+                <svg class="w-6 h-6 text-institucional-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14M14 8h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                </svg>
+              } @else {
+                <svg class="w-6 h-6 text-institucional-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                </svg>
+              }
+            </div>
+            <div class="min-w-0 flex-1">
+              <h3 class="text-sm font-bold text-gray-900 truncate">
+                {{ h.grado?.nombre }} "{{ h.seccion?.nombre }}"
+              </h3>
+              <p class="text-xs text-gray-500 mt-0.5">{{ h.periodo.nombre }}</p>
+              @if (h.descripcion) {
+                <p class="text-xs text-gray-600 mt-1">{{ h.descripcion }}</p>
+              }
+              <div class="flex items-center gap-2 mt-3 pt-3 border-t border-gray-100">
+                <button (click)="verHorario(h); $event.stopPropagation()" class="flex-1 text-center text-xs font-semibold text-institucional-700 bg-institucional-50 hover:bg-institucional-100 rounded-lg py-2 transition-colors">Ver</button>
+                <button (click)="descargarHorario(h, $event)" class="flex-1 text-center text-xs font-semibold text-gray-600 bg-gray-50 hover:bg-gray-100 rounded-lg py-2 transition-colors">Descargar</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+  }
+</div>

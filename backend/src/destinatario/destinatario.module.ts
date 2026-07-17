@@ -5,6 +5,7 @@ import { Comunicado } from '../comunicado/entities/comunicado.entity';
 import { DocumentoInstitucional } from '../documento-institucional/entities/documento-institucional.entity';
 import { DestinatarioService } from './destinatario.service';
 import { DestinatarioController } from './destinatario.controller';
+import { Matricula } from '../matricula/entities/matricula.entity';
 
 @Module({
   imports: [
@@ -12,6 +13,7 @@ import { DestinatarioController } from './destinatario.controller';
       Destinatario,
       Comunicado,
       DocumentoInstitucional,
+      Matricula,
     ]),
   ],
   controllers: [DestinatarioController],

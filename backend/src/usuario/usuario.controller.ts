@@ -52,12 +52,52 @@ export class UsuarioController {
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('Estudiante')
+  @Get('estudiante/dashboard-resumen')
+  getResumenDashboard(@Req() req: AuthRequest) {
+    return this.usuarioService.getResumenDashboardEstudiante(req.user);
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('Estudiante')
+  @Get('estudiante/cursos')
+  getCursosEstudiante(@Req() req: AuthRequest) {
+    return this.usuarioService.findCursosEstudiante(req.user);
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('Docente')
   @Get('docente/dashboard')
   getDocenteDashboard(@Req() req: AuthRequest) {
     return this.usuarioService.getDocenteDashboard(req.user);
   }
-
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('Docente')
+  @Get('docente/asignaciones/:id')
+  getAsignacionDetalle(
+    @Param('id', ParseIntPipe) id: number,
+    @Req() req: AuthRequest,
+  ) {
+    return this.usuarioService.getAsignacionDetalle(id, req.user);
+  }
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('Estudiante')
+  @Get('estudiante/asignaciones/:id')
+  getAsignacionDetalleEstudiante(
+    @Param('id', ParseIntPipe) id: number,
+    @Req() req: AuthRequest,
+  ) {
+    return this.usuarioService.getAsignacionDetalleEstudiante(id, req.user);
+  }
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('Estudiante')
+  @Get('estudiante/curso/:id_curso')
+  getCursoDetalleEstudiante(
+    @Param('id_curso', ParseIntPipe) id_curso: number,
+    @Req() req: AuthRequest,
+  ) {
+    return this.usuarioService.getCursoDetalleEstudiante(id_curso, req.user);
+  }
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('Administrador')
   @Get('admin/dashboard')

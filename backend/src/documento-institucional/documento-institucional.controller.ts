@@ -20,6 +20,8 @@ import { DocumentoInstitucionalService } from './documento-institucional.service
 import type { AuthUser } from './documento-institucional.service';
 import { CreateDocumentoInstitucionalDto } from './dto/create-documento-institucional.dto';
 import { UpdateDocumentoInstitucionalDto } from './dto/update-documento-institucional.dto';
+import { UseGuards } from '@nestjs/common';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
 interface RequestWithUser extends Request {
   user: AuthUser;
@@ -32,6 +34,7 @@ export class DocumentoInstitucionalController {
   ) {}
 
   @Post()
+  @UseGuards(JwtAuthGuard)
   @UseInterceptors(FileInterceptor('archivo'))
   create(
     @Body() dto: CreateDocumentoInstitucionalDto,
@@ -44,6 +47,11 @@ export class DocumentoInstitucionalController {
   @Get()
   findAll() {
     return this.documentoInstitucionalService.findAll();
+  }
+  @Get('mis-documentos')
+  @UseGuards(JwtAuthGuard)
+  findParaUsuario(@Req() req: RequestWithUser) {
+    return this.documentoInstitucionalService.findParaUsuario(req.user);
   }
 
   @Get(':id')

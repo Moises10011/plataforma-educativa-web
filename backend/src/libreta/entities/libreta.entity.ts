@@ -9,7 +9,7 @@ import {
 import { Usuario } from '../../usuario/entities/usuario.entity';
 import { PeriodoAcademico } from '../../periodo-academico/entities/periodo-academico.entity';
 
-@Entity('Libreta')
+@Entity('libreta')
 export class Libreta {
   @PrimaryGeneratedColumn({ name: 'id_libreta' })
   id_libreta!: number;
@@ -23,7 +23,7 @@ export class Libreta {
   @Column({ name: 'id_estudiante' })
   id_estudiante!: number;
 
-  @ManyToOne(() => Usuario)
+  @ManyToOne(() => Usuario, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'id_estudiante' })
   estudiante!: Usuario;
 

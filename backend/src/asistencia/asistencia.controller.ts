@@ -72,6 +72,23 @@ export class AsistenciaController {
 
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('Docente')
+  @Get('curso/:id_asignacion/mes/:mes/:anio')
+  async getAsistenciaMes(
+    @Param('id_asignacion', ParseIntPipe) id_asignacion: number,
+    @Param('mes', ParseIntPipe) mes: number,
+    @Param('anio', ParseIntPipe) anio: number,
+    @Req() req: AuthRequest,
+  ) {
+    return await this.asistenciaService.getAsistenciaMes(
+      id_asignacion,
+      mes,
+      anio,
+      req.user.id_usuario,
+    );
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('Docente')
   @Post('importar/:id_asignacion')
   @UseInterceptors(FileInterceptor('archivo'))
   async importar(
@@ -101,6 +118,16 @@ export class AsistenciaController {
     @Body() updateAsistenciaDto: UpdateAsistenciaDto,
   ) {
     return this.asistenciaService.update(id, updateAsistenciaDto);
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('Docente')
+  @Delete('fecha/:id_asignacion/:fecha')
+  eliminarPorFecha(
+    @Param('id_asignacion', ParseIntPipe) id_asignacion: number,
+    @Param('fecha') fecha: string, // formato yyyy-mm-dd
+  ) {
+    return this.asistenciaService.eliminarPorFecha(id_asignacion, fecha);
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)

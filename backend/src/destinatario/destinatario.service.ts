@@ -4,7 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Brackets, Repository } from 'typeorm';
 import { Destinatario } from './entities/destinatario.entity';
 import type {
   EntidadDestinatario,
@@ -14,6 +14,7 @@ import { CreateDestinatarioDto } from './dto/create-destinatario.dto';
 import { UpdateDestinatarioDto } from './dto/update-destinatario.dto';
 import { Comunicado } from '../comunicado/entities/comunicado.entity';
 import { DocumentoInstitucional } from '../documento-institucional/entities/documento-institucional.entity';
+import { Matricula } from '../matricula/entities/matricula.entity';
 
 @Injectable()
 export class DestinatarioService {
@@ -24,6 +25,8 @@ export class DestinatarioService {
     private readonly comunicadoRepository: Repository<Comunicado>,
     @InjectRepository(DocumentoInstitucional)
     private readonly documentoRepository: Repository<DocumentoInstitucional>,
+    @InjectRepository(Matricula)
+    private readonly matriculaRepository: Repository<Matricula>,
   ) {}
 
   private validarConsistenciaTipo(datos: {
@@ -83,6 +86,60 @@ export class DestinatarioService {
         );
       }
     }
+  }
+
+  async obtenerEntidadIdsParaUsuario(
+    entidad: EntidadDestinatario,
+    authUser: { id_usuario: number; roles?: string[] },
+  ): Promise<number[]> {
+    const esDocente = authUser.roles?.some(
+      (r) => r.toLowerCase() === 'docente',
+    );
+    const esEstudiante = authUser.roles?.some(
+      (r) => r.toLowerCase() === 'estudiante',
+    );
+
+    const qb = this.destinatarioRepository
+      .createQueryBuilder('d')
+      .where('d.entidad = :entidad', { entidad })
+      .andWhere(
+        new Brackets((qb2) => {
+          qb2.where('d.tipo = :todos', { todos: 'todos' });
+          if (esDocente) {
+            qb2.orWhere(
+              '(d.tipo = :docentes AND (d.id_usuario = :id_usuario OR d.id_usuario IS NULL))',
+              { docentes: 'docentes', id_usuario: authUser.id_usuario },
+            );
+          }
+        }),
+      );
+
+    if (esEstudiante) {
+      const matricula = await this.matriculaRepository.findOne({
+        where: { id_usuario: authUser.id_usuario, estado: true },
+        order: { fecha_matricula: 'DESC' },
+      });
+
+      if (matricula) {
+        qb.orWhere(
+          new Brackets((qb2) => {
+            qb2
+              .where('d.entidad = :entidad', { entidad })
+              .andWhere('d.tipo = :estudiantes', { estudiantes: 'estudiantes' })
+              .andWhere('d.id_grado = :id_grado', {
+                id_grado: matricula.id_grado,
+              })
+              .andWhere(
+                '(d.id_seccion IS NULL OR d.id_seccion = :id_seccion)',
+                { id_seccion: matricula.id_seccion },
+              );
+          }),
+        );
+      }
+    }
+
+    const destinatarios = await qb.getMany();
+    return destinatarios.map((d) => d.entidad_id);
   }
 
   async create(dto: CreateDestinatarioDto): Promise<Destinatario> {

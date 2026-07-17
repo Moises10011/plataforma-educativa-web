@@ -11,7 +11,7 @@ import { Grado } from '../../grado/entities/grado.entity';
 import { Seccion } from '../../seccion/entities/seccion.entity';
 import { PeriodoAcademico } from '../../periodo-academico/entities/periodo-academico.entity';
 
-@Entity('Asignacion_Curso')
+@Entity('asignacion_curso')
 export class AsignacionCurso {
   @PrimaryGeneratedColumn({ name: 'id_asignacion' })
   id_asignacion!: number;

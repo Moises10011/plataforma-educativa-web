@@ -1,0 +1,184 @@
+/* Dashboard de Comunicados - Estilos personalizados */
+
+/* Animaciones personalizadas */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Aplicar animaciones a las tarjetas */
+.bg-white {
+  animation: fadeIn 0.4s ease-out;
+}
+
+/* Mejorar transiciones en botones de filtro */
+button {
+  transition: all 0.2s ease-in-out;
+}
+
+button:active {
+  transform: scale(0.98);
+}
+
+/* Mejorar hover en cards */
+.hover\:shadow-md {
+  transition: all 0.3s ease;
+}
+
+.hover\:bg-institucional-100 {
+  transition: background-color 0.2s ease;
+}
+
+/* Mejorar legibilidad de texto */
+.text-sm {
+  line-height: 1.5;
+}
+
+/* Estilos para iconos */
+svg {
+  display: inline-block;
+  vertical-align: middle;
+}
+
+/* Mejorar espaciado */
+.space-y-3 > * + * {
+  margin-top: 0.75rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+  .grid-cols-1 {
+    gap: 1rem;
+  }
+  
+  .p-5 {
+    padding: 1rem;
+  }
+  
+  .text-sm {
+    font-size: 0.875rem;
+  }
+}
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Mejorar focus en elementos interactivos */
+button:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px #2563eb;
+}
+
+/* Animación de carga personalizada */
+@keyframes pulse-custom {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.animate-pulse {
+  animation: pulse-custom 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Mejorar transiciones de hover en filas */
+tbody tr {
+  transition: all 0.2s ease;
+}
+
+/* Estilos para tooltips (futuro uso) */
+.tooltip {
+  position: relative;
+}
+
+.tooltip:hover::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 0.5rem 1rem;
+  background: #1f2937;
+  color: white;
+  font-size: 0.75rem;
+  border-radius: 0.375rem;
+  white-space: nowrap;
+  z-index: 50;
+}
+
+/* Mejorar accesibilidad */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+/* Mejorar contraste en texto */
+.text-gray-500 {
+  color: #6b7280;
+}
+
+.text-gray-600 {
+  color: #4b5563;
+}
+
+/* Estilos para bordes izquierdos de estado */
+.border-l-4 {
+  border-left-width: 4px;
+}
+
+.border-l-institucional-600 {
+  border-left-color: #2563eb;
+}
+
+/* Mejorar legibilidad de números */
+.text-4xl {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Estilos para la rotación del icono */
+.transition-transform {
+  transition: transform 0.2s ease;
+}
+
+.rotate-180 {
+  transform: rotate(180deg);
+}
+
+/* Mejorar legibilidad del contenido expandido */
+.whitespace-pre-line {
+  white-space: pre-line;
+  line-height: 1.6;
+}
+
+/* Estilos para el fondo del contenido expandido */
+.bg-gray-50\/50 {
+  background-color: rgba(249, 250, 251, 0.5);
+}

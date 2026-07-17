@@ -1,166 +1,131 @@
-<div>
-  <div class="mb-6">
-    <h1 class="text-xl font-bold text-gray-900">Notas</h1>
-    <p class="text-sm text-gray-500 mt-1">Califica las entregas de tus estudiantes</p>
-  </div>
+<div class="notas-container">
 
-  <div class="mb-4">
-    <select
-      class="w-full sm:w-72 text-sm border border-gray-200 rounded-lg px-3 py-2 text-gray-700 bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-institucional-500"
-      [ngModel]="idAsignacionSeleccionada()"
-      (ngModelChange)="onCursoChange($event)">
-      <option [ngValue]="null">Selecciona un curso</option>
-      @for (c of cursos(); track c.id_asignacion) {
-        <option [ngValue]="c.id_asignacion">
-          {{ c.curso.nombre }} · {{ c.grado.nombre }} {{ c.seccion.nombre }} · {{ c.periodo.nombre }}
-        </option>
-      }
-    </select>
-  </div>
-
-  @if (cargandoCursos()) {
-    <div class="bg-white rounded-xl shadow-sm p-5 h-40 animate-pulse"></div>
-  } @else if (!idAsignacionSeleccionada()) {
-    <div class="bg-white rounded-xl shadow-sm p-10 text-center">
-      <p class="text-sm text-gray-400">Selecciona un curso para ver las tareas y calificar</p>
-    </div>
-  } @else if (cargando()) {
-    <div class="bg-white rounded-xl shadow-sm p-5 h-40 animate-pulse"></div>
-  } @else if (!tareas().length) {
-    <div class="bg-white rounded-xl shadow-sm p-10 text-center">
-      <p class="text-sm text-gray-400">No hay tareas en este curso</p>
-    </div>
-  } @else {
-    <div class="space-y-3">
-      @for (t of tareas(); track t.id_tarea) {
-        <div class="bg-white rounded-xl shadow-sm overflow-hidden">
-          <button
-            class="w-full p-4 flex items-center justify-between hover:bg-gray-50 transition-colors text-left"
-            (click)="toggleTarea(t.id_tarea)">
-            <div class="flex items-center gap-3">
-              <div class="w-9 h-9 rounded-lg bg-amber-50 flex items-center justify-center flex-shrink-0">
-                <svg class="w-4 h-4 text-amber-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
-                </svg>
-              </div>
-              <div>
-                <p class="text-sm font-medium text-gray-800">{{ t.titulo }}</p>
-                <p class="text-xs text-gray-400">
-                  Entrega: {{ t.fecha_entrega | date:'dd/MM/yyyy' }} ·
-                  <span class="text-institucional-600 font-medium">{{ t.total_entregas }} entregas</span>
-                </p>
-              </div>
-            </div>
-            <svg class="w-4 h-4 text-gray-400 transition-transform"
-              [class.rotate-180]="t.expandido"
-              xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-            </svg>
-          </button>
-
-          @if (t.expandido && t.entregas) {
-            <div class="border-t border-gray-50">
-              @if (!t.entregas.length) {
-                <p class="text-sm text-gray-400 text-center py-6">No hay entregas aún</p>
-              } @else {
-                <table class="w-full text-sm">
-                  <thead>
-                    <tr class="border-b border-gray-50">
-                      <th class="text-left text-xs text-gray-500 font-medium px-4 py-2">Estudiante</th>
-                      <th class="text-left text-xs text-gray-500 font-medium px-4 py-2">Fecha entrega</th>
-                      <th class="text-center text-xs text-gray-500 font-medium px-4 py-2">Archivo</th>
-                      <th class="text-center text-xs text-gray-500 font-medium px-4 py-2">Acción</th>
-                    </tr>
-                  </thead>
-                  <tbody class="divide-y divide-gray-50">
-                    @for (e of t.entregas; track e.id_entrega) {
-                      <tr class="hover:bg-gray-50">
-                        <td class="px-4 py-3 font-medium text-gray-800">
-                          {{ e.estudiante.nombres }} {{ e.estudiante.apellidos }}
-                        </td>
-                        <td class="px-4 py-3 text-gray-500">
-                          {{ e.fecha_entrega ? (e.fecha_entrega | date:'dd/MM/yyyy HH:mm') : '—' }}
-                        </td>
-                        <td class="px-4 py-3 text-center">
-                          @if (e.archivo) {
-                            <button
-                              class="text-xs text-institucional-600 hover:underline"
-                              (click)="descargarEntrega(e.id_entrega)">
-                              Descargar
-                            </button>
-                          } @else {
-                            <span class="text-xs text-gray-400">Sin archivo</span>
-                          }
-                        </td>
-                        <td class="px-4 py-3 text-center">
-                          <button
-                            class="text-xs bg-institucional-50 text-institucional-700 px-3 py-1 rounded-full hover:bg-institucional-100 transition-colors"
-                            (click)="abrirModalCalificar(e)">
-                            Calificar
-                          </button>
-                        </td>
-                      </tr>
-                    }
-                  </tbody>
-                </table>
-              }
-            </div>
-          }
-        </div>
+  <!-- ===== Selector de curso ===== -->
+  <div class="cursos-card">
+    <p class="cursos-label">Selecciona un curso</p>
+    <div class="cursos-lista">
+      @for (a of asignaciones(); track a.id_asignacion) {
+        <label class="curso-radio" [class.curso-radio-activo]="idAsignacionSeleccionada() === a.id_asignacion">
+          <input type="radio" name="curso"
+            [checked]="idAsignacionSeleccionada() === a.id_asignacion"
+            (change)="seleccionarCurso(a.id_asignacion)" />
+          <span class="curso-nombre">{{ a.curso }}</span>
+          <span class="curso-detalle">{{ a.grado }} "{{ a.seccion }}"</span>
+        </label>
+      } @empty {
+        <p class="text-sm text-gray-400 italic">No tienes cursos asignados.</p>
       }
     </div>
-  }
+  </div>
 
-  @if (modalCalificar()) {
-    <div class="fixed inset-0 bg-black/40 flex items-center justify-center z-50" (click)="cerrarModal()">
-      <div class="bg-white rounded-xl shadow-xl p-6 w-full max-w-sm" (click)="$event.stopPropagation()">
+  <!-- ===== Selector de bimestre/trimestre ===== -->
+  <div class="cursos-card">
+    <p class="cursos-label">Selecciona un bimestre / trimestre</p>
+    <div class="cursos-lista">
+      @for (p of periodos(); track p.id_periodo) {
+        <label class="curso-radio" [class.curso-radio-activo]="idPeriodoSeleccionado() === p.id_periodo">
+          <input type="radio" name="periodo"
+            [checked]="idPeriodoSeleccionado() === p.id_periodo"
+            (change)="seleccionarPeriodo(p.id_periodo)" />
+          <span class="curso-nombre">{{ p.nombre }}</span>
+        </label>
+      } @empty {
+        <p class="text-sm text-gray-400 italic">No hay periodos disponibles.</p>
+      }
+    </div>
+  </div>
 
-        <h2 class="text-base font-bold text-gray-900 mb-1">Calificar entrega</h2>
-        @if (entregaSeleccionada()) {
-          <p class="text-xs text-gray-400 mb-4">
-            {{ entregaSeleccionada()!.estudiante.nombres }} {{ entregaSeleccionada()!.estudiante.apellidos }}
-          </p>
-        }
+  @if (idAsignacionSeleccionada() && idPeriodoSeleccionado()) {
 
-        @if (error()) {
-          <p class="text-xs text-red-600 bg-red-50 rounded-lg px-3 py-2 mb-4">{{ error() }}</p>
-        }
+    @if (error()) {
+      <div class="alert alert-error">{{ error() }}</div>
+    }
+    @if (exito()) {
+      <div class="alert alert-exito">{{ exito() }}</div>
+    }
 
-        <div class="mb-4">
-          <label class="text-xs text-gray-500 font-medium block mb-1">Nota</label>
-          <input
-            type="text"
-            class="w-full text-sm border border-gray-200 rounded-lg px-3 py-2"
-            [(ngModel)]="calificacion.valor"
-            placeholder="Ej. 15, AD, B"
-          />
-        </div>
-
-        <div class="mb-6">
-          <label class="text-xs text-gray-500 font-medium block mb-1">Observación <span class="text-gray-400">(opcional)</span></label>
-          <textarea
-            class="w-full text-sm border border-gray-200 rounded-lg px-3 py-2"
-            [(ngModel)]="calificacion.observacion"
-            rows="2"
-            placeholder="Comentario sobre la entrega">
-          </textarea>
-        </div>
-
-        <div class="flex justify-end gap-2">
-          <button
-            class="text-sm px-4 py-2 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50"
-            (click)="cerrarModal()">
-            Cancelar
+    <div class="tabla-card">
+      <div class="tabla-header">
+        <h3 class="tabla-titulo">
+          Registro de notas — {{ asignacionActual()?.curso }}
+        </h3>
+        <div class="tabla-acciones">
+          <button class="btn btn-outline" (click)="exportar()">Exportar</button>
+          <button class="btn btn-outline"
+            (click)="deshacer()"
+            [disabled]="cambiosPendientes().size === 0">
+            Deshacer
           </button>
-          <button
-            class="text-sm px-4 py-2 rounded-lg bg-institucional-600 text-white hover:bg-institucional-700 disabled:opacity-50"
-            [disabled]="guardando() || !calificacion.valor.trim()"
-            (click)="calificar()">
-            {{ guardando() ? 'Guardando...' : 'Guardar nota' }}
+          <button class="btn btn-primary"
+            (click)="guardar()"
+            [disabled]="guardando() || cambiosPendientes().size === 0">
+            {{ guardando() ? 'Guardando...' : 'Guardar' }}
           </button>
         </div>
-
       </div>
+
+      @if (cargando()) {
+        <div class="loading">Cargando notas...</div>
+      } @else {
+        <div class="tabla-scroll">
+          <table class="tabla-notas">
+            <thead>
+              <tr>
+                <th class="col-num">#</th>
+                <th class="col-nombre">Nombres</th>
+
+                @for (c of competencias(); track c.id_competencia) {
+                  <th class="col-competencia" title="{{ c.nombre }}">
+                    <span class="competencia-header">{{ c.nombre }}</span>
+                  </th>
+                }
+
+                <th class="col-promedio">Promedio</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              @for (est of estudiantes(); track est.id_usuario; let i = $index) {
+                <tr>
+                  <td class="col-num">{{ i + 1 }}</td>
+                  <td class="col-nombre">{{ est.apellidos }} {{ est.nombres }}</td>
+
+                  @for (c of competencias(); track c.id_competencia) {
+                    <td class="celda-nota"
+                      tabindex="0"
+                      [class.celda-ad]="estadoCelda(est.id_usuario, c.id_competencia) === 'AD'"
+                      [class.celda-a]="estadoCelda(est.id_usuario, c.id_competencia) === 'A'"
+                      [class.celda-b]="estadoCelda(est.id_usuario, c.id_competencia) === 'B'"
+                      [class.celda-c]="estadoCelda(est.id_usuario, c.id_competencia) === 'C'"
+                      (click)="clickCelda(est.id_usuario, c.id_competencia)"
+                      (keydown)="borrarConTecla($event, est.id_usuario, c.id_competencia)">
+                      {{ estadoCelda(est.id_usuario, c.id_competencia) }}
+                    </td>
+                  }
+
+                  <td class="col-promedio">{{ promedioEstudiante(est.id_usuario) }}</td>
+                </tr>
+              } @empty {
+                <tr>
+                  <td [attr.colspan]="competencias().length + 3"
+                    style="text-align:center;color:#9ca3af;padding:1.5rem">
+                    No hay estudiantes matriculados en este curso.
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+
+        <div class="leyenda">
+          <span><span class="leyenda-punto vacio"></span> Sin registrar</span>
+          <span><span class="leyenda-punto ad"></span> AD - Logro destacado</span>
+          <span><span class="leyenda-punto a"></span> A - Logro esperado</span>
+          <span><span class="leyenda-punto b"></span> B - En proceso</span>
+          <span><span class="leyenda-punto c"></span> C - En inicio</span>
+        </div>
+      }
     </div>
   }
+
 </div>

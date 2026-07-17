@@ -9,13 +9,11 @@ import {
   ParseIntPipe,
   UseGuards,
   Req,
-  Res,
   UseInterceptors,
-  UploadedFile,
+  UploadedFiles,
 } from '@nestjs/common';
-import { FileInterceptor } from '@nestjs/platform-express';
-import type { Request, Response } from 'express';
-import { join } from 'path';
+import { FilesInterceptor } from '@nestjs/platform-express';
+import type { Request } from 'express';
 import { EntregaTareaService } from './entrega-tarea.service';
 import { CreateEntregaTareaDto } from './dto/create-entrega-tarea.dto';
 import { UpdateEntregaTareaDto } from './dto/update-entrega-tarea.dto';
@@ -39,16 +37,18 @@ export class EntregaTareaController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('Estudiante')
   @Post()
-  @UseInterceptors(FileInterceptor('archivo', crearMulterConfig('entregas')))
+  @UseInterceptors(
+    FilesInterceptor('archivos', 10, crearMulterConfig('entregas')),
+  )
   create(
     @Body() createEntregaTareaDto: CreateEntregaTareaDto,
     @Req() req: AuthRequest,
-    @UploadedFile() archivo?: Express.Multer.File,
+    @UploadedFiles() archivos?: Express.Multer.File[],
   ) {
     return this.entregaTareaService.create(
       createEntregaTareaDto,
       req.user,
-      archivo,
+      archivos,
     );
   }
 
@@ -69,38 +69,29 @@ export class EntregaTareaController {
   findOne(@Param('id', ParseIntPipe) id: number) {
     return this.entregaTareaService.findOne(id);
   }
-
-  @UseGuards(JwtAuthGuard)
-  @Get(':id/descargar')
-  async descargar(@Param('id', ParseIntPipe) id: number, @Res() res: Response) {
-    const entrega = await this.entregaTareaService.findOne(id);
-
-    if (!entrega.archivo) {
-      res
-        .status(404)
-        .json({ message: 'Esta entrega no tiene archivo adjunto' });
-      return;
-    }
-
-    const ruta = join(process.cwd(), 'uploads', 'entregas', entrega.archivo);
-    res.download(ruta);
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('Docente')
+  @Put(':id/calificar')
+  calificar(@Param('id', ParseIntPipe) id: number, @Body('nota') nota: string) {
+    return this.entregaTareaService.calificar(id, nota);
   }
-
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('Estudiante')
   @Put(':id')
-  @UseInterceptors(FileInterceptor('archivo', crearMulterConfig('entregas')))
+  @UseInterceptors(
+    FilesInterceptor('archivos', 10, crearMulterConfig('entregas')),
+  )
   update(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateEntregaTareaDto: UpdateEntregaTareaDto,
     @Req() req: AuthRequest,
-    @UploadedFile() archivo?: Express.Multer.File,
+    @UploadedFiles() archivos?: Express.Multer.File[],
   ) {
     return this.entregaTareaService.update(
       id,
       updateEntregaTareaDto,
       req.user,
-      archivo,
+      archivos,
     );
   }
 

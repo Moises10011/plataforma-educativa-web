@@ -1,44 +1,109 @@
-<div>
-  <div class="mb-6">
-    <h1 class="text-xl font-bold text-gray-900">Comunicados</h1>
-    <p class="text-sm text-gray-500 mt-1">Avisos y comunicados institucionales</p>
+<div class="space-y-8">
+  <!-- Encabezado -->
+  <div class="text-center max-w-xl mx-auto">
+    <h1 class="text-3xl font-serif font-bold text-gray-900 tracking-tight">Comunicados</h1>
+    <p class="text-sm text-gray-500 mt-2">Avisos y comunicados institucionales</p>
+    <div class="w-12 h-0.5 bg-institucional-500 mx-auto mt-4 rounded-full"></div>
   </div>
 
+  <!-- Contenido -->
   @if (cargando()) {
-    <div class="space-y-3">
+    <div class="space-y-4 max-w-3xl mx-auto">
       @for (i of [1,2,3]; track i) {
-        <div class="bg-white rounded-xl shadow-sm p-5 h-20 animate-pulse"></div>
+        <div class="bg-white rounded-2xl shadow-sm p-6 h-24 animate-pulse"></div>
       }
     </div>
   } @else if (!comunicados().length) {
-    <div class="bg-white rounded-xl shadow-sm p-10 text-center">
-      <p class="text-sm text-gray-400">No hay comunicados publicados</p>
+    <div class="bg-white rounded-2xl shadow-sm p-14 text-center max-w-xl mx-auto">
+      <svg class="w-16 h-16 text-gray-300 mx-auto mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"/>
+      </svg>
+      <p class="text-sm font-medium text-gray-600">No hay comunicados publicados</p>
+      <p class="text-xs text-gray-400 mt-1">Los comunicados institucionales aparecerán aquí</p>
     </div>
   } @else {
-    <div class="space-y-3">
+    <div class="space-y-4 max-w-3xl mx-auto">
       @for (c of comunicados(); track c.id_comunicado) {
-        <div class="bg-white rounded-xl shadow-sm overflow-hidden hover:shadow-md transition-shadow">
-          <button (click)="seleccionar(c)" class="w-full text-left p-4 flex items-center justify-between gap-3">
-            <div class="flex items-center gap-3 min-w-0">
-              <div class="w-9 h-9 rounded-lg bg-institucional-50 flex items-center justify-center flex-shrink-0">
-                <svg class="w-4 h-4 text-institucional-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"/>
-                </svg>
+        <div
+          class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden transition-all duration-200"
+          [class.border-institucional-200]="seleccionado()?.id_comunicado === c.id_comunicado"
+          [class.shadow-md]="seleccionado()?.id_comunicado === c.id_comunicado"
+        >
+          <button (click)="seleccionar(c)"
+            class="w-full text-left p-6 flex items-start gap-5 hover:bg-gray-50/60 transition-colors group">
+
+            <div class="w-12 h-12 rounded-xl bg-institucional-50 flex items-center justify-center flex-shrink-0 group-hover:bg-institucional-100 transition-colors">
+              <svg class="w-5 h-5 text-institucional-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"/>
+              </svg>
+            </div>
+
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-2 flex-wrap">
+                <h3 class="text-base font-semibold text-gray-900 truncate group-hover:text-institucional-700 transition-colors">
+                  {{ c.titulo }}
+                </h3>
+                <span class="text-[10px] font-bold uppercase tracking-wide text-institucional-700 bg-institucional-50 px-2 py-0.5 rounded-full flex-shrink-0">
+                  {{ etiquetaAudiencia(c) }}
+                </span>
+                @if (esReciente(c.fecha_publicacion)) {
+                  <span class="text-[10px] font-bold uppercase tracking-wide text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full flex-shrink-0">
+                    Nuevo
+                  </span>
+                }
               </div>
-              <div class="min-w-0">
-                <p class="text-sm font-semibold text-gray-800 truncate">{{ c.titulo }}</p>
-                <p class="text-xs text-gray-400">{{ c.autor.nombres }} {{ c.autor.apellidos }} · {{ c.fecha_publicacion | date:'dd/MM/yyyy' }}</p>
+
+              @if (seleccionado()?.id_comunicado !== c.id_comunicado) {
+                <p class="text-sm text-gray-500 mt-1 line-clamp-1">{{ c.contenido }}</p>
+              }
+
+              <div class="flex items-center gap-1.5 mt-3">
+                <svg class="w-3.5 h-3.5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                </svg>
+                <span class="text-xs text-gray-400">{{ c.fecha_publicacion | date:'dd MMM yyyy' }}</span>
               </div>
             </div>
-            <svg class="w-4 h-4 text-gray-400 flex-shrink-0 transition-transform duration-200"
+
+            <svg class="w-5 h-5 text-gray-300 group-hover:text-institucional-500 flex-shrink-0 mt-1 transition-all duration-200"
               [class.rotate-180]="seleccionado()?.id_comunicado === c.id_comunicado"
-              xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
             </svg>
           </button>
+
           @if (seleccionado()?.id_comunicado === c.id_comunicado) {
-            <div class="px-4 pb-4 border-t border-gray-50">
-              <p class="text-sm text-gray-600 mt-3 leading-relaxed whitespace-pre-line">{{ c.contenido }}</p>
+            <div class="px-6 pb-6 pl-[4.75rem] space-y-4">
+              <div class="border-t border-gray-100 pt-4">
+                <p class="text-sm text-gray-600 leading-relaxed whitespace-pre-line">{{ c.contenido }}</p>
+              </div>
+
+              @if (c.adjuntos?.length) {
+                <div class="flex flex-wrap gap-2">
+                  @for (a of c.adjuntos; track a.id) {
+                    <button (click)="abrirAdjunto(a)"
+                      class="flex items-center gap-2 bg-gray-50 hover:bg-institucional-50 border border-gray-200 hover:border-institucional-200 rounded-lg px-3 py-2 transition-colors group/file">
+                      <span class="w-7 h-7 rounded-md bg-institucional-100 flex items-center justify-center flex-shrink-0">
+                        <span class="text-[9px] font-bold text-institucional-600">{{ extensionDe(a.nombre_original) }}</span>
+                      </span>
+                      <span class="text-xs text-gray-600 group-hover/file:text-institucional-700 truncate max-w-[180px]">
+                        {{ a.nombre_original }}
+                      </span>
+                      <span class="text-[10px] text-gray-400">{{ formatearTamano(a.tamano) }}</span>
+                    </button>
+                  }
+                </div>
+              } @else if (c.archivo) {
+                <button (click)="abrirLegado(c)"
+                  class="flex items-center gap-2 bg-gray-50 hover:bg-institucional-50 border border-gray-200 hover:border-institucional-200 rounded-lg px-3 py-2 transition-colors w-fit group/file">
+                  <span class="w-7 h-7 rounded-md bg-institucional-100 flex items-center justify-center flex-shrink-0">
+                    <span class="text-[9px] font-bold text-institucional-600">{{ extensionDe(c.archivo) }}</span>
+                  </span>
+                  <span class="text-xs text-gray-600 group-hover/file:text-institucional-700 truncate max-w-[220px]">
+                    {{ nombreArchivoLegado(c.archivo) }}
+                  </span>
+                </button>
+              }
             </div>
           }
         </div>

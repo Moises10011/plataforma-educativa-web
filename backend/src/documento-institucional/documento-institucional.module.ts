@@ -9,6 +9,7 @@ import { DocumentoInstitucional } from './entities/documento-institucional.entit
 import { Destinatario } from '../destinatario/entities/destinatario.entity';
 import { DocumentoInstitucionalService } from './documento-institucional.service';
 import { DocumentoInstitucionalController } from './documento-institucional.controller';
+import { DestinatarioModule } from '../destinatario/destinatario.module';
 
 const CARPETA_DOCUMENTOS = join(process.cwd(), 'uploads', 'documentos');
 
@@ -35,6 +36,7 @@ const CARPETA_DOCUMENTOS = join(process.cwd(), 'uploads', 'documentos');
       },
       limits: { fileSize: 10 * 1024 * 1024 },
     }),
+    DestinatarioModule,
   ],
   controllers: [DocumentoInstitucionalController],
   providers: [DocumentoInstitucionalService],

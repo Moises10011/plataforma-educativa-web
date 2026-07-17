@@ -1,0 +1,424 @@
+.asistencia-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+/* ===== Selector de curso ===== */
+.cursos-card {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.75rem;
+  padding: 1.1rem 1.25rem;
+}
+
+.cursos-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.75rem;
+}
+
+.cursos-lista {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+.curso-radio {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding: 0.55rem 1rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.6rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.curso-radio input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.curso-radio:hover {
+  border-color: #9ca3af;
+  background: #f9fafb;
+}
+
+.curso-radio-activo {
+  border-color: #2c3e91;
+  background: #eef1fb;
+}
+
+.curso-nombre {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #111827;
+}
+
+.curso-detalle {
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+
+/* ===== Alertas ===== */
+.alert {
+  padding: 0.65rem 1rem;
+  border-radius: 0.5rem;
+  font-size: 0.85rem;
+}
+
+.alert-error {
+  background: #fef2f2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+}
+
+.alert-exito {
+  background: #f0fdf4;
+  color: #15803d;
+  border: 1px solid #bbf7d0;
+}
+
+/* ===== Tabla card ===== */
+.tabla-card {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.75rem;
+  padding: 1.1rem;
+}
+
+.tabla-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.tabla-titulo {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #111827;
+  margin: 0;
+}
+
+.tabla-acciones {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.btn {
+  padding: 0.45rem 0.9rem;
+  border-radius: 0.5rem;
+  font-size: 0.8rem;
+  font-weight: 500;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.btn-primary {
+  background: #2c3e91;
+  color: white;
+  border-color: #2c3e91;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: #22307a;
+}
+
+.btn-outline {
+  background: white;
+  color: #374151;
+  border-color: #d1d5db;
+}
+
+.btn-outline:hover {
+  background: #f9fafb;
+}
+
+.btn-danger {
+  background: #dc2626;
+  color: white;
+  border-color: #dc2626;
+}
+
+.btn-danger:hover:not(:disabled) {
+  background: #b91c1c;
+}
+
+.loading {
+  text-align: center;
+  padding: 2rem;
+  color: #6b7280;
+  font-size: 0.85rem;
+}
+
+/* ===== Tabla scroll ===== */
+.tabla-scroll {
+  overflow-x: auto;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+}
+
+.tabla-asistencia {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 0.75rem;
+  table-layout: fixed;
+}
+
+/* ── Cabecera: azul del sistema, no tan claro ── */
+.tabla-asistencia thead th {
+  background: #2c3e91;
+  color: #ffffff;
+  font-weight: 600;
+  border-bottom: 2px solid #22307a;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  text-align: center;
+  padding: 0;
+}
+
+/* Columna # */
+.col-num {
+  width: 2rem;
+  min-width: 2rem;
+  text-align: center;
+  position: sticky;
+  left: 0;
+  z-index: 3;
+  padding: 0.4rem 0.2rem;
+}
+
+thead .col-num {
+  background: #2c3e91;
+}
+
+tbody .col-num {
+  background: #f3f4f6;
+  border-right: 1px solid #e5e7eb;
+}
+
+/* Columna nombres — alineado a la izquierda */
+.col-nombre {
+  min-width: 200px;
+  text-align: left;
+  position: sticky;
+  left: 2rem;
+  z-index: 2;
+  padding: 0.4rem 0.6rem;
+}
+
+thead .col-nombre {
+  background: #2c3e91;
+  color: white;
+  border-right: 1px solid rgba(255,255,255,0.2);
+}
+
+tbody .col-nombre {
+  background: white;
+  color: #111827;
+  border-right: 1px solid #e5e7eb;
+}
+
+tbody tr:nth-child(even) .col-nombre {
+  background: #fafafa;
+}
+
+/* ── Columna de fecha ── */
+.col-dia {
+  width: 2.1rem;
+  min-width: 2.1rem;
+  height: 5.2rem;
+  padding: 0;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.col-dia:hover {
+  background-color: #22307a;
+}
+
+.col-dia-seleccionada {
+  background-color: #d97706 !important;
+}
+
+/* Contenedor de la celda de fecha: centra el texto rotado dentro de la celda */
+.th-fecha-inner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 5.2rem;
+  overflow: hidden;
+}
+
+/* Texto de la fecha, rotado -90°, centrado dentro de su propia celda */
+.dia-header {
+  display: inline-block;
+  transform: rotate(-90deg);
+  white-space: nowrap;
+  font-size: 0.66rem;
+  color: #ffffff;
+  letter-spacing: 0.01em;
+}
+
+/* Columna "+" */
+.col-agregar {
+  width: 2.4rem;
+  min-width: 2.4rem;
+  text-align: center;
+  vertical-align: middle;
+  padding: 0.4rem 0.2rem;
+}
+
+.btn-agregar {
+  width: 1.6rem;
+  height: 1.6rem;
+  border-radius: 0.4rem;
+  border: 1px dashed rgba(255,255,255,0.6);
+  background: transparent;
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  line-height: 1;
+}
+
+.btn-agregar:hover {
+  border-color: #fff;
+  background: rgba(255,255,255,0.2);
+}
+
+/* ── Body ── */
+.tabla-asistencia tbody tr:nth-child(even) {
+  background: #fafafa;
+}
+
+.tabla-asistencia tbody td {
+  border-bottom: 1px solid #f3f4f6;
+  padding: 0.35rem 0.2rem;
+  text-align: center;
+}
+
+.celda-asistencia {
+  cursor: pointer;
+  user-select: none;
+  transition: background-color 0.12s ease;
+  border-left: 1px solid #f3f4f6;
+}
+
+.celda-asistencia:hover {
+  background-color: #e0e7ff !important;
+}
+
+.punto {
+  color: #16a34a;
+  font-size: 0.8rem;
+}
+
+.marca {
+  font-weight: 700;
+  font-size: 0.7rem;
+}
+
+.celda-falta .marca   { color: #dc2626; }
+.celda-tardanza .marca { color: #d97706; }
+
+.celda-presente  { background-color: #f0fdf4; }
+.celda-falta     { background-color: #fef2f2; }
+.celda-tardanza  { background-color: #fffbeb; }
+
+/* ===== Leyenda ===== */
+.leyenda {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.1rem;
+  margin-top: 0.85rem;
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+
+.leyenda span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.leyenda-punto {
+  width: 0.7rem;
+  height: 0.7rem;
+  border-radius: 0.2rem;
+  display: inline-block;
+  border: 1px solid #d1d5db;
+}
+
+.leyenda-punto.vacio    { background: white; }
+.leyenda-punto.presente { background: #dcfce7; border-color: #86efac; }
+.leyenda-punto.falta    { background: #fee2e2; border-color: #fca5a5; }
+.leyenda-punto.tardanza { background: #fef3c7; border-color: #fcd34d; }
+
+/* ===== Modal base ===== */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-box {
+  background: white;
+  border-radius: 0.75rem;
+  padding: 1.35rem 1.5rem;
+  width: 90%;
+  max-width: 320px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+}
+
+.modal-box h4 {
+  margin: 0 0 0.85rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #111827;
+}
+
+.modal-box p {
+  font-size: 0.83rem;
+  color: #4b5563;
+  margin: 0 0 1.1rem;
+  line-height: 1.5;
+}
+
+.modal-acciones {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+/* ===== Input fecha ===== */
+.input-fecha {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  box-sizing: border-box;
+  margin-bottom: 0.25rem;
+}

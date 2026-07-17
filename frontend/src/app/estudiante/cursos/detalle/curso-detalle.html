@@ -1,0 +1,59 @@
+<div class="space-y-4">
+  <!-- Breadcrumb -->
+  <div class="text-sm text-gray-400">
+    <a routerLink="/estudiante/cursos" class="hover:text-institucional-700">Mis Cursos</a>
+    <span class="mx-1">›</span>
+    <span class="text-gray-600 font-medium">{{ asignacion()?.curso?.nombre }}</span>
+  </div>
+
+  <!-- Header azul -->
+  <div class="bg-institucional-700 rounded-2xl px-8 py-10 text-white text-center">
+    @if (cargando()) {
+      <div class="animate-pulse space-y-3 flex flex-col items-center">
+        <div class="h-8 w-64 bg-white/20 rounded"></div>
+        <div class="h-3 w-44 bg-white/20 rounded"></div>
+      </div>
+    } @else if (asignacion()) {
+      <h1 class="text-4xl font-serif font-bold tracking-tight">{{ asignacion()?.curso?.nombre }}</h1>
+      <div class="w-12 h-0.5 bg-white/40 mx-auto mt-4 rounded-full"></div>
+      <p class="text-sm text-white/80 mt-4 flex items-center justify-center flex-wrap gap-x-2">
+        @if (asignacion()?.grado || asignacion()?.seccion) {
+          <span>{{ asignacion()?.grado?.nombre }} - {{ asignacion()?.seccion?.nombre }}</span>
+          <span class="text-white/40">·</span>
+        }
+        @if (asignacion()?.docente) {
+          <span>{{ asignacion()?.docente?.nombres }} {{ asignacion()?.docente?.apellidos }}</span>
+        } @else {
+          <span class="text-amber-200">Docente no asignado</span>
+        }
+      </p>
+    } @else {
+      <p class="text-sm text-white/80">No se pudo cargar la información del curso.</p>
+    }
+  </div>
+
+  <!-- Tabs + contenido -->
+  <div class="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+    <nav class="flex gap-1 border-b border-gray-100 px-3 pt-2">
+      <a [routerLink]="['/estudiante/cursos', idCurso(), 'tareas']"
+        routerLinkActive="text-institucional-700 bg-institucional-50"
+        class="flex items-center gap-2 px-4 py-2.5 text-sm font-semibold text-gray-500 rounded-t-lg hover:text-institucional-700 hover:bg-gray-50 transition-colors">
+        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
+        </svg>
+        Tareas
+      </a>
+      <a [routerLink]="['/estudiante/cursos', idCurso(), 'materiales']"
+        routerLinkActive="text-institucional-700 bg-institucional-50"
+        class="flex items-center gap-2 px-4 py-2.5 text-sm font-semibold text-gray-500 rounded-t-lg hover:text-institucional-700 hover:bg-gray-50 transition-colors">
+        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"/>
+        </svg>
+        Materiales
+      </a>
+    </nav>
+    <div class="p-5">
+      <router-outlet></router-outlet>
+    </div>
+  </div>
+</div>
