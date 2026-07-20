@@ -1,5 +1,5 @@
 export const environment = {
-  production: false,
-  apiUrl: 'http://localhost:3000/api',
-  filesUrl: 'http://localhost:3000',
+  production: true,
+  apiUrl: 'https://plataforma-backend-5f6y.onrender.com/api',
+  filesUrl: 'https://plataforma-backend-5f6y.onrender.com',
 };
