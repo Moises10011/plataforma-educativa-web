@@ -74,6 +74,6 @@ export class AdminInstitucion implements OnInit {
 
   logoUrl(): string {
     const logo = this.institucion()?.logo;
-    return logo ? `${environment.apiUrl}/uploads/institucion/${logo}` : '';
+    return logo ? `${environment.filesUrl}/uploads/institucion/${logo}` : '';
   }
 }
