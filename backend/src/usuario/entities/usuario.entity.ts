@@ -45,7 +45,7 @@ export class Usuario {
 
   @ManyToMany(() => Rol)
   @JoinTable({
-    name: 'Usuario_Rol',
+    name: 'usuario_Rol',
     joinColumn: { name: 'id_usuario', referencedColumnName: 'id_usuario' },
     inverseJoinColumn: { name: 'id_rol', referencedColumnName: 'id_rol' },
   })
