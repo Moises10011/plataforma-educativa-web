@@ -20,5 +20,7 @@ export const databaseConfig: TypeOrmModuleAsyncOptions = {
     autoLoadEntities: true,
 
     synchronize: false,
+
+    logging: false,
   }),
 };
