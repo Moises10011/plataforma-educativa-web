@@ -11,7 +11,7 @@ import { Seccion } from '../../seccion/entities/seccion.entity';
 import { PeriodoAcademico } from '../../periodo-academico/entities/periodo-academico.entity';
 import { Usuario } from '../../usuario/entities/usuario.entity';
 
-@Entity('Horario')
+@Entity('horario')
 export class Horario {
   @PrimaryGeneratedColumn({ name: 'id_horario' })
   id_horario!: number;

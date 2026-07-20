@@ -4,6 +4,7 @@ import {
   Post,
   Put,
   Delete,
+  Patch,
   Body,
   Param,
   ParseIntPipe,
@@ -36,6 +37,12 @@ export class PeriodoAcademicoController {
   }
 
   @UseGuards(JwtAuthGuard)
+  @Get('activo')
+  findActivo() {
+    return this.periodoAcademicoService.findActivo();
+  }
+
+  @UseGuards(JwtAuthGuard)
   @Get(':id')
   findOne(@Param('id', ParseIntPipe) id: number) {
     return this.periodoAcademicoService.findOne(id);
@@ -49,6 +56,13 @@ export class PeriodoAcademicoController {
     @Body() updatePeriodoAcademicoDto: UpdatePeriodoAcademicoDto,
   ) {
     return this.periodoAcademicoService.update(id, updatePeriodoAcademicoDto);
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('Administrador')
+  @Patch(':id/cerrar')
+  cerrarPeriodo(@Param('id', ParseIntPipe) id: number) {
+    return this.periodoAcademicoService.cerrarPeriodo(id);
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)

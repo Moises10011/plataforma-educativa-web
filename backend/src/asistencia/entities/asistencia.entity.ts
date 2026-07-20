@@ -8,7 +8,7 @@ import {
 import { AsignacionCurso } from '../../asignacion-curso/entities/asignacion-curso.entity';
 import { Usuario } from '../../usuario/entities/usuario.entity';
 
-@Entity('Asistencia')
+@Entity('asistencia')
 export class Asistencia {
   @PrimaryGeneratedColumn({ name: 'id_asistencia' })
   id_asistencia!: number;

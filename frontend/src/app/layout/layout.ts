@@ -160,6 +160,7 @@ export class Layout implements OnInit {
           etiqueta: 'Gestión Académica',
           icono: 'academic',
           items: [
+            { etiqueta: 'Períodos Académicos', ruta: '/admin/periodos' },
             { etiqueta: 'Estudiantes', ruta: '/admin/estudiantes' },
             { etiqueta: 'Docentes', ruta: '/admin/docentes' },
           ],

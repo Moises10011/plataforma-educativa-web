@@ -8,7 +8,7 @@ import {
 } from 'typeorm';
 import { AsignacionCurso } from '../../asignacion-curso/entities/asignacion-curso.entity';
 
-@Entity('Tarea')
+@Entity('tarea')
 export class Tarea {
   @PrimaryGeneratedColumn({ name: 'id_tarea' })
   id_tarea!: number;

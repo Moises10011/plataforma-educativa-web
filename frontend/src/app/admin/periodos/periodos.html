@@ -1,0 +1,297 @@
+<div class="periodos-container">
+  <div class="header">
+    <h1>Gestión de Períodos Académicos</h1>
+    <button class="btn btn-primary" (click)="abrirModalNuevo()">
+      + Nuevo Período
+    </button>
+  </div>
+
+  <div class="alert alert-error" *ngIf="error()">
+    {{ error() }}
+  </div>
+
+  <div class="loading" *ngIf="cargando()">
+    <p>Cargando períodos...</p>
+  </div>
+
+  <div class="content" *ngIf="!cargando()">
+    <div class="periodo-activo" *ngIf="periodoActivo">
+      <div class="activo-badge">PERÍODO ACTIVO</div>
+      <h2>{{ periodoActivo.nombre }}</h2>
+      <div class="info">
+        <span>Año: {{ periodoActivo.anio }}</span>
+        <span>Inicio: {{ formatearFecha(periodoActivo.fecha_inicio) }}</span>
+        <span>Fin: {{ formatearFecha(periodoActivo.fecha_fin) }}</span>
+        <span>Tipo: {{ periodoActivo.tipo_periodo === 'trimestral' ? 'Trimestral' : 'Bimestral' }}</span>
+      </div>
+      <div class="periodo-activo-acciones">
+        <button class="btn btn-outline" (click)="abrirModalBimestres(periodoActivo)">
+          Ver bimestres
+        </button>
+        <button class="btn btn-warning" (click)="abrirModalCerrar(periodoActivo)">
+          Cerrar Período
+        </button>
+      </div>
+    </div>
+
+    <div class="periodos-historial">
+      <h3>Historial de Períodos</h3>
+      <div class="table-container">
+        <table class="tabla">
+          <thead>
+            <tr>
+              <th>Nombre</th>
+              <th>Año</th>
+              <th>Fecha Inicio</th>
+              <th>Fecha Fin</th>
+              <th>Tipo</th>
+              <th>Estado</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let periodo of periodos()">
+              <td>{{ periodo.nombre }}</td>
+              <td>{{ periodo.anio }}</td>
+              <td>{{ formatearFecha(periodo.fecha_inicio) }}</td>
+              <td>{{ formatearFecha(periodo.fecha_fin) }}</td>
+              <td>{{ periodo.tipo_periodo === 'trimestral' ? 'Trimestral' : 'Bimestral' }}</td>
+              <td>
+                <span class="badge" [class.badge-success]="periodo.estado" [class.badge-secondary]="!periodo.estado">
+                  {{ periodo.estado ? 'Activo' : 'Cerrado' }}
+                </span>
+              </td>
+              <td class="acciones">
+                <button class="btn btn-sm btn-outline" (click)="abrirModalBimestres(periodo)">
+                  Bimestres
+                </button>
+                <button class="btn btn-sm btn-info" (click)="abrirModalEditar(periodo)">
+                  Editar
+                </button>
+                <button class="btn btn-sm btn-warning" (click)="abrirModalCerrar(periodo)" 
+                        *ngIf="periodo.estado" [disabled]="guardando()">
+                  Cerrar
+                </button>
+                <button class="btn btn-sm btn-danger" (click)="abrirModalEliminar(periodo)" 
+                        *ngIf="!periodo.estado" [disabled]="guardando()">
+                  Eliminar
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Nuevo Período -->
+  <div class="modal" *ngIf="modalNuevo()" (click)="cerrarModal()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>Nuevo Período Académico</h2>
+        <button class="btn-close" (click)="cerrarModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="alert alert-error" *ngIf="error()">
+          {{ error() }}
+        </div>
+        <form>
+          <div class="form-group">
+            <label>Nombre del Período *</label>
+            <input type="text" [(ngModel)]="nuevoPeriodo.nombre" name="nombre" 
+                   placeholder="Ej: 2025-I" required>
+          </div>
+          <div class="form-group">
+            <label>Año *</label>
+            <input type="number" [(ngModel)]="nuevoPeriodo.anio" name="anio" 
+                   [min]="2000" [max]="2100" required>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Fecha Inicio *</label>
+              <input type="date" [(ngModel)]="nuevoPeriodo.fecha_inicio" name="fecha_inicio" required>
+            </div>
+            <div class="form-group">
+              <label>Fecha Fin *</label>
+              <input type="date" [(ngModel)]="nuevoPeriodo.fecha_fin" name="fecha_fin" required>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Tipo de período *</label>
+            <select [(ngModel)]="nuevoPeriodo.tipo_periodo" name="tipo_periodo">
+              <option value="trimestral">Trimestral (I, II, III Trimestre)</option>
+              <option value="bimestral">Bimestral (I, II, III, IV Bimestre)</option>
+            </select>
+            <p class="form-hint">Al crear el período se generarán automáticamente sus bimestres/trimestres.</p>
+          </div>
+          <div class="form-group">
+            <label>
+              <input type="checkbox" [(ngModel)]="nuevoPeriodo.estado" name="estado">
+              Período Activo
+            </label>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" (click)="cerrarModal()" [disabled]="guardando()">
+          Cancelar
+        </button>
+        <button class="btn btn-primary" (click)="crearPeriodo()" [disabled]="guardando()">
+          {{ guardando() ? 'Guardando...' : 'Crear Período' }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Editar Período -->
+  <div class="modal" *ngIf="modalEditar()" (click)="cerrarModal()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>Editar Período Académico</h2>
+        <button class="btn-close" (click)="cerrarModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="alert alert-error" *ngIf="error()">
+          {{ error() }}
+        </div>
+        <form>
+          <div class="form-group">
+            <label>Nombre del Período *</label>
+            <input type="text" [(ngModel)]="editarPeriodo.nombre" name="nombre" required>
+          </div>
+          <div class="form-group">
+            <label>Año *</label>
+            <input type="number" [(ngModel)]="editarPeriodo.anio" name="anio" 
+                   [min]="2000" [max]="2100" required>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Fecha Inicio *</label>
+              <input type="date" [(ngModel)]="editarPeriodo.fecha_inicio" name="fecha_inicio" required>
+            </div>
+            <div class="form-group">
+              <label>Fecha Fin *</label>
+              <input type="date" [(ngModel)]="editarPeriodo.fecha_fin" name="fecha_fin" required>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Tipo de período *</label>
+            <select [(ngModel)]="editarPeriodo.tipo_periodo" name="tipo_periodo">
+              <option value="trimestral">Trimestral (I, II, III Trimestre)</option>
+              <option value="bimestral">Bimestral (I, II, III, IV Bimestre)</option>
+            </select>
+            <p class="form-hint">Cambiar esto NO regenera los bimestres ya creados. Usa "Bimestres" en la tabla para ajustarlos manualmente.</p>
+          </div>
+          <div class="form-group">
+            <label>
+              <input type="checkbox" [(ngModel)]="editarPeriodo.estado" name="estado">
+              Período Activo
+            </label>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" (click)="cerrarModal()" [disabled]="guardando()">
+          Cancelar
+        </button>
+        <button class="btn btn-primary" (click)="actualizarPeriodo()" [disabled]="guardando()">
+          {{ guardando() ? 'Guardando...' : 'Actualizar Período' }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Cerrar Período -->
+  <div class="modal" *ngIf="modalCerrar()" (click)="cerrarModal()">
+    <div class="modal-content modal-sm" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>Cerrar Período</h2>
+        <button class="btn-close" (click)="cerrarModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p>¿Está seguro de cerrar el período <strong>{{ periodoSeleccionado()?.nombre }}</strong>?</p>
+        <p class="text-warning">Esta acción marcará el período como inactivo. No se podrán realizar nuevas matrículas en este período.</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" (click)="cerrarModal()" [disabled]="guardando()">
+          Cancelar
+        </button>
+        <button class="btn btn-warning" (click)="cerrarPeriodo()" [disabled]="guardando()">
+          {{ guardando() ? 'Cerrando...' : 'Cerrar Período' }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Eliminar Período -->
+  <div class="modal" *ngIf="modalEliminar()" (click)="cerrarModal()">
+    <div class="modal-content modal-sm" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>Eliminar Período</h2>
+        <button class="btn-close" (click)="cerrarModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p>¿Está seguro de eliminar el período <strong>{{ periodoSeleccionado()?.nombre }}</strong>?</p>
+        <p class="text-danger">Esta acción no se puede deshacer.</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" (click)="cerrarModal()" [disabled]="guardando()">
+          Cancelar
+        </button>
+        <button class="btn btn-danger" (click)="eliminarPeriodo()" [disabled]="guardando()">
+          {{ guardando() ? 'Eliminando...' : 'Eliminar' }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Gestionar Bimestres -->
+  <div class="modal" *ngIf="modalBimestres()" (click)="cerrarModalBimestres()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>Bimestres de {{ periodoBimestres()?.nombre }}</h2>
+        <button class="btn-close" (click)="cerrarModalBimestres()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="alert alert-error" *ngIf="errorBimestres()">
+          {{ errorBimestres() }}
+        </div>
+
+        <div class="loading" *ngIf="cargandoBimestres()">
+          <p>Cargando bimestres...</p>
+        </div>
+
+        <ul class="lista-bimestres" *ngIf="!cargandoBimestres()">
+          <li *ngFor="let b of bimestres()">
+            <span>{{ b.nombre }}</span>
+            <button class="btn btn-sm btn-danger"
+                    (click)="eliminarBimestre(b)"
+                    [disabled]="eliminandoBimestreId() === b.id_bimestre">
+              {{ eliminandoBimestreId() === b.id_bimestre ? 'Eliminando...' : 'Eliminar' }}
+            </button>
+          </li>
+          <li *ngIf="bimestres().length === 0" class="lista-bimestres-vacia">
+            Este período aún no tiene bimestres.
+          </li>
+        </ul>
+
+        <div class="form-row-inline">
+          <input type="text" placeholder="Ej: I Bimestre extraordinario"
+                 [ngModel]="nombreNuevoBimestre()"
+                 (ngModelChange)="nombreNuevoBimestre.set($event)"
+                 (keydown.enter)="crearBimestreManual()">
+          <button class="btn btn-primary btn-sm"
+                  [disabled]="creandoBimestre()"
+                  (click)="crearBimestreManual()">
+            {{ creandoBimestre() ? '...' : '+ Agregar' }}
+          </button>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" (click)="cerrarModalBimestres()">
+          Cerrar
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

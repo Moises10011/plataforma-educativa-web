@@ -10,13 +10,13 @@ interface AsignacionMini {
   grado: string;
   seccion: string;
   periodo: string;
+  id_periodo: number;
 }
 
-interface PeriodoMini {
+interface BimestreMini {
+  id_bimestre: number;
   id_periodo: number;
   nombre: string;
-  fecha_inicio: string;
-  fecha_fin: string;
   estado: boolean;
 }
 
@@ -31,11 +31,10 @@ interface EstudianteMini {
   apellidos: string;
 }
 
-interface NotaRegistro {
-  id_nota: number;
-  id_usuario_estudiante: number;
+interface NotaColumna {
+  id: string;
   id_competencia: number;
-  valor: string;
+  nombre: string;
 }
 
 type EstadoNota = '' | 'AD' | 'A' | 'B' | 'C';
@@ -69,16 +68,100 @@ export class DocenteNotas implements OnInit {
     ) ?? null,
   );
 
-  // ── Periodos (bimestre/trimestre) ─────────────────────────────────────────
-  periodos = signal<PeriodoMini[]>([]);
-  idPeriodoSeleccionado = signal<number | null>(null);
+  // ── Bimestres (catálogo fijo, creado por el admin al abrir el periodo) ───
+  bimestres = signal<BimestreMini[]>([]);
+  idBimestreSeleccionado = signal<number | null>(null);
 
-  // ── Roster y notas ───────────────────────────────────────────────────────
+  // ── Roster ──────────────────────────────────────────────────────────────
   estudiantes  = signal<EstudianteMini[]>([]);
   competencias = signal<CompetenciaMini[]>([]);
-  mapaNotas         = signal<Map<string, EstadoNota>>(new Map());
-  mapaNotasOriginal = signal<Map<string, EstadoNota>>(new Map());
-  cambiosPendientes = signal<Set<string>>(new Set());
+
+  // ── Notas dinámicas por competencia (columnas "Crear Nota") ────────────────
+  notasPorCompetencia = signal<Map<number, NotaColumna[]>>(new Map());
+  valoresNota          = signal<Map<string, EstadoNota>>(new Map());
+  valoresNotaOriginal  = signal<Map<string, EstadoNota>>(new Map());
+  cambiosPendientes    = signal<Set<string>>(new Set());
+
+  notasDeCompetencia(id_competencia: number): NotaColumna[] {
+    return this.notasPorCompetencia().get(id_competencia) ?? [];
+  }
+
+  // ── Modal 1: crear nota ──────────────────────────────────────────────────
+  modalCrearNotaAbierto = signal(false);
+  competenciaModalId = signal<number | null>(null);
+  nombreNuevaNota = signal('');
+
+  abrirModalCrearNota(id_competencia: number): void {
+    this.competenciaModalId.set(id_competencia);
+    this.nombreNuevaNota.set('');
+    this.modalCrearNotaAbierto.set(true);
+  }
+
+  cerrarModalCrearNota(): void {
+    this.modalCrearNotaAbierto.set(false);
+  }
+
+  confirmarCrearNota(): void {
+    const id_competencia = this.competenciaModalId();
+    const nombre = this.nombreNuevaNota().trim();
+    if (!id_competencia || !nombre) return;
+
+    const nueva: NotaColumna = { id: `nota_${Date.now()}`, id_competencia, nombre };
+    const mapa = new Map(this.notasPorCompetencia());
+    mapa.set(id_competencia, [...(mapa.get(id_competencia) ?? []), nueva]);
+    this.notasPorCompetencia.set(mapa);
+
+    this.modalCrearNotaAbierto.set(false);
+  }
+
+  // ── Modal 2: editar / eliminar columna de nota ──────────────────────────
+  modalEditarNotaAbierto = signal(false);
+  notaEditando = signal<NotaColumna | null>(null);
+  nombreEditarNota = signal('');
+
+  abrirModalEditarNota(nota: NotaColumna): void {
+    this.notaEditando.set(nota);
+    this.nombreEditarNota.set(nota.nombre);
+    this.modalEditarNotaAbierto.set(true);
+  }
+
+  cerrarModalEditarNota(): void {
+    this.modalEditarNotaAbierto.set(false);
+    this.notaEditando.set(null);
+  }
+
+  guardarEdicionNota(): void {
+    const nota = this.notaEditando();
+    const nombre = this.nombreEditarNota().trim();
+    if (!nota || !nombre) return;
+
+    const mapa = new Map(this.notasPorCompetencia());
+    const lista = (mapa.get(nota.id_competencia) ?? []).map((n) =>
+      n.id === nota.id ? { ...n, nombre } : n,
+    );
+    mapa.set(nota.id_competencia, lista);
+    this.notasPorCompetencia.set(mapa);
+
+    this.cerrarModalEditarNota();
+  }
+
+  eliminarNotaColumna(): void {
+    const nota = this.notaEditando();
+    if (!nota) return;
+
+    const mapa = new Map(this.notasPorCompetencia());
+    const lista = (mapa.get(nota.id_competencia) ?? []).filter((n) => n.id !== nota.id);
+    mapa.set(nota.id_competencia, lista);
+    this.notasPorCompetencia.set(mapa);
+
+    const valores = new Map(this.valoresNota());
+    for (const clave of Array.from(valores.keys())) {
+      if (clave.endsWith(`_${nota.id}`)) valores.delete(clave);
+    }
+    this.valoresNota.set(valores);
+
+    this.cerrarModalEditarNota();
+  }
 
   // ── Estado general ──────────────────────────────────────────────────────
   cargando  = signal(false);
@@ -90,7 +173,6 @@ export class DocenteNotas implements OnInit {
 
   ngOnInit(): void {
     this.cargarAsignaciones();
-    this.cargarPeriodos();
   }
 
   private mostrarExito(msg: string): void {
@@ -109,28 +191,27 @@ export class DocenteNotas implements OnInit {
       });
   }
 
-  cargarPeriodos(): void {
+  private cargarBimestres(): void {
+    const id_periodo = this.asignacionActual()?.id_periodo;
+    if (!id_periodo) return;
+
     this.http
-      .get<PeriodoMini[]>(`${environment.apiUrl}/periodo-academico`)
+      .get<BimestreMini[]>(`${environment.apiUrl}/bimestre?id_periodo=${id_periodo}`)
       .subscribe({
-        next: (data) => {
-          const activos = data
-            .filter((p) => p.estado)
-            .sort((a, b) => a.fecha_inicio.localeCompare(b.fecha_inicio));
-          this.periodos.set(activos);
-        },
-        error: () => this.periodos.set([]),
+        next: (data) => this.bimestres.set(data),
+        error: () => this.bimestres.set([]),
       });
   }
 
   seleccionarCurso(id: number): void {
     this.idAsignacionSeleccionada.set(id);
+    this.idBimestreSeleccionado.set(null);
     this.limpiarTabla();
-    this.cargarSiListo();
+    this.cargarBimestres();
   }
 
-  seleccionarPeriodo(id: number): void {
-    this.idPeriodoSeleccionado.set(id);
+  seleccionarBimestre(id: number): void {
+    this.idBimestreSeleccionado.set(id);
     this.limpiarTabla();
     this.cargarSiListo();
   }
@@ -139,14 +220,17 @@ export class DocenteNotas implements OnInit {
     this.cambiosPendientes.set(new Set());
     this.competencias.set([]);
     this.estudiantes.set([]);
-    this.mapaNotas.set(new Map());
-    this.mapaNotasOriginal.set(new Map());
+    this.notasPorCompetencia.set(new Map());
+    this.valoresNota.set(new Map());
+    this.valoresNotaOriginal.set(new Map());
+    this.modalCrearNotaAbierto.set(false);
+    this.modalEditarNotaAbierto.set(false);
   }
 
   private cargarSiListo(): void {
     const idAsignacion = this.idAsignacionSeleccionada();
-    const idPeriodo = this.idPeriodoSeleccionado();
-    if (!idAsignacion || !idPeriodo) return;
+    const idBimestre = this.idBimestreSeleccionado();
+    if (!idAsignacion || !idBimestre) return;
 
     this.cargando.set(true);
     this.error.set('');
@@ -156,7 +240,7 @@ export class DocenteNotas implements OnInit {
       .subscribe({
         next: (estudiantes) => {
           this.estudiantes.set(estudiantes);
-          this.cargarCompetenciasYNotas(idAsignacion, idPeriodo);
+          this.cargarCompetenciasYNotas(idAsignacion, idBimestre);
         },
         error: () => {
           this.cargando.set(false);
@@ -165,31 +249,15 @@ export class DocenteNotas implements OnInit {
       });
   }
 
-  private cargarCompetenciasYNotas(idAsignacion: number, idPeriodo: number): void {
+  private cargarCompetenciasYNotas(idAsignacion: number, idBimestre: number): void {
     this.http
       .get<CompetenciaMini[]>(`${environment.apiUrl}/asignacion-curso/${idAsignacion}/competencias`)
       .subscribe({
         next: (competencias) => {
           this.competencias.set(competencias);
-
-          this.http
-            .get<NotaRegistro[]>(`${environment.apiUrl}/asignacion-curso/${idAsignacion}/notas/${idPeriodo}`)
-            .subscribe({
-              next: (notas) => {
-                const mapa = new Map<string, EstadoNota>();
-                for (const n of notas) {
-                  mapa.set(`${n.id_usuario_estudiante}_${n.id_competencia}`, n.valor as EstadoNota);
-                }
-                this.mapaNotas.set(mapa);
-                this.mapaNotasOriginal.set(new Map(mapa));
-                this.cargando.set(false);
-              },
-              error: () => {
-                this.mapaNotas.set(new Map());
-                this.mapaNotasOriginal.set(new Map());
-                this.cargando.set(false);
-              },
-            });
+          // NOTA: falta el endpoint que traiga las columnas de nota (NotaColumna)
+          // ya creadas para este bimestre y sus valores (valoresNota).
+          this.cargando.set(false);
         },
         error: () => {
           this.cargando.set(false);
@@ -198,40 +266,41 @@ export class DocenteNotas implements OnInit {
       });
   }
 
-  // ── Celdas ──────────────────────────────────────────────────────────────
+  // ── Celdas de nota ───────────────────────────────────────────────────────
 
-  estadoCelda(id_usuario: number, id_competencia: number): EstadoNota {
-    return this.mapaNotas().get(`${id_usuario}_${id_competencia}`) ?? '';
+  estadoCeldaNota(id_usuario: number, id_nota: string): EstadoNota {
+    return this.valoresNota().get(`${id_usuario}_${id_nota}`) ?? '';
   }
 
-  clickCelda(id_usuario: number, id_competencia: number): void {
-    const clave     = `${id_usuario}_${id_competencia}`;
-    const actual    = this.mapaNotas().get(clave) ?? '';
+  clickCeldaNota(id_usuario: number, id_nota: string): void {
+    const clave     = `${id_usuario}_${id_nota}`;
+    const actual    = this.valoresNota().get(clave) ?? '';
     const siguiente = CICLO[(CICLO.indexOf(actual) + 1) % CICLO.length];
-    this.setCelda(clave, siguiente);
+    this.setCeldaNota(clave, siguiente);
   }
 
-  borrarConTecla(event: KeyboardEvent, id_usuario: number, id_competencia: number): void {
+  borrarConTecla(event: KeyboardEvent, id_usuario: number, id_nota: string): void {
     if (event.key !== 'Delete' && event.key !== 'Backspace') return;
     event.preventDefault();
-    this.setCelda(`${id_usuario}_${id_competencia}`, '');
+    this.setCeldaNota(`${id_usuario}_${id_nota}`, '');
   }
 
-  private setCelda(clave: string, valor: EstadoNota): void {
-    const nuevoMapa = new Map(this.mapaNotas());
+  private setCeldaNota(clave: string, valor: EstadoNota): void {
+    const nuevoMapa = new Map(this.valoresNota());
     valor === '' ? nuevoMapa.delete(clave) : nuevoMapa.set(clave, valor);
-    this.mapaNotas.set(nuevoMapa);
+    this.valoresNota.set(nuevoMapa);
 
     const nuevosCambios = new Set(this.cambiosPendientes());
     nuevosCambios.add(clave);
     this.cambiosPendientes.set(nuevosCambios);
   }
 
-  // ── Promedio en vivo ──────────────────────────────────────────────────────
+  // ── Promedio por competencia (en vivo) ──────────────────────────────────
 
-  promedioEstudiante(id_usuario: number): string {
-    const valores = this.competencias()
-      .map((c) => this.mapaNotas().get(`${id_usuario}_${c.id_competencia}`))
+  promedioCompetencia(id_usuario: number, id_competencia: number): string {
+    const notas = this.notasDeCompetencia(id_competencia);
+    const valores = notas
+      .map((n) => this.valoresNota().get(`${id_usuario}_${n.id}`))
       .filter((v): v is EstadoNota => !!v);
 
     if (valores.length === 0) return '';
@@ -243,34 +312,47 @@ export class DocenteNotas implements OnInit {
   // ── Deshacer ────────────────────────────────────────────────────────────
 
   deshacer(): void {
-    this.mapaNotas.set(new Map(this.mapaNotasOriginal()));
+    this.valoresNota.set(new Map(this.valoresNotaOriginal()));
     this.cambiosPendientes.set(new Set());
+  }
+
+  // ── Actualizar (recarga desde el servidor) ──────────────────────────────
+
+  actualizar(): void {
+    this.limpiarTabla();
+    this.cargarSiListo();
+    this.mostrarExito('Datos actualizados');
   }
 
   // ── Guardar ─────────────────────────────────────────────────────────────
 
   guardar(): void {
     const idAsignacion = this.idAsignacionSeleccionada();
-    const idPeriodo = this.idPeriodoSeleccionado();
-    if (!idAsignacion || !idPeriodo || this.cambiosPendientes().size === 0) return;
+    const idBimestre = this.idBimestreSeleccionado();
+    if (!idAsignacion || !idBimestre || this.cambiosPendientes().size === 0) return;
 
-    const registros: { id_usuario: number; id_competencia: number; valor: string }[] = [];
-    const eliminaciones: { id_usuario: number; id_competencia: number }[] = [];
+    const notas: { id_usuario: number; id_nota: string; id_competencia: number; nombre: string; valor: string }[] = [];
+    const eliminaciones: { id_usuario: number; id_nota: string }[] = [];
 
     for (const clave of this.cambiosPendientes()) {
-      const idx = clave.indexOf('_');
+      const idx = clave.indexOf('_nota_');
+      if (idx === -1) continue;
       const id_usuario = Number(clave.slice(0, idx));
-      const id_competencia = Number(clave.slice(idx + 1));
-      const valor = this.mapaNotas().get(clave) ?? '';
+      const id_nota = clave.slice(idx + 1);
+      const valor = this.valoresNota().get(clave) ?? '';
 
-      if (valor) {
-        registros.push({ id_usuario, id_competencia, valor });
-      } else if (this.mapaNotasOriginal().has(clave)) {
-        eliminaciones.push({ id_usuario, id_competencia });
+      const columna = this.competencias()
+        .flatMap((c) => this.notasDeCompetencia(c.id_competencia))
+        .find((n) => n.id === id_nota);
+
+      if (valor && columna) {
+        notas.push({ id_usuario, id_nota, id_competencia: columna.id_competencia, nombre: columna.nombre, valor });
+      } else if (this.valoresNotaOriginal().has(clave)) {
+        eliminaciones.push({ id_usuario, id_nota });
       }
     }
 
-    if (registros.length === 0 && eliminaciones.length === 0) {
+    if (notas.length === 0 && eliminaciones.length === 0) {
       this.mostrarExito('No hay cambios nuevos para guardar');
       this.cambiosPendientes.set(new Set());
       return;
@@ -281,14 +363,14 @@ export class DocenteNotas implements OnInit {
 
     this.http
       .post(`${environment.apiUrl}/asignacion-curso/${idAsignacion}/notas/lote`, {
-        id_periodo: idPeriodo,
-        registros,
+        id_bimestre: idBimestre,
+        notas,
         eliminaciones,
       })
       .subscribe({
         next: () => {
           this.guardando.set(false);
-          this.mapaNotasOriginal.set(new Map(this.mapaNotas()));
+          this.valoresNotaOriginal.set(new Map(this.valoresNota()));
           this.cambiosPendientes.set(new Set());
           this.mostrarExito('Notas guardadas correctamente');
         },
@@ -301,11 +383,11 @@ export class DocenteNotas implements OnInit {
 
   exportar(): void {
     const idAsignacion = this.idAsignacionSeleccionada();
-    const idPeriodo = this.idPeriodoSeleccionado();
-    if (!idAsignacion || !idPeriodo) return;
+    const idBimestre = this.idBimestreSeleccionado();
+    if (!idAsignacion || !idBimestre) return;
 
     this.http
-      .get(`${environment.apiUrl}/asignacion-curso/${idAsignacion}/notas/exportar/${idPeriodo}`, {
+      .get(`${environment.apiUrl}/asignacion-curso/${idAsignacion}/notas/exportar/${idBimestre}`, {
         responseType: 'blob',
       })
       .subscribe({

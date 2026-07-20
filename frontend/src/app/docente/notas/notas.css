@@ -64,6 +64,53 @@
   color: #6b7280;
 }
 
+/* ── Nuevo bimestre ─────────────────────────────────────────────────────── */
+
+.curso-radio-nuevo {
+  background: white;
+  border-style: dashed;
+  color: #2c3e91;
+  align-items: center;
+  justify-content: center;
+}
+
+.curso-radio-nuevo:hover {
+  background: #eef1fb;
+  border-color: #2c3e91;
+}
+
+.curso-radio-nuevo .curso-nombre {
+  color: #2c3e91;
+}
+
+.curso-radio-form {
+  cursor: default;
+  gap: 0.5rem;
+  min-width: 200px;
+}
+
+.input-nuevo-periodo {
+  border: 1px solid #d1d5db;
+  border-radius: 0.4rem;
+  padding: 0.3rem 0.5rem;
+  font-size: 0.8rem;
+  outline: none;
+}
+
+.input-nuevo-periodo:focus {
+  border-color: #2c3e91;
+}
+
+.form-nuevo-acciones {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.btn-mini {
+  padding: 0.25rem 0.6rem;
+  font-size: 0.72rem;
+}
+
 .alert {
   padding: 0.65rem 1rem;
   border-radius: 0.5rem;
@@ -145,6 +192,16 @@
   background: #f9fafb;
 }
 
+.btn-danger {
+  background: #fef2f2;
+  color: #dc2626;
+  border-color: #fecaca;
+}
+
+.btn-danger:hover:not(:disabled) {
+  background: #fee2e2;
+}
+
 .loading {
   text-align: center;
   padding: 2rem;
@@ -162,7 +219,6 @@
   border-collapse: collapse;
   width: 100%;
   font-size: 0.75rem;
-  table-layout: fixed;
 }
 
 .tabla-notas thead th {
@@ -170,6 +226,7 @@
   color: #ffffff;
   font-weight: 600;
   border-bottom: 2px solid #22307a;
+  border-right: 1px solid rgba(255,255,255,0.15);
   position: sticky;
   top: 0;
   z-index: 1;
@@ -217,32 +274,57 @@ tbody .col-nombre {
 tbody tr:nth-child(even) .col-nombre { background: #fafafa; }
 
 .col-competencia {
-  width: 7rem;
-  min-width: 7rem;
+  min-width: 8rem;
 }
 
 .competencia-header {
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  line-clamp: 3;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-  font-size: 0.68rem;
-  line-height: 1.15;
+  font-size: 0.72rem;
 }
 
+/* ── Columnas de nota dinámica dentro de cada competencia ──────────────── */
 
-.col-promedio {
-  width: 5rem;
-  min-width: 5rem;
+.col-nota {
+  min-width: 4.5rem;
+  cursor: pointer;
+  font-size: 0.68rem;
+}
+
+.col-nota:hover {
+  background: #22307a;
+}
+
+.col-crear-nota {
+  min-width: 5.5rem;
+  padding: 0.3rem !important;
+}
+
+.btn-crear-nota {
+  background: rgba(255,255,255,0.15);
+  border: 1px dashed rgba(255,255,255,0.5);
+  color: white;
+  border-radius: 0.35rem;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.65rem;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.btn-crear-nota:hover {
+  background: rgba(255,255,255,0.3);
+}
+
+.col-promedio-comp {
+  width: 4.5rem;
+  min-width: 4.5rem;
   text-align: center;
   font-weight: 700;
 }
 
-thead .col-promedio { background: #1c2760; }
-tbody .col-promedio {
+thead .col-promedio-comp { background: #1c2760; }
+tbody .col-promedio-comp {
   background: #f3f4f6;
   border-left: 2px solid #d1d5db;
+  border-right: 2px solid #d1d5db;
   color: #111827;
 }
 
@@ -300,3 +382,56 @@ tbody .col-promedio {
 .leyenda-punto.a     { background: #dbeafe; border-color: #93c5fd; }
 .leyenda-punto.b     { background: #fef3c7; border-color: #fcd34d; }
 .leyenda-punto.c     { background: #fee2e2; border-color: #fca5a5; }
+
+/* ── Modales ──────────────────────────────────────────────────────────── */
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(17, 24, 39, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+}
+
+.modal-caja {
+  background: white;
+  border-radius: 0.75rem;
+  padding: 1.25rem;
+  width: 100%;
+  max-width: 320px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+}
+
+.modal-titulo {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #111827;
+  margin: 0 0 0.75rem;
+}
+
+.modal-input {
+  width: 100%;
+  border: 1px solid #d1d5db;
+  border-radius: 0.5rem;
+  padding: 0.5rem 0.7rem;
+  font-size: 0.85rem;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.modal-input:focus {
+  border-color: #2c3e91;
+}
+
+.modal-acciones {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.modal-acciones-3 {
+  justify-content: space-between;
+}
