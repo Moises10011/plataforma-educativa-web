@@ -61,11 +61,7 @@ export class AdminInstitucion implements OnInit {
     Object.entries(this.form).forEach(([k, v]) => { if (v) fd.append(k, String(v)); });
     if (this.logoFile) fd.append('logo', this.logoFile);
 
-    const req = this.institucion()?.id_institucion
-      ? this.http.put(`${environment.apiUrl}/institucion/${this.institucion()!.id_institucion}`, fd)
-      : this.http.post(`${environment.apiUrl}/institucion`, fd);
-
-    req.subscribe({
+    this.http.put(`${environment.apiUrl}/institucion`, fd).subscribe({
       next: (data: any) => {
         this.institucion.set(data);
         this.guardando.set(false);
